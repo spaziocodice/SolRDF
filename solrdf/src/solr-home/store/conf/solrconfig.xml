@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+	This is a solr configuration that is supposed to act as a template for deploying jena-nosql + SOLR.
+	As consequence of that, some settings are not supposed to be universally valid and should be tuned / configured 
+	according with your specific deployment contextx.
+	
+	For instance, if you have a master / slave architecture the replication section needs to be configured, the autocommit makes sense
+	only on master, etc etc.   
+ -->
+<config>
+	<luceneMatchVersion>LUCENE_48</luceneMatchVersion>
+	<dataDir>${solr.data.dir}/${solr.core.name}/data</dataDir>
+	<directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
+	<codecFactory class="solr.SchemaCodecFactory" />
+	<schemaFactory class="ClassicIndexSchemaFactory" />
+	<indexConfig>
+		<lockType>${solr.lock.type:native}</lockType>
+	</indexConfig>
+	<updateHandler class="solr.DirectUpdateHandler2">
+	<!-- 
+		AUTO COMMIT has been disabled because using configuration you can specify
+		the "commitWithin" msecs periods in adds and deletes. 
+		If you want to use the autoCommit feature please make sure you set a value of -1 for both values above.
+	 -->
+	 <!-- 
+		<autoCommit>
+			<maxTime>15000</maxTime>
+			<openSearcher>false</openSearcher>
+		</autoCommit>
+	 -->	
+	</updateHandler>
+	<query>
+		<maxBooleanClauses>1024</maxBooleanClauses>
+		<filterCache class="solr.FastLRUCache" size="512" initialSize="512" autowarmCount="0" />
+		<queryResultCache class="solr.LRUCache" size="512" initialSize="512" autowarmCount="0" />
+		<documentCache class="solr.LRUCache" size="512" initialSize="512" autowarmCount="0" />
+		<enableLazyFieldLoading>true</enableLazyFieldLoading>
+		<queryResultWindowSize>20</queryResultWindowSize>
+		<queryResultMaxDocsCached>200</queryResultMaxDocsCached>
+		<useColdSearcher>false</useColdSearcher>
+		<maxWarmingSearchers>2</maxWarmingSearchers>
+	</query>
+	<requestDispatcher handleSelect="false">
+		<requestParsers enableRemoteStreaming="true" multipartUploadLimitInKB="2048000" formdataUploadLimitInKB="2048" />
+		<httpCaching never304="true" />
+	</requestDispatcher>
+
+	<requestHandler name="/select" class="solr.SearchHandler" default="true">
+		<lst name="invariants">
+			<str name="echoParams">explicit</str>
+			<int name="rows">10</int>
+			<str name="q">*:*</str>
+			<bool name="facet">false</bool>
+		</lst>
+		<lst name="appends">
+			<str name="sort">id asc</str>
+		</lst>
+	</requestHandler>
+
+	<requestHandler name="/update" class="org.gazzax.labs.solrdf.handler.update.RdfUpdateRequestHandler">
+		<lst name="defaults">
+			<str name="update.chain">dedupe</str>
+		</lst>
+	</requestHandler>
+	<requestHandler name="/analysis/field" startup="lazy" class="solr.FieldAnalysisRequestHandler" />
+	<requestHandler name="/analysis/document" class="solr.DocumentAnalysisRequestHandler" startup="lazy" />
+	<requestHandler name="/admin/" class="solr.admin.AdminHandlers" />
+	<requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+		<lst name="invariants">
+			<str name="q">*:*</str>
+		</lst>
+		<lst name="defaults">
+			<str name="echoParams">all</str>
+		</lst>
+	</requestHandler>
+	<updateRequestProcessorChain name="dedupe"> 
+		<processor class="solr.processor.SignatureUpdateProcessorFactory"> 
+			<bool name="enabled">true</bool> 
+			<str name="signatureField">id</str> 
+			<bool name="overwriteDupes">false</bool> 
+			<str name="fields">s,p,o,c</str>
+			<str name="signatureClass">solr.processor.Lookup3Signature</str> </processor> 
+			<processor class="solr.LogUpdateProcessorFactory" /> 
+			<processor class="solr.RunUpdateProcessorFactory" /> 
+	</updateRequestProcessorChain>
+	<admin>
+		<defaultQuery>*:*</defaultQuery>
+	</admin>
+</config>
