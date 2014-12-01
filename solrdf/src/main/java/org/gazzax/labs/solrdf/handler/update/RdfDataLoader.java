@@ -52,7 +52,7 @@ class RdfDataLoader extends ContentStreamLoader {
 							inputStream, 
 							stream.getStream(), 
 							RDFLanguages.contentTypeToLang(stream.getContentType()));
-				} catch (IOException exception) {
+				} catch (final IOException exception) {
 					exception.printStackTrace();
 				}
 			}
