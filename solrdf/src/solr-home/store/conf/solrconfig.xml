@@ -40,21 +40,21 @@
 		<useColdSearcher>false</useColdSearcher>
 		<maxWarmingSearchers>2</maxWarmingSearchers>
 	</query>
-	<requestDispatcher handleSelect="false">
+	<requestDispatcher handleSelect="true">
 		<requestParsers enableRemoteStreaming="true" multipartUploadLimitInKB="2048000" formdataUploadLimitInKB="2048" />
 		<httpCaching never304="true" />
 	</requestDispatcher>
-
-	<requestHandler name="/select" class="solr.SearchHandler" default="true">
+	<requestHandler name="/sparql" class="solr.SearchHandler" default="true">
 		<lst name="invariants">
 			<str name="echoParams">explicit</str>
+			<str name="defType">sparql</str>
 			<int name="rows">10</int>
-			<str name="q">*:*</str>
-			<bool name="facet">false</bool>
+<!-- 			<str name="q">*:*</str> -->
+<!-- 			<bool name="facet">false</bool> -->
 		</lst>
-		<lst name="appends">
-			<str name="sort">id asc</str>
-		</lst>
+<!-- 		<lst name="appends"> -->
+<!-- 			<str name="sort">id asc</str> -->
+<!-- 		</lst> -->
 	</requestHandler>
 
 	<requestHandler name="/update" class="org.gazzax.labs.solrdf.handler.update.RdfUpdateRequestHandler">
@@ -83,6 +83,7 @@
 			<processor class="solr.LogUpdateProcessorFactory" /> 
 			<processor class="solr.RunUpdateProcessorFactory" /> 
 	</updateRequestProcessorChain>
+	<queryParser name="sparql" class="org.gazzax.labs.solrdf.handler.qparser.SparqlQParserPlugin"/>	
 	<admin>
 		<defaultQuery>*:*</defaultQuery>
 	</admin>
