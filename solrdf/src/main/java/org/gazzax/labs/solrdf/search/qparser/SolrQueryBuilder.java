@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.handler.qparser;
+package org.gazzax.labs.solrdf.search.qparser;
 
 import java.util.List;
 

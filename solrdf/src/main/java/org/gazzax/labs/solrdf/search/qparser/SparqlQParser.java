@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.handler.qparser;
+package org.gazzax.labs.solrdf.search.qparser;
 
 import org.apache.lucene.search.Query;
 import org.apache.solr.common.params.SolrParams;
@@ -18,10 +18,11 @@ public class SparqlQParser extends QParser {
 		super(qstr, localParams, params, req);
 	}
 
-	@Override
+	@Override 
 	public Query parse() throws SyntaxError {
-		final SolrQueryBuilder builder = new SolrQueryBuilder(QueryFactory.create(qstr));
-		builder.buildAndGet();
-		return null;
+		return new SparqlQuery(QueryFactory.create(qstr));
+//		final SolrQueryBuilder builder = new SolrQueryBuilder(QueryFactory.create(qstr));
+//		builder.buildAndGet();
+//		return null;
 	}
 }
