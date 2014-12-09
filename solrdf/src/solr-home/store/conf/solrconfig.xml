@@ -49,12 +49,10 @@
 			<str name="echoParams">explicit</str>
 			<str name="defType">sparql</str>
 			<int name="rows">10</int>
-<!-- 			<str name="q">*:*</str> -->
-<!-- 			<bool name="facet">false</bool> -->
+			<arr name="components">
+				<str>sparql-query</str>
+			</arr>
 		</lst>
-<!-- 		<lst name="appends"> -->
-<!-- 			<str name="sort">id asc</str> -->
-<!-- 		</lst> -->
 	</requestHandler>
 
 	<requestHandler name="/update" class="org.gazzax.labs.solrdf.handler.update.RdfUpdateRequestHandler">
@@ -83,7 +81,8 @@
 			<processor class="solr.LogUpdateProcessorFactory" /> 
 			<processor class="solr.RunUpdateProcessorFactory" /> 
 	</updateRequestProcessorChain>
-	<queryParser name="sparql" class="org.gazzax.labs.solrdf.handler.qparser.SparqlQParserPlugin"/>	
+	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
+	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
 	<admin>
 		<defaultQuery>*:*</defaultQuery>
 	</admin>
