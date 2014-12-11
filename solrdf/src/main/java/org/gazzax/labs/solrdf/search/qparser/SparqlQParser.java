@@ -7,6 +7,7 @@ import org.apache.solr.search.QParser;
 import org.apache.solr.search.SyntaxError;
 
 import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QueryParseException;
 
 public class SparqlQParser extends QParser {
 
@@ -20,9 +21,10 @@ public class SparqlQParser extends QParser {
 
 	@Override 
 	public Query parse() throws SyntaxError {
-		return new SparqlQuery(QueryFactory.create(qstr));
-//		final SolrQueryBuilder builder = new SolrQueryBuilder(QueryFactory.create(qstr));
-//		builder.buildAndGet();
-//		return null;
+		try {
+			return new SparqlQuery(QueryFactory.create(qstr));
+		} catch (final QueryParseException exception) {
+			throw new SyntaxError(exception);
+		}
 	}
 }

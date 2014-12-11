@@ -43,19 +43,18 @@ public class SparqlQuery extends Query {
 			
 			@Override
 			public Scorer scorer(AtomicReaderContext context, Bits acceptDocs) throws IOException {
-				// TODO Auto-generated method stub
+				// TODO
 				return null;
 			}
 			
 			@Override
 			public void normalize(float norm, float topLevelBoost) {
-				// TODO Auto-generated method stub
-				
+				// TODO 
 			}
 			
 			@Override
 			public float getValueForNormalization() throws IOException {
-				// TODO Auto-generated method stub
+				// TODO
 				return 0;
 			}
 			
@@ -65,9 +64,8 @@ public class SparqlQuery extends Query {
 			}
 			
 			@Override
-			public Explanation explain(AtomicReaderContext context, int doc)
-					throws IOException {
-				// TODO Auto-generated method stub
+			public Explanation explain(AtomicReaderContext context, int doc) throws IOException {
+				// TODO 
 				return null;
 			}
 		};
