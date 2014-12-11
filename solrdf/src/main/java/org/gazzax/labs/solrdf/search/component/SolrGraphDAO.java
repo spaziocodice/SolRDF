@@ -3,15 +3,18 @@ package org.gazzax.labs.solrdf.search.component;
 import static org.gazzax.labs.jena.nosql.fwk.util.NTriples.asNt;
 import static org.gazzax.labs.jena.nosql.fwk.util.NTriples.asNtURI;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.search.SortSpec;
 import org.gazzax.labs.jena.nosql.fwk.StorageLayerException;
 import org.gazzax.labs.jena.nosql.fwk.ds.GraphDAO;
 import org.gazzax.labs.jena.nosql.fwk.log.Log;
@@ -34,9 +37,9 @@ import com.hp.hpl.jena.graph.TripleMatch;
  */
 public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 	protected final Log logger = new Log(LoggerFactory.getLogger(SolrGraphDAO.class));
-	
+		
 	final SolrIndexSearcher searcher;
-	
+	final SortSpec sort;
 	private final Node name;
 	
 	/**
@@ -44,8 +47,8 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 	 * 
 	 * @param searcher the SOLR proxy that will be used for issuing queries.
 	 */
-	public SolrGraphDAO(final SolrIndexSearcher searcher) {
-		this(searcher, null);
+	public SolrGraphDAO(final SolrIndexSearcher searcher, final SortSpec sort) {
+		this(searcher, null, sort);
 	}
 	
 	/**
@@ -54,9 +57,10 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 	 * @param searcher the SOLR proxy that will be used for issuing queries.
 	 * @param name the name of the graph associated with this DAO.
 	 */
-	public SolrGraphDAO(final SolrIndexSearcher searcher, final Node name) {
+	public SolrGraphDAO(final SolrIndexSearcher searcher, final Node name, final SortSpec sort) {
 		this.searcher = searcher;
 		this.name = name;
+		this.sort = sort;
 	}
 
 	@Override
@@ -139,25 +143,30 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 
 	@Override
 	public Iterator<Triple> query(final TripleMatch query) throws StorageLayerException {
-		
-		final BooleanQuery q = new BooleanQuery();
+	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
+	    cmd.setQuery(new MatchAllDocsQuery());
+	    cmd.setSort(sort.getSort());
+	    cmd.setLen(10);
+	    
+	    final List<Query> q = new ArrayList<Query>();
+	    
 		final Node s = query.getMatchSubject();
 		final Node p = query.getMatchPredicate();
 		final Node o = query.getMatchObject();
 		
 		if (s != null) {
-			q.add(new TermQuery(new Term(Field.S, asNt(s))), Occur.MUST);
+			q.add(new TermQuery(new Term(Field.S, asNt(s))));
 		}
 		
 		if (p != null) {
-			q.add(new TermQuery(new Term(Field.P, asNt(p))), Occur.MUST);
+			q.add(new TermQuery(new Term(Field.P, asNt(p))));
 		}
 		
 		if (o != null) {
 			if (o.isLiteral()) {
 				final String language = o.getLiteralLanguage();
 				if (Strings.isNotNullOrEmptyString(language)) {
-					q.add(new TermQuery(new Term(Field.LANG, language)), Occur.MUST);
+					q.add(new TermQuery(new Term(Field.LANG, language)));
 				}
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
@@ -165,47 +174,46 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 				if (dataType != null) {
 					final String uri = dataType.getURI();
 					if (XSDDatatype.XSDboolean.getURI().equals(uri)) {
-						q.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, literalValue)), Occur.MUST);
+						q.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, literalValue)));
 					} else if (
 							XSDDatatype.XSDint.getURI().equals(uri) ||
 							XSDDatatype.XSDinteger.getURI().equals(uri) ||
 							XSDDatatype.XSDdecimal.getURI().equals(uri) ||
 							XSDDatatype.XSDdouble.getURI().equals(uri) ||
 							XSDDatatype.XSDlong.getURI().equals(uri)) {
-						q.add(new TermQuery(new Term(Field.NUMERIC_OBJECT, literalValue)), Occur.MUST);
+						q.add(new TermQuery(new Term(Field.NUMERIC_OBJECT, literalValue)));
 					} else if (
 							XSDDatatype.XSDdateTime.equals(uri) || 
 							XSDDatatype.XSDdate.equals(uri)) {
-						q.add(new TermQuery(new Term(Field.DATE_OBJECT, literalValue)), Occur.MUST);
+						q.add(new TermQuery(new Term(Field.DATE_OBJECT, literalValue)));
 					} else {
-						q.add(new TermQuery(new Term(Field.TEXT_OBJECT, literalValue)), Occur.MUST);
+						q.add(new TermQuery(new Term(Field.TEXT_OBJECT, literalValue)));
 					}
 				} else {
-					q.add(new TermQuery(new Term(Field.TEXT_OBJECT, literalValue)), Occur.MUST);
+					q.add(new TermQuery(new Term(Field.TEXT_OBJECT, literalValue)));
 				}				
 			} else {
-				q.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))), Occur.MUST);			
+				q.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));			
 			}
 		}
 		
 		if (name != null) {
-			q.add(new TermQuery(new Term(Field.C, asNtURI(o))), Occur.MUST);				
+			q.add(new TermQuery(new Term(Field.C, asNtURI(o))));				
 		}
 		
-		System.out.println(">>>>>>>>>>>>>" + q);
-		return null;
+		cmd.setFilterList(q);
+
+	    return new SolrDeepPagingIterator(searcher, cmd, sort);
 	}
 	
 
 	@Override
 	public long countTriples() throws StorageLayerException {
-		return -1;
-//		final SolrQuery query = new SolrQuery();
-//		try {
-//			return searcher.query(query).getResults().getNumFound();
-//		} catch (final Exception exception) {
-//			throw new StorageLayerException(exception);
-//		}		
+		try {
+			return searcher.search(new MatchAllDocsQuery(), 0).totalHits;
+		} catch (final IOException exception) {
+			throw new StorageLayerException(exception);
+		}
 	} 	
 	
 	/**

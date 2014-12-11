@@ -3,6 +3,7 @@ package org.gazzax.labs.solrdf.search.component;
 import java.util.ArrayList;
 
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.search.SortSpec;
 import org.gazzax.labs.jena.nosql.fwk.StorageLayerException;
 import org.gazzax.labs.jena.nosql.fwk.ds.GraphDAO;
 import org.gazzax.labs.jena.nosql.fwk.factory.StorageLayerFactory;
@@ -40,8 +41,8 @@ public class SolrGraph extends GraphBase {
 	 * 
 	 * @param factory the storage layer factory.
 	 */
-	public SolrGraph(SolrIndexSearcher searcher) {
-		this.dao = new SolrGraphDAO(searcher);
+	public SolrGraph(SolrIndexSearcher searcher, final SortSpec sort) {
+		this.dao = new SolrGraphDAO(searcher, sort);
 	}
 
 	/**
@@ -50,8 +51,8 @@ public class SolrGraph extends GraphBase {
 	 * @param name the graph name.
 	 * @param factory the storage layer factory.
 	 */	
-	public SolrGraph(final Node name, final SolrIndexSearcher searcher) {
-		this.dao = name != null ? new SolrGraphDAO(searcher, name) : new SolrGraphDAO(searcher);
+	public SolrGraph(final Node name, final SolrIndexSearcher searcher, final SortSpec sort) {
+		this.dao = name != null ? new SolrGraphDAO(searcher, name, sort) : new SolrGraphDAO(searcher, sort);
 	}
 	
 	@Override
@@ -101,12 +102,12 @@ public class SolrGraph extends GraphBase {
 	
 	@Override
 	public ExtendedIterator<Triple> graphBaseFind(final TripleMatch pattern) {
-		return EMPTY_TRIPLES_ITERATOR;
-//		try  {
-//			return WrappedIterator.createNoRemove(dao.query(pattern));
-//		} catch (StorageLayerException exception) {
-//			LOGGER.error(MessageCatalog._00010_DATA_ACCESS_LAYER_FAILURE, exception);
-//			return EMPTY_TRIPLES_ITERATOR;
-//		}
+		
+		try  {
+			return WrappedIterator.createNoRemove(dao.query(pattern));
+		} catch (StorageLayerException exception) {
+			LOGGER.error(MessageCatalog._00010_DATA_ACCESS_LAYER_FAILURE, exception);
+			return EMPTY_TRIPLES_ITERATOR;
+		}
 	}
 }

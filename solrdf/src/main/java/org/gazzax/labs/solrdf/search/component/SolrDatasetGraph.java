@@ -3,6 +3,7 @@ package org.gazzax.labs.solrdf.search.component;
 import java.util.Iterator;
 
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.search.SortSpec;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -18,16 +19,18 @@ import com.hp.hpl.jena.sparql.core.Quad;
  */
 public class SolrDatasetGraph extends DatasetGraphCaching {
 	final SolrIndexSearcher searcher;
+	final SortSpec sort;
 	
 	/**
 	 * Builds a new Dataset graph with the given factory.
 	 * 
 	 * @param factory the storage layer (abstract) factory.
 	 */
-	public SolrDatasetGraph(final SolrIndexSearcher searcher) {
+	public SolrDatasetGraph(final SolrIndexSearcher searcher, final SortSpec sort) {
 		this.searcher = searcher;
+		this.sort = sort;
 	}
-	
+
 	@Override
 	public Iterator<Node> listGraphNodes() {
 		return namedGraphs.keys();
@@ -40,12 +43,12 @@ public class SolrDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return new SolrGraph(graphNode, searcher);
+		return new SolrGraph(graphNode, searcher, sort);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return new SolrGraph(searcher);
+		return new SolrGraph(searcher, sort);
 	}
 
 	@Override
