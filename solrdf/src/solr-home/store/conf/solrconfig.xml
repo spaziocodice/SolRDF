@@ -46,10 +46,11 @@
 	</requestDispatcher>
 	<requestHandler name="/sparql" class="solr.SearchHandler" default="true">
 		<lst name="invariants">
-			<str name="echoParams">explicit</str>
+			<str name="echoParams">none</str>
 			<str name="defType">sparql</str>
 			<int name="rows">10</int>
 			<str name="sort">id asc</str>
+			<str name="wt">application/sparql-results+xml</str>
 		</lst>
 		<arr name="components">
 			<str>sparql-query</str>
@@ -84,6 +85,7 @@
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
+	<queryResponseWriter name="application/sparql-results+xml" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter"/>
 	<admin>
 		<defaultQuery>*:*</defaultQuery>
 	</admin>
