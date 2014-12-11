@@ -2,20 +2,19 @@ package org.gazzax.labs.solrdf.search.component;
 
 import java.io.IOException;
 
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.search.CursorMark;
 import org.apache.solr.search.QParser;
-import org.apache.solr.search.QParserPlugin;
 import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SortSpec;
 import org.apache.solr.search.SyntaxError;
+import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
 
 import com.hp.hpl.jena.query.DatasetFactory;
@@ -25,33 +24,35 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 
+/**
+ * A {@link SearchComponent} implementation for executing SPARQL queries.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 public class SparqlSearchComponent extends SearchComponent {
-
+	private final static String DEFAULT_DEF_TYPE = "sparql";
+	
 	@Override
-	public void prepare(ResponseBuilder rb) throws IOException {
-	    SolrQueryRequest req = rb.req;
-	    SolrParams params = req.getParams();
-	    SolrQueryResponse rsp = rb.rsp;
+	public void prepare(final ResponseBuilder responseBuilder) throws IOException {
+	    final SolrQueryRequest request = responseBuilder.req;
+	    final SolrParams params = request.getParams();
+	    final SolrQueryResponse response = responseBuilder.rsp;
 
-		String defType = params.get(QueryParsing.DEFTYPE, "sparql");
-
-	    // get it from the response builder to give a different component a chance
-	    // to set it.
-	    String queryString = rb.getQueryString();
+	    final String queryString = params.get(CommonParams.Q);
 	    if (queryString == null) {
-	      // this is the normal way it's set.
-	      queryString = params.get( CommonParams.Q );
-	      rb.setQueryString(queryString);
+	    	throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Missing query");
 	    }
-
 	    
 		try {
-			QParser parser = QParser.getParser(rb.getQueryString(), defType, req);
-			rb.setQuery(parser.getQuery());
-			rb.setQparser(parser);
-		} catch (SyntaxError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			final QParser parser = QParser.getParser(
+					queryString, 
+					params.get(QueryParsing.DEFTYPE, DEFAULT_DEF_TYPE), 
+					request);
+			responseBuilder.setQuery(parser.getQuery());
+			responseBuilder.setQparser(parser);
+		} catch (final SyntaxError exception) {
+			  throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, exception);
 		}
 	}
 
@@ -65,27 +66,28 @@ public class SparqlSearchComponent extends SearchComponent {
 	    try {
 	    	final SparqlQuery wrapper = (SparqlQuery) responseBuilder.getQuery();
 	    	final Query query = wrapper.getQuery();
-	    	final SortSpec sort = responseBuilder.getQparser().getSort(true);
-	    	final CursorMark cursorMark = new CursorMark(responseBuilder.req.getSchema(), sort);
-			execution = QueryExecutionFactory.create(query, DatasetFactory.create(new SolrDatasetGraph(searcher, sort)));
-			ResultSet rs = execution.execSelect();
-			System.out.println(ResultSetFormatter.asText(rs));
-		} catch (Exception e) {
-			throw new IOException(e);
-		} finally {
-			if (execution != null) execution.close();
-		}
+	    	
+	    	// TODO: can we reuse a DatasetGraph??
+			execution = QueryExecutionFactory.create(
+					query, 
+					DatasetFactory.create(
+							new SolrDatasetGraph(searcher, responseBuilder.getQparser().getSort(true))));
+			
+			// TODO: ASK and CONSTRUCT queries
+			response.add(Names.SPARQL_RESULTSET, execution.execSelect());
+			response.add(Names.QUERY_EXECUTION, execution);			
+		} catch (final Exception exception) {
+			throw new IOException(exception);
+		} 
 	}
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return "sparql";
 	}
 
 	@Override
 	public String getSource() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

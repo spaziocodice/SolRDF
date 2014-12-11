@@ -91,8 +91,7 @@ public class SolrDeepPagingIterator extends UnmodifiableIterator<Triple> {
 		@Override
 		public Triple next() {
 			try {
-				final int documentId = iterator().nextDoc();
-				final Document document = searcher.doc(iterator.nextDoc(), TRIPLE_FIELDS);
+				final Document document = searcher.doc(iterator().nextDoc(), TRIPLE_FIELDS);
 				return Triple.create(
 						NTriples.asURIorBlankNode((String) document.get(Field.S)), 
 						NTriples.asURI((String) document.get(Field.P)),
