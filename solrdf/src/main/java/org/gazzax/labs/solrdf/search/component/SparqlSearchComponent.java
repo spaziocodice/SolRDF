@@ -72,7 +72,7 @@ public class SparqlSearchComponent extends SearchComponent {
 			execution = QueryExecutionFactory.create(
 					query, 
 					DatasetFactory.create(
-							new SolrDatasetGraph(searcher, responseBuilder.getQparser().getSort(true))));
+							new SolRDFDatasetGraph(searcher, responseBuilder.getQparser().getSort(true))));
 			
 			// TODO: ASK and CONSTRUCT queries			
 			response.add(Names.QUERY, query);
@@ -90,6 +90,6 @@ public class SparqlSearchComponent extends SearchComponent {
 
 	@Override
 	public String getSource() {
-		return null;
+		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/search/component/SparqlSearchComponent.java $";
 	}
 }

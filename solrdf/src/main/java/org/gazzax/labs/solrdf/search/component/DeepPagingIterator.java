@@ -27,7 +27,7 @@ import com.hp.hpl.jena.graph.Triple;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SolrDeepPagingIterator extends UnmodifiableIterator<Triple> {
+public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	protected final static Set<String> TRIPLE_FIELDS = new HashSet<String>();
 	static {
 		TRIPLE_FIELDS.add(Field.S);
@@ -139,7 +139,7 @@ public class SolrDeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param searcher the Solr index searcher.
 	 * @param queryCommand the query command that will be submitted.
 	 */
-	SolrDeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort) {
+	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);

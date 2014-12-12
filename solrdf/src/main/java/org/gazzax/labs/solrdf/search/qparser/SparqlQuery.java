@@ -28,6 +28,11 @@ public class SparqlQuery extends Query {
 		this.query = query;
 	}
 	
+	/**
+	 * Returns the wrapped Jena {@link com.hp.hpl.jena.query.Query}.
+	 * 
+	 * @return the wrapped Jena {@link com.hp.hpl.jena.query.Query}.
+	 */
 	public com.hp.hpl.jena.query.Query getQuery() {
 		return query;
 	}

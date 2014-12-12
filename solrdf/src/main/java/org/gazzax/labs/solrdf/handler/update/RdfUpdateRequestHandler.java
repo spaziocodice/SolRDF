@@ -26,4 +26,14 @@ public class RdfUpdateRequestHandler extends UpdateRequestHandler {
 		}
 		return registry;
 	}
+	
+	@Override
+	public String getDescription() {
+		return "RDFUpdateRequestHandler";
+	}
+	
+	@Override
+	public String getSource() {
+		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/handler/update/RdfUpdateRequestHandler.java $";
+	}
 }

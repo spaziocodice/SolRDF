@@ -6,12 +6,12 @@ import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SortSpec;
 import org.gazzax.labs.jena.nosql.fwk.StorageLayerException;
 import org.gazzax.labs.jena.nosql.fwk.ds.GraphDAO;
-import org.gazzax.labs.jena.nosql.fwk.factory.StorageLayerFactory;
 import org.gazzax.labs.jena.nosql.fwk.log.Log;
 import org.gazzax.labs.jena.nosql.fwk.log.MessageCatalog;
 import org.gazzax.labs.jena.nosql.fwk.log.MessageFactory;
 import org.slf4j.LoggerFactory;
 
+import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -23,26 +23,24 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
 /**
- * SOLR Graph implementation.
+ * SolRDF {@link Graph} implementation.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SolrGraph extends GraphBase {
-	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SolrGraph.class));
+public class SolRDFGraph extends GraphBase {
+	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SolRDFGraph.class));
 	private static final ExtendedIterator<Triple> EMPTY_TRIPLES_ITERATOR = WrappedIterator.createNoRemove(new ArrayList<Triple>(0).iterator());
 
 	private final GraphDAO<Triple, TripleMatch> dao;
-	
-	private SolrIndexSearcher searcher;
 				
 	/**
 	 * Builds a new unnamed graph with the given factory.
 	 * 
 	 * @param factory the storage layer factory.
 	 */
-	public SolrGraph(SolrIndexSearcher searcher, final SortSpec sort) {
-		this.dao = new SolrGraphDAO(searcher, sort);
+	public SolRDFGraph(SolrIndexSearcher searcher, final SortSpec sort) {
+		this.dao = new SolRDFGraphDAO(searcher, sort);
 	}
 
 	/**
@@ -51,8 +49,8 @@ public class SolrGraph extends GraphBase {
 	 * @param name the graph name.
 	 * @param factory the storage layer factory.
 	 */	
-	public SolrGraph(final Node name, final SolrIndexSearcher searcher, final SortSpec sort) {
-		this.dao = name != null ? new SolrGraphDAO(searcher, name, sort) : new SolrGraphDAO(searcher, sort);
+	public SolRDFGraph(final Node name, final SolrIndexSearcher searcher, final SortSpec sort) {
+		this.dao = name != null ? new SolRDFGraphDAO(searcher, name, sort) : new SolRDFGraphDAO(searcher, sort);
 	}
 	
 	@Override

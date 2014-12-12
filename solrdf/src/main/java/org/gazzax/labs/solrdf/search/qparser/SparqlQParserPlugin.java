@@ -27,4 +27,14 @@ public class SparqlQParserPlugin extends QParserPlugin {
 			final SolrQueryRequest req) {
 		return new SparqlQParser(qstr, localParams, params, req);
 	}
+	
+	@Override
+	public String getDescription() {
+		return "sparql";
+	}
+	
+	@Override
+	public String getSource() {
+		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/search/qparser/SparqlQParserPlugin.java $";
+	}
 }

@@ -29,14 +29,14 @@ import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 
 /**
- * {@link GraphDAO} implementation for Apache SOLR.
+ * {@link GraphDAO} implementation for SolRDF.
  * 
  * @see http://lucene.apache.org/solr
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
-	protected final Log logger = new Log(LoggerFactory.getLogger(SolrGraphDAO.class));
+public class SolRDFGraphDAO implements GraphDAO<Triple, TripleMatch> {
+	protected final Log logger = new Log(LoggerFactory.getLogger(SolRDFGraphDAO.class));
 		
 	final SolrIndexSearcher searcher;
 	final SortSpec sort;
@@ -47,7 +47,7 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 	 * 
 	 * @param searcher the SOLR proxy that will be used for issuing queries.
 	 */
-	public SolrGraphDAO(final SolrIndexSearcher searcher, final SortSpec sort) {
+	public SolRDFGraphDAO(final SolrIndexSearcher searcher, final SortSpec sort) {
 		this(searcher, null, sort);
 	}
 	
@@ -57,7 +57,7 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 	 * @param searcher the SOLR proxy that will be used for issuing queries.
 	 * @param name the name of the graph associated with this DAO.
 	 */
-	public SolrGraphDAO(final SolrIndexSearcher searcher, final Node name, final SortSpec sort) {
+	public SolRDFGraphDAO(final SolrIndexSearcher searcher, final Node name, final SortSpec sort) {
 		this.searcher = searcher;
 		this.name = name;
 		this.sort = sort;
@@ -203,7 +203,7 @@ public class SolrGraphDAO implements GraphDAO<Triple, TripleMatch> {
 		
 		cmd.setFilterList(q);
 
-	    return new SolrDeepPagingIterator(searcher, cmd, sort);
+	    return new DeepPagingIterator(searcher, cmd, sort);
 	}
 	
 

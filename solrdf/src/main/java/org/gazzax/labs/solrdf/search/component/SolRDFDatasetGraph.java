@@ -8,16 +8,17 @@ import org.apache.solr.search.SortSpec;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
 import com.hp.hpl.jena.sparql.core.Quad;
 
 /**
- * NoSQL implementation of Jena Dataset.
+ * SolRDF (Solr low level) implementation of a Jena {@link Dataset}.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SolrDatasetGraph extends DatasetGraphCaching {
+public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	final SolrIndexSearcher searcher;
 	final SortSpec sort;
 	
@@ -26,7 +27,7 @@ public class SolrDatasetGraph extends DatasetGraphCaching {
 	 * 
 	 * @param factory the storage layer (abstract) factory.
 	 */
-	public SolrDatasetGraph(final SolrIndexSearcher searcher, final SortSpec sort) {
+	public SolRDFDatasetGraph(final SolrIndexSearcher searcher, final SortSpec sort) {
 		this.searcher = searcher;
 		this.sort = sort;
 	}
@@ -43,12 +44,12 @@ public class SolrDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return new SolrGraph(graphNode, searcher, sort);
+		return new SolRDFGraph(graphNode, searcher, sort);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return new SolrGraph(searcher, sort);
+		return new SolRDFGraph(searcher, sort);
 	}
 
 	@Override
