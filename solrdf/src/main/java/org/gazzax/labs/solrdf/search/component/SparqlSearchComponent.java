@@ -12,7 +12,6 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SolrIndexSearcher;
-import org.apache.solr.search.SortSpec;
 import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
@@ -21,8 +20,6 @@ import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
 
 /**
  * A {@link SearchComponent} implementation for executing SPARQL queries.
@@ -37,9 +34,13 @@ public class SparqlSearchComponent extends SearchComponent {
 	public void prepare(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrParams params = request.getParams();
-	    final SolrQueryResponse response = responseBuilder.rsp;
 
-	    final String queryString = params.get(CommonParams.Q);
+	    String queryString = params.get(CommonParams.Q);
+
+	    if (queryString == null) {
+	    	queryString = params.get(CommonParams.QUERY);
+	    }
+	    
 	    if (queryString == null) {
 	    	throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Missing query");
 	    }
@@ -61,7 +62,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
 	    final SolrIndexSearcher searcher = request.getSearcher();
-	    	    
+	    
 	    QueryExecution execution = null;
 	    try {
 	    	final SparqlQuery wrapper = (SparqlQuery) responseBuilder.getQuery();
@@ -73,8 +74,9 @@ public class SparqlSearchComponent extends SearchComponent {
 					DatasetFactory.create(
 							new SolrDatasetGraph(searcher, responseBuilder.getQparser().getSort(true))));
 			
-			// TODO: ASK and CONSTRUCT queries
-			response.add(Names.SPARQL_RESULTSET, execution.execSelect());
+			// TODO: ASK and CONSTRUCT queries			
+			response.add(Names.QUERY, query);
+			response.add(Names.QUERY_RESULT, execution.execSelect());
 			response.add(Names.QUERY_EXECUTION, execution);			
 		} catch (final Exception exception) {
 			throw new IOException(exception);
@@ -90,5 +92,4 @@ public class SparqlSearchComponent extends SearchComponent {
 	public String getSource() {
 		return null;
 	}
-
 }
