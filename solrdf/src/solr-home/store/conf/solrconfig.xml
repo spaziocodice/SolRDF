@@ -41,7 +41,15 @@
 		<maxWarmingSearchers>2</maxWarmingSearchers>
 	</query>
 	<requestDispatcher handleSelect="true">
-		<requestParsers enableRemoteStreaming="true" multipartUploadLimitInKB="2048000" formdataUploadLimitInKB="2048" />
+		<!-- 
+			IMPORTANT: in order to agree on the client requested output format the "Accept" header
+			must be visible to internal components.
+		-->
+		<requestParsers 
+			enableRemoteStreaming="true" 
+			multipartUploadLimitInKB="2048000" 
+			formdataUploadLimitInKB="2048" 
+			addHttpRequestToContext="true"/>
 		<httpCaching never304="true" />
 	</requestDispatcher>
 	<requestHandler name="/sparql" class="solr.SearchHandler" default="true">
@@ -85,7 +93,11 @@
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
-	<queryResponseWriter name="application/sparql-results+xml" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter"/>
+	<queryResponseWriter name="application/sparql-results+xml" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter">
+		<lst name="writers">
+			<str name="application/sparql-results+xml"></str>
+		</lst>
+	</queryResponseWriter>
 	<admin>
 		<defaultQuery>*:*</defaultQuery>
 	</admin>
