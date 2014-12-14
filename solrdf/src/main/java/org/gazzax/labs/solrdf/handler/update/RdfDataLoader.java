@@ -46,6 +46,7 @@ class RdfDataLoader extends ContentStreamLoader {
 		final ExecutorService executor = Executors.newSingleThreadExecutor();
 		
 		Runnable parser = new Runnable() {
+			@Override
 			public void run() {
 				try {
 					RDFDataMgr.parse(
