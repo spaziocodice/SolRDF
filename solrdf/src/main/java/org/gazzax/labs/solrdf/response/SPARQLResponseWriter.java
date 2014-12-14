@@ -8,9 +8,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpHeaders;
+import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.ResultSetMgr;
+import org.apache.jena.riot.resultset.ResultSetLang;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.QueryResponseWriter;
@@ -103,6 +105,8 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 			}
 		});
 
+		final Lang defaultLang = ResultSetLang.SPARQLResultSetXML;
+		
 		writers.put(Query.QueryTypeSelect, new ResponseWriter() {
 			@Override
 			public void doWrite(
@@ -111,10 +115,14 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 					final QueryExecution execution, 
 					final String contentType) {
 				final ResultSet resultSet = (ResultSet) response.get(Names.QUERY_RESULT);
+				Lang lang = RDFLanguages.contentTypeToLang(contentType);
+				if (lang == null) {
+					lang = defaultLang;
+				}
 				ResultSetMgr.write(
 					new WriterOutputStream(writer, CharacterSet.UTF_8), 
 					resultSet, 
-					RDFLanguages.contentTypeToLang(contentType));
+					lang);
 			}
 		});
 		
@@ -125,7 +133,7 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 					final Writer writer, 
 					final QueryExecution execution, 
 					final String contentType) {
-				final Model model = (Model) response.get(Names.QUERY);
+				final Model model = (Model) response.get(Names.QUERY_RESULT);
 				RDFDataMgr.write(
 						new WriterOutputStream(writer, CharacterSet.UTF_8), 
 						model, 
