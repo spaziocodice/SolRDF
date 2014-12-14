@@ -43,17 +43,17 @@ public class SparqlQuery extends Query {
 	}
 	
 	@Override
-	public Weight createWeight(IndexSearcher searcher) throws IOException {
+	public Weight createWeight(final IndexSearcher searcher) throws IOException {
 		return new Weight() {
 			
 			@Override
-			public Scorer scorer(AtomicReaderContext context, Bits acceptDocs) throws IOException {
+			public Scorer scorer(final AtomicReaderContext context, final Bits acceptDocs) throws IOException {
 				// TODO
 				return null;
 			}
 			
 			@Override
-			public void normalize(float norm, float topLevelBoost) {
+			public void normalize(final float norm, final float topLevelBoost) {
 				// TODO 
 			}
 			
@@ -69,7 +69,7 @@ public class SparqlQuery extends Query {
 			}
 			
 			@Override
-			public Explanation explain(AtomicReaderContext context, int doc) throws IOException {
+			public Explanation explain(final AtomicReaderContext context, final int doc) throws IOException {
 				// TODO 
 				return null;
 			}

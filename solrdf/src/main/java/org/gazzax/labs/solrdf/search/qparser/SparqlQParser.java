@@ -17,7 +17,6 @@ import com.hp.hpl.jena.query.QueryParseException;
  * @since 1.0
  */
 public class SparqlQParser extends QParser {
-
 	/**
 	 * Builds a new {@link QParser} with the given data.
 	 * 

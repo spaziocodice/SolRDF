@@ -68,16 +68,30 @@ public class SparqlSearchComponent extends SearchComponent {
 	    	final SparqlQuery wrapper = (SparqlQuery) responseBuilder.getQuery();
 	    	final Query query = wrapper.getQuery();
 	    	
-	    	// TODO: can we reuse a DatasetGraph??
 			execution = QueryExecutionFactory.create(
 					query, 
 					DatasetFactory.create(
-							new SolRDFDatasetGraph(searcher, responseBuilder.getQparser().getSort(true))));
+							new SolRDFDatasetGraph(
+									searcher, 
+									responseBuilder.getQparser().getSort(true))));
 			
-			// TODO: ASK and CONSTRUCT queries			
 			response.add(Names.QUERY, query);
-			response.add(Names.QUERY_RESULT, execution.execSelect());
 			response.add(Names.QUERY_EXECUTION, execution);			
+			
+			switch(query.getQueryType()) {
+			case Query.QueryTypeAsk:
+				response.add(Names.QUERY_RESULT, execution.execAsk());				
+				break;
+			case Query.QueryTypeSelect: 
+				response.add(Names.QUERY_RESULT, execution.execSelect());
+				break;
+			case Query.QueryTypeDescribe: 
+				response.add(Names.QUERY_RESULT, execution.execDescribe());
+				break;
+			case Query.QueryTypeConstruct: 
+				response.add(Names.QUERY_RESULT, execution.execConstruct());
+				break;
+			}
 		} catch (final Exception exception) {
 			throw new IOException(exception);
 		} 

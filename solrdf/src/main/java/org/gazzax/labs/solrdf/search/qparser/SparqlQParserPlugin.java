@@ -15,17 +15,18 @@ import org.apache.solr.search.QParserPlugin;
  */
 public class SparqlQParserPlugin extends QParserPlugin {
 	@Override
-	public void init(@SuppressWarnings("rawtypes") final NamedList args) {
-		// Nothing to be done at the momyny
-	}
-
-	@Override
 	public QParser createParser(
 			final String qstr, 
 			final SolrParams localParams,
 			final SolrParams params, 
 			final SolrQueryRequest req) {
 		return new SparqlQParser(qstr, localParams, params, req);
+	}
+	
+	@Override
+	@SuppressWarnings("rawtypes") 
+	public void init(final NamedList args) {
+		// Nothing to be done at the momyny
 	}
 	
 	@Override
