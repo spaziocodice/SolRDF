@@ -11,8 +11,8 @@ import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocList;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SortSpec;
-import org.gazzax.labs.jena.nosql.fwk.util.NTriples;
-import org.gazzax.labs.jena.nosql.solr.Field;
+import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.NTriples;
 
 import com.google.common.collect.UnmodifiableIterator;
 import com.hp.hpl.jena.graph.Triple;

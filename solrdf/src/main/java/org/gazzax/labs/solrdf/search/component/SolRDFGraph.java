@@ -1,15 +1,9 @@
 package org.gazzax.labs.solrdf.search.component;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SortSpec;
-import org.gazzax.labs.jena.nosql.fwk.StorageLayerException;
-import org.gazzax.labs.jena.nosql.fwk.ds.GraphDAO;
-import org.gazzax.labs.jena.nosql.fwk.log.Log;
-import org.gazzax.labs.jena.nosql.fwk.log.MessageCatalog;
-import org.gazzax.labs.jena.nosql.fwk.log.MessageFactory;
-import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
@@ -17,8 +11,6 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
-import com.hp.hpl.jena.shared.AddDeniedException;
-import com.hp.hpl.jena.shared.DeleteDeniedException;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
@@ -29,10 +21,7 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public class SolRDFGraph extends GraphBase {
-	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SolRDFGraph.class));
-	private static final ExtendedIterator<Triple> EMPTY_TRIPLES_ITERATOR = WrappedIterator.createNoRemove(new ArrayList<Triple>(0).iterator());
-
-	private final GraphDAO<Triple, TripleMatch> dao;
+	private final SolRDFGraphDAO dao;
 				
 	/**
 	 * Builds a new unnamed graph with the given factory.
@@ -55,40 +44,21 @@ public class SolRDFGraph extends GraphBase {
 	
 	@Override
 	public void performAdd(final Triple triple) {
-		try {
-			dao.insertTriple(triple);
-		} catch (final StorageLayerException exception) {
-			final String message = MessageFactory.createMessage(MessageCatalog._00101_UNABLE_TO_ADD_TRIPLE, triple);
-			LOGGER.error(message, exception);
-			throw new AddDeniedException(message, triple);
-		}
+		// TODO
 	}
 	
 	@Override
 	public void performDelete(final Triple triple) {
-		try {
-			if (triple.isConcrete()) {
-				dao.deleteTriple(triple);
-			} else if (!triple.getSubject().isConcrete() &&  !triple.getPredicate().isConcrete() &&  !triple.getObject().isConcrete()) {
-				clear();
-			} else {
-				dao.deleteTriple(triple);
-			}	
-			dao.executePendingMutations();
-		} catch (final StorageLayerException exception) {
-			final String message = MessageFactory.createMessage(MessageCatalog._00100_UNABLE_TO_DELETE_TRIPLE, triple);
-			LOGGER.error(message, exception);
-			throw new DeleteDeniedException(message, triple);
-		}
+		// TODO
 	}
 	
 	@Override
 	protected int graphBaseSize() {
 		try {
 			return (int) dao.countTriples();
-		} catch (StorageLayerException exception) {
-			LOGGER.error(MessageCatalog._00010_DATA_ACCESS_LAYER_FAILURE, exception);		
-			throw new RuntimeException(exception);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return 0;
 		}
 	}
 	
@@ -99,13 +69,7 @@ public class SolRDFGraph extends GraphBase {
 	}
 	
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(final TripleMatch pattern) {
-		
-		try  {
-			return WrappedIterator.createNoRemove(dao.query(pattern));
-		} catch (StorageLayerException exception) {
-			LOGGER.error(MessageCatalog._00010_DATA_ACCESS_LAYER_FAILURE, exception);
-			return EMPTY_TRIPLES_ITERATOR;
-		}
+	public ExtendedIterator<Triple> graphBaseFind(final TripleMatch pattern) {		
+		return WrappedIterator.createNoRemove(dao.query(pattern));
 	}
 }
