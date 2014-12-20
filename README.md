@@ -7,12 +7,12 @@ The difference between SolRDF and the jena-nosql project (specifically the Solr 
 
 The following page will guide you through the SolRDF quick installation. I assume you already have Java (7), Maven (3.x) and git on your system.
 
-- Checkout the project Open a new shell and type the following:
+Checkout the project Open a new shell and type the following:
 
 > cd /tmp  
 > git clone https://github.com/agazzarini/SolRDF.git solrdf-download
 
-- Build and run SolrRDF
+Build and run SolrRDF
 
 > cd solrdf-download/solrdf  
 > mvn clean install cargo:run  
