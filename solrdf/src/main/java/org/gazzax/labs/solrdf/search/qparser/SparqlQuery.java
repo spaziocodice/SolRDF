@@ -65,7 +65,7 @@ public class SparqlQuery extends Query {
 			
 			@Override
 			public Query getQuery() {
-				return null;
+				return SparqlQuery.this;
 			}
 			
 			@Override

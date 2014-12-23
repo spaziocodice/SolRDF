@@ -39,7 +39,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected void _close() {
-//		factory.getDictionary().close();
+		// Nothing to be done here...
 	}
 
 	@Override
@@ -53,47 +53,44 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	}
 
 	@Override
-	protected boolean _containsGraph(Node graphNode) {
+	protected boolean _containsGraph(final Node graphNode) {
 		return false;
 	}
 
 	@Override
-	protected void addToDftGraph(Node s, Node p, Node o) {
+	protected void addToDftGraph(final Node s, final Node p, final Node o) {
 		getDefaultGraph().add(new Triple(s,p,o));
 	}
 
 	@Override
-	protected void addToNamedGraph(Node g, Node s, Node p, Node o) {
-		// TODO Auto-generated method stub
-
+	protected void addToNamedGraph(final Node g, final Node s, final Node p, final Node o) {
+		// Nothing to be done here...
 	}
 
 	@Override
-	protected void deleteFromDftGraph(Node s, Node p, Node o) {
+	protected void deleteFromDftGraph(final Node s, final Node p, final Node o) {
 		getDefaultGraph().delete(new Triple(s,p,o));
-
 	}
 
 	@Override
-	protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
-		// TODO Auto-generated method stub
-
+	protected void deleteFromNamedGraph(final Node g, final Node s, final Node p, final Node o) {
+		// Nothing to be done here...
 	}
 
 	@Override
-	protected Iterator<Quad> findInDftGraph(Node s, Node p, Node o) {
+	protected Iterator<Quad> findInDftGraph(final Node s, final Node p, final Node o) {
 		return triples2quads(Quad.tripleInQuad, getDefaultGraph().find(s, p, o));
 	}
 
 	@Override
-	protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p, Node o) {
-		// TODO Auto-generated method stub
+	protected Iterator<Quad> findInSpecificNamedGraph(final Node g, final Node s, final Node p, final Node o) {
+		// Nothing to be done here...
 		return null;
 	}
 
 	@Override
-	protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
-		// TODO Auto-generated method stub
+	protected Iterator<Quad> findInAnyNamedGraphs(final Node s, final Node p, final Node o) {
+		// Nothing to be done here...
 		return null;
 	}
 }
