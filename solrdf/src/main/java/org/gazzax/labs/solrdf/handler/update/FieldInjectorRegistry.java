@@ -61,7 +61,7 @@ class FieldInjectorRegistry {
 		}
 	};
 	
-	private final Map<String, FieldInjector> injectors = new HashMap<String, FieldInjector>();
+	final Map<String, FieldInjector> injectors = new HashMap<String, FieldInjector>();
 	{
 		injectors.put(XSDDatatype.XSDboolean.getURI(), booleanFieldInjector);		
 		
