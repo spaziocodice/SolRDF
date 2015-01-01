@@ -1,8 +1,5 @@
 package org.gazzax.labs.solrdf.handler.update;
 
-import static org.gazzax.labs.solrdf.NTriples.asNt;
-import static org.gazzax.labs.solrdf.NTriples.asNtURI;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,17 +9,13 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
-import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.ContentStream;
 import org.apache.solr.handler.loader.ContentStreamLoader;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
-import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 
 /**
@@ -32,7 +25,6 @@ import com.hp.hpl.jena.graph.Triple;
  * @since 1.0
  */
 class RdfDataLoader extends ContentStreamLoader {
-	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	@Override
@@ -58,36 +50,12 @@ class RdfDataLoader extends ContentStreamLoader {
 				}
 			}
 		};
-		
+
 		executor.submit(parser);
-		final SolrInputDocument document = new SolrInputDocument();
-		final AddUpdateCommand command = new AddUpdateCommand(request);
-		
+	
+		final SolRDFGraph graph = SolRDFGraph.writableGraph(null, request, response);
 		while (iterator.hasNext()) {
-			final Triple triple = iterator.next();
-
-			document.clear();
-			command.clear();
-			
-			document.setField(Field.S, asNt(triple.getSubject()));
-			document.setField(Field.P, asNtURI(triple.getPredicate()));
-			
-			final String o = asNt(triple.getObject());
-			document.setField(Field.O, o);
-
-			final Node object = triple.getObject();
-			if (object.isLiteral()) {
-				document.setField(Field.LANG, object.getLiteralLanguage());				
-
-				final RDFDatatype dataType = object.getLiteralDatatype();
-				final Object value = object.getLiteralValue();
-				registry.get(dataType != null ? dataType.getURI() : null).inject(document, value);
-			} else {
-				registry.catchAllFieldInjector.inject(document, o);
-			}			
-
-			command.solrDoc = document;
-			processor.processAdd(command);
+			graph.add(iterator.next());
 		}
 	}
 }

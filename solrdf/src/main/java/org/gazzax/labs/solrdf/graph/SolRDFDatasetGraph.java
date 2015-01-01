@@ -1,9 +1,10 @@
-package org.gazzax.labs.solrdf.search.component;
+package org.gazzax.labs.solrdf.graph;
 
 import java.util.Iterator;
 
-import org.apache.solr.search.SolrIndexSearcher;
-import org.apache.solr.search.SortSpec;
+import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.search.QParser;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -19,17 +20,22 @@ import com.hp.hpl.jena.sparql.core.Quad;
  * @since 1.0
  */
 public class SolRDFDatasetGraph extends DatasetGraphCaching {
-	final SolrIndexSearcher searcher;
-	final SortSpec sort;
+	final SolrQueryRequest request;
+	final SolrQueryResponse response;
+	final QParser qParser;
 	
 	/**
 	 * Builds a new Dataset graph with the given factory.
 	 * 
 	 * @param factory the storage layer (abstract) factory.
 	 */
-	public SolRDFDatasetGraph(final SolrIndexSearcher searcher, final SortSpec sort) {
-		this.searcher = searcher;
-		this.sort = sort;
+	public SolRDFDatasetGraph(
+			final SolrQueryRequest request, 
+			final SolrQueryResponse response,
+			final QParser qParser) {
+		this.request = request;
+		this.response = response;
+		this.qParser = qParser;
 	}
 
 	@Override
@@ -44,12 +50,12 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return new SolRDFGraph(graphNode, searcher, sort);
+		return SolRDFGraph.readableAndWritableGraph(graphNode, request, response, qParser);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return new SolRDFGraph(searcher, sort);
+		return SolRDFGraph.readableAndWritableGraph(null, request, response, qParser);
 	}
 
 	@Override

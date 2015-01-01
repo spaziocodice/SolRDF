@@ -10,10 +10,8 @@ import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
-import org.apache.solr.search.QueryParsing;
-import org.apache.solr.search.SolrIndexSearcher;
-import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
 
 import com.hp.hpl.jena.query.DatasetFactory;
@@ -31,49 +29,22 @@ public class SparqlSearchComponent extends SearchComponent {
 	private final static String DEFAULT_DEF_TYPE = "sparql";
 	
 	@Override
-	public void prepare(final ResponseBuilder responseBuilder) throws IOException {
-	    final SolrQueryRequest request = responseBuilder.req;
-	    final SolrParams params = request.getParams();
-
-	    String queryString = params.get(CommonParams.Q);
-
-	    if (queryString == null) {
-	    	queryString = params.get(CommonParams.QUERY);
-	    }
-	    
-	    if (queryString == null) {
-	    	throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Missing query");
-	    }
-	    
-		try {
-			final QParser parser = QParser.getParser(
-					queryString, 
-					params.get(QueryParsing.DEFTYPE, DEFAULT_DEF_TYPE), 
-					request);
-			responseBuilder.setQuery(parser.getQuery());
-			responseBuilder.setQparser(parser);
-		} catch (final SyntaxError exception) {
-			  throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, exception);
-		}
-	}
-
-	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
-	    final SolrIndexSearcher searcher = request.getSearcher();
-	    
-	    QueryExecution execution = null;
+
 	    try {
-	    	final SparqlQuery wrapper = (SparqlQuery) responseBuilder.getQuery();
+			final QParser parser = QParser.getParser(
+					queryString(request), 
+					DEFAULT_DEF_TYPE, 
+					request);
+	    	
+	    	final SparqlQuery wrapper = (SparqlQuery) parser.getQuery();
 	    	final Query query = wrapper.getQuery();
 	    	
-			execution = QueryExecutionFactory.create(
+	    	final QueryExecution execution = QueryExecutionFactory.create(
 					query, 
-					DatasetFactory.create(
-							new SolRDFDatasetGraph(
-									searcher, 
-									responseBuilder.getQparser().getSort(true))));
+					DatasetFactory.create(new SolRDFDatasetGraph(request, response, parser)));
 			
 			response.add(Names.QUERY, query);
 			response.add(Names.QUERY_EXECUTION, execution);			
@@ -105,5 +76,31 @@ public class SparqlSearchComponent extends SearchComponent {
 	@Override
 	public String getSource() {
 		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/search/component/SparqlSearchComponent.java $";
+	}
+	
+	@Override
+	public void prepare(final ResponseBuilder responseBuilder) {
+		// Nothing to be done here...
+	}	
+	
+	/**
+	 * Returns the query string associated with the current request.
+	 * 
+	 * @param request the current request.
+	 * @return the query string associated with the current request.
+	 */
+	String queryString(final SolrQueryRequest request) {
+	    final SolrParams params = request.getParams();
+	    String queryString = params.get(CommonParams.Q);
+
+	    if (queryString == null) {
+	    	queryString = params.get(CommonParams.QUERY);
+	    }
+	    
+	    if (queryString == null) {
+	    	throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Missing query");
+	    }		
+	    
+	    return queryString;
 	}
 }

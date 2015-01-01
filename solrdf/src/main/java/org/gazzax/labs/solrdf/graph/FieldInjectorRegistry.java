@@ -1,9 +1,13 @@
-package org.gazzax.labs.solrdf.handler.update;
+package org.gazzax.labs.solrdf.graph;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.SolrInputDocument;
 import org.gazzax.labs.solrdf.Field;
 
@@ -11,7 +15,7 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 
 /**
- * A registry for datatyped literal objects.
+ * A registry for datatyped literal objects mappings.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
@@ -30,13 +34,26 @@ class FieldInjectorRegistry {
 		 * @param triple the {@link SolrInputDocument} representing a triple.
 		 * @param value the value of the object member.
 		 */
-		public void inject(final SolrInputDocument triple, final Object value);
+		void inject(SolrInputDocument triple, Object value);
+
+		/**
+		 * Adds to the given list a new constraint query with the given data.
+		 * 
+		 * @param filters the filter list.
+		 * @param value the new constraint value. 
+		 */
+		void collectConstraint(List<Query> filters, String value);
 	}
 	
 	final FieldInjector booleanFieldInjector = new FieldInjector() {
 		@Override
 		public void inject(final SolrInputDocument document, final Object value) {
 			document.setField(Field.BOOLEAN_OBJECT, value);
+		}
+
+		@Override
+		public void collectConstraint(final List<Query> filters, final String value) {
+			filters.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, value)));
 		}
 	};
 
@@ -45,6 +62,11 @@ class FieldInjectorRegistry {
 		public void inject(final SolrInputDocument document, final Object value) {
 			document.setField(Field.NUMERIC_OBJECT, value);
 		}
+		
+		@Override
+		public void collectConstraint(final List<Query> filters, final String value) {
+			filters.add(new TermQuery(new Term(Field.NUMERIC_OBJECT, value)));
+		}		
 	};
 	
 	final FieldInjector dateTimeFieldInjector = new FieldInjector() {
@@ -52,6 +74,11 @@ class FieldInjectorRegistry {
 		public void inject(final SolrInputDocument document, Object value) {
 			document.setField(Field.DATE_OBJECT, ((XSDDateTime)value).asCalendar().getTime());
 		}
+		
+		@Override
+		public void collectConstraint(final List<Query> filters, final String value) {
+			filters.add(new TermQuery(new Term(Field.DATE_OBJECT, value)));
+		}				
 	};
 	
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
@@ -59,6 +86,11 @@ class FieldInjectorRegistry {
 		public void inject(final SolrInputDocument document, final Object value) {
 			document.setField(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(String.valueOf(value)));
 		}
+
+		@Override
+		public void collectConstraint(final List<Query> filters, final String value) {
+			filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, value)));
+		}		
 	};
 	
 	final Map<String, FieldInjector> injectors = new HashMap<String, FieldInjector>();

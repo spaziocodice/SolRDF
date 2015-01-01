@@ -1,10 +1,11 @@
-package org.gazzax.labs.solrdf.handler.update;
+package org.gazzax.labs.solrdf.graph;
 
 import static org.junit.Assert.assertSame;
 
 import java.util.Map.Entry;
 
-import org.gazzax.labs.solrdf.handler.update.FieldInjectorRegistry.FieldInjector;
+import org.gazzax.labs.solrdf.graph.FieldInjectorRegistry;
+import org.gazzax.labs.solrdf.graph.FieldInjectorRegistry.FieldInjector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,8 +32,23 @@ public class FieldInjectorRegistryTestCase {
 			final String dataTypeURI = entry.getKey();
 			final FieldInjector result = cut.get(dataTypeURI);
 			assertSame(entry.getValue(), result);
-		}
-		
+		}		
+	}
+	
+	/**
+	 * In case a null datatype is passed as key a catch-all {@link FieldInjector} is returned.
+	 */
+	@Test
+	public void nullDatatype() {
 		assertSame(cut.catchAllInjector(), cut.get(null));
 	}
+	
+	/**
+	 * In case a datatype hasn't been registered (i.e. unknown) a catch-all {@link FieldInjector} is returned.
+	 */
+	@Test
+	public void unknownRegistryKey() {
+		final String unknownKey = String.valueOf(System.currentTimeMillis());
+		assertSame(cut.catchAllInjector(), cut.get(unknownKey));
+	}	
 }

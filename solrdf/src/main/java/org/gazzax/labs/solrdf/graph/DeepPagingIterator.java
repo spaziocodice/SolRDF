@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.search.component;
+package org.gazzax.labs.solrdf.graph;
 
 import java.io.IOException;
 import java.util.HashSet;
