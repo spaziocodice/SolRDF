@@ -59,6 +59,7 @@ public class SolRDFGraph extends GraphBase {
 	final QParser qParser;
 	
 	final Node graphNode;
+	final String c;
 	final int fetchSize;
 	
 	/**
@@ -116,6 +117,7 @@ public class SolRDFGraph extends GraphBase {
 		final QParser qparser, 
 		final int fetchSize) {
 		this.graphNode = graphNode;
+		this.c = graphNode !=null ? asNtURI(graphNode) : null;
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateCommand.solrDoc = new SolrInputDocument();
@@ -129,7 +131,8 @@ public class SolRDFGraph extends GraphBase {
 	public void performAdd(final Triple triple) {
 		resetUpdateCommand();
 		
-		final SolrInputDocument document = updateCommand.solrDoc;
+		final SolrInputDocument document = updateCommand.solrDoc;		
+		document.setField(Field.C, c);
 		document.setField(Field.S, asNt(triple.getSubject()));
 		document.setField(Field.P, asNtURI(triple.getPredicate()));
 		

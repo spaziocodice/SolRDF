@@ -1,10 +1,19 @@
 package org.gazzax.labs.solrdf.graph;
 
+import static org.gazzax.labs.solrdf.NTriples.asNtURI;
+
 import java.util.Iterator;
 
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.TermQuery;
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
+import org.apache.solr.search.SolrIndexSearcher;
+import org.gazzax.labs.solrdf.Field;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -60,7 +69,18 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected boolean _containsGraph(final Node graphNode) {
-		return false;
+	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
+	    cmd.setQuery(new MatchAllDocsQuery());
+	    cmd.setLen(0);
+	    cmd.setFilterList(new TermQuery(new Term(Field.C, asNtURI(graphNode))));				
+	    
+	    final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
+	    try {
+			request.getSearcher().search(result, cmd);
+		    return result.getDocListAndSet().docList.matches() > 0;
+		} catch (final Exception exception) {
+			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
+		}	    
 	}
 
 	@Override
@@ -70,7 +90,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected void addToNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		// Nothing to be done here...
+		getGraph(g).add(Triple.create(s, p, o));
 	}
 
 	@Override
@@ -80,7 +100,9 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected void deleteFromNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		// Nothing to be done here...
+		if (containsGraph(g)) {
+			getGraph(g).delete(Triple.createMatch(s, p, o));
+		}
 	}
 
 	@Override
@@ -90,13 +112,11 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected Iterator<Quad> findInSpecificNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		// Nothing to be done here...
-		return null;
+		return triples2quads(Quad.tripleInQuad, getGraph(g).find(s, p, o));
 	}
 
 	@Override
 	protected Iterator<Quad> findInAnyNamedGraphs(final Node s, final Node p, final Node o) {
-		// Nothing to be done here...
-		return null;
+		return triples2quads(Quad.tripleInQuad, getDefaultGraph().find(s, p, o));
 	}
 }
