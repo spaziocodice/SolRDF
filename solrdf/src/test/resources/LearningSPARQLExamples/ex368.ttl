@@ -1,0 +1,14 @@
+# filename: ex368.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+# Who's taking which courses
+
+d:i8301 ab:takingCourse d:course59 . 
+d:i9771 ab:takingCourse d:course34 . 
+d:i0432 ab:takingCourse d:course85 . 
+d:i0432 ab:takingCourse d:course59 . 
+d:i9771 ab:takingCourse d:course59 . 
+
+

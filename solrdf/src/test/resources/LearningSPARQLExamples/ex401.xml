@@ -1,0 +1,41 @@
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="name"/>
+    <variable name="homepage"/>
+    <variable name="description"/>
+  </head>
+  <results>
+    <result>
+      <binding name="name">
+        <literal xml:lang="en">DONG Energy</literal>
+      </binding>
+      <binding name="homepage">
+        <uri>http://www.dongenergy.com</uri>
+      </binding>
+      <binding name="description">
+        <literal xml:lang="en">DONG Energy is Denmark's leading energy
+        company.</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="name">
+        <literal xml:lang="en">Garrad Hassan</literal>
+      </binding>
+      <binding name="homepage">
+        <uri>http://www.gl-garradhassan.com/</uri>
+      </binding>
+      <binding name="description">
+        <literal xml:lang="en">GL Garrad Hassan (GH) is one of the world's 
+leading wind energy consultants. GH also consults in offshore wind, marine 
+renewables, and solar energy. GH was founded in 1984 by Dr. Andrew Garrad 
+and Dr. Unsal Hassan and has since grown to have about 750 employees with 
+offices in 18 countries. The company has acted as the Independent Engineer 
+for lenders and investors in more than 21,000 MW of wind projects and has 
+carried out energy assessments for over 80,000 MW.</literal>
+      </binding>
+    </result>
+
+   <!-- Seven more result elements with the same structure -->
+
+  </results>
+</sparql>

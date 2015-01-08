@@ -1,0 +1,8 @@
+# filename: ex125.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+ab:course42 ab:courseTitle "Combining Public and Private RDF Data" .
+ab:course24 ab:courseTitle "Using Named Graphs" .
+

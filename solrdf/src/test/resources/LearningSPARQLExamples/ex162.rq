@@ -1,0 +1,7 @@
+# filename: ex162.rq
+
+SELECT ?p (COUNT(?p) AS ?pTotal)
+WHERE
+{ ?s ?p ?o . }
+GROUP BY ?p
+

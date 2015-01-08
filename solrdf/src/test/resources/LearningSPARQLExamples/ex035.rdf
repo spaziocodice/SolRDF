@@ -1,0 +1,19 @@
+<!-- filename: ex035.rdf -->
+
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dm="http://learningsparql.com/ns/demo#"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+
+  <rdf:Description rdf:about="http://learningsparql.com/ns/demo#item342">
+    <dm:shipped 
+     rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-02-14</dm:shipped>
+    <dm:quantity 
+     rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</dm:quantity>
+    <dm:invoiced 
+     rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</dm:invoiced>
+    <dm:costPerItem 
+     rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.50</dm:costPerItem>
+  </rdf:Description> 
+
+</rdf:RDF>
+

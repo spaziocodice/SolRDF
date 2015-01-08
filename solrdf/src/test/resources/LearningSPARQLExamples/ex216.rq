@@ -1,0 +1,8 @@
+# filename: ex216.rq
+
+PREFIX d:  <http://learningsparql.com/ns/data#>
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+DESCRIBE ?course WHERE
+{ d:i0432 ab:takingCourse ?course . }
+

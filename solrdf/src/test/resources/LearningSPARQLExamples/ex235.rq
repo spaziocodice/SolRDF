@@ -1,0 +1,7 @@
+# filename: ex235.rq
+
+SELECT ?answer 
+WHERE 
+{ 
+  BIND ((IF (2 > 3, "Two is bigger","Three is bigger")) AS ?answer)
+}

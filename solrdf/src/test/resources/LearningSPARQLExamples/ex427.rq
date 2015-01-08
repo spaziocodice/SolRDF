@@ -1,0 +1,12 @@
+# filename: ex427.rq
+
+PREFIX  owl:  <http://www.w3.org/2002/07/owl#> 
+
+CONSTRUCT 
+{ ?resource2 ?property1 ?resource1 . }
+WHERE
+{
+   ?property1 owl:inverseOf ?property2 .
+   ?resource1 ?property2 ?resource2 .
+}
+

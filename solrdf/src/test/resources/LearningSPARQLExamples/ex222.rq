@@ -1,0 +1,8 @@
+# filename: ex222.rq
+
+PREFIX d:  <http://learningsparql.com/ns/data#> 
+PREFIX mt: <http://learningsparql.com/ns/mytypesystem#> 
+
+SELECT ?s
+WHERE { ?s ?p "two"^^mt:potrzebies . } 
+

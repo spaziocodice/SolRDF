@@ -1,0 +1,9 @@
+# filename: ex436.rq
+
+SELECT * 
+WHERE 
+{
+  ?s ?p ?o . 
+}
+#LIMIT 50
+

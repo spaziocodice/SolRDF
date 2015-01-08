@@ -1,0 +1,14 @@
+# filename: ex041.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+
+ab:i0432 ab:firstName    "Richard" ;
+        ab:lastName      "Mutt" ;
+        ab:homeTel       "(229) 276-5135" ;
+        ab:email         "richard49@hotmail.com" ;
+        ab:address       _:b1 .
+
+_:b1    ab:postalCode    "49345" ;
+        ab:city          "Springfield" ;
+        ab:streetAddress "32 Main St." ;
+        ab:region        "Connecticut" . 

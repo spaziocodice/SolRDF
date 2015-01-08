@@ -1,0 +1,26 @@
+# filename: ex074.ttl
+
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix c: <http://learningsparql.com/ns/citations#> . 
+@prefix : <http://learningsparql.com/ns/papers#> .
+
+:paperA dc:title "Paper A" . 
+
+:paperB rdfs:label "Paper B" ;
+        c:cites :paperA . 
+
+:paperC c:cites :paperA . 
+
+:paperD c:cites :paperA , :paperB . 
+
+:paperE c:cites :paperA . 
+
+:paperF c:cites :paperC , :paperE . 
+
+:paperG c:cites :paperC , :paperE . 
+
+:paperH c:cites :paperD . 
+
+:paperI c:cites :paperF , :paperG . 
+

@@ -1,0 +1,19 @@
+# filename: ex072.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+# People
+
+d:i0432 ab:firstName "Richard" ; 
+        ab:lastName  "Mutt" ; 
+        ab:email     "richard49@hotmail.com" . 
+
+d:i9771 ab:firstName "Cindy" ; 
+        ab:lastName  "Marshall" ; 
+        ab:email     "cindym@gmail.com" . 
+
+d:i8301 ab:firstName "Craig" ; 
+        ab:lastName  "Ellis" ; 
+        ab:email     "c.ellis@usairwaysgroup.com" . 
+

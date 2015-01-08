@@ -1,0 +1,14 @@
+# filename: ex176.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+PREFIX d:  <http://learningsparql.com/ns/data#>
+
+CONSTRUCT
+{ ?person ?p ?o . }
+
+WHERE
+{
+  ?person ab:firstName "Craig" ;
+          ab:lastName  "Ellis" ;
+          ?p ?o . 
+}

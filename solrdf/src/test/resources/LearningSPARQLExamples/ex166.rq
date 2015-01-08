@@ -1,0 +1,8 @@
+# filename: ex166.rq
+
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+
+SELECT ?title
+FROM <http://dig.csail.mit.edu/2008/webdav/timbl/foaf.rdf>
+WHERE { ?s dc:title ?title .}
+

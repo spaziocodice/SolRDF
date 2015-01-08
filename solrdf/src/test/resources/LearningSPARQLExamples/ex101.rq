@@ -1,0 +1,23 @@
+# filename: ex101.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+SELECT ?first ?last ?instrument 
+WHERE
+{
+  { ?person ab:firstName ?first ;
+            ab:lastName ?last ;
+            ab:instrument "trumpet" ;
+            ab:instrument ?instrument . 
+  }
+
+  UNION
+
+  { ?person ab:firstName ?first ;
+            ab:lastName ?last ;
+            ab:instrument "sax" ;
+            ab:instrument ?instrument . 
+  }
+
+}
+

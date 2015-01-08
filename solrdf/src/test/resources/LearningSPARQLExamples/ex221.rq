@@ -1,0 +1,9 @@
+# filename: ex221.rq
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX d: <http://learningsparql.com/ns/data#> 
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+
+SELECT ?s
+WHERE { ?s ?p "two"^^xsd:string . } 
+

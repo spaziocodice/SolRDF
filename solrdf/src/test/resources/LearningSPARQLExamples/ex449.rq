@@ -1,0 +1,7 @@
+# filename: ex449.rq
+
+SELECT DISTINCT ?property
+WHERE 
+{ ?s ?property ?o . }
+# LIMIT 50
+

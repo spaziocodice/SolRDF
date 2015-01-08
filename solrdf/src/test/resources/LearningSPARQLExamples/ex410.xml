@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="s"/>
+    <variable name="o"/>
+  </head>
+  <results>
+    <result>
+      <binding name="s">
+        <uri>http://learningsparql.com/ns/data#id3</uri>
+      </binding>
+      <binding name="o">
+        <literal datatype="http://www.w3.org/2001/XMLSchema#boolean">true</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://learningsparql.com/ns/data#id1</uri>
+      </binding>
+      <binding name="o">
+        <literal>book</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://learningsparql.com/ns/data#id4</uri>
+      </binding>
+      <binding name="o">
+        <bnode>b0</bnode>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://learningsparql.com/ns/data#id2</uri>
+      </binding>
+      <binding name="o">
+        <literal xml:lang="en-US">5 bucks</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://learningsparql.com/ns/data#id5</uri>
+      </binding>
+      <binding name="o">
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">3</literal>
+      </binding>
+    </result>
+  </results>
+</sparql>

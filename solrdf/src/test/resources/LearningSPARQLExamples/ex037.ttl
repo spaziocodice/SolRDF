@@ -1,0 +1,10 @@
+# filename: ex037.ttl
+
+@prefix :     <http://www.learningsparql.com/ns/demo#> . 
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:sideDish42 rdfs:label "french fries"@en-US . 
+:sideDish42 rdfs:label "chips"@en-GB . 
+
+:sideDish43 rdfs:label "chips"@en-US . 
+:sideDish43 rdfs:label "crisps"@en-GB . 

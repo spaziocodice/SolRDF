@@ -1,0 +1,12 @@
+# filename: ex487.rq
+
+PREFIX dm:   <http://learningsparql.com/ns/demo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+
+SELECT ?o 
+WHERE
+{
+  ?s dm:foobar ?o . 
+  FILTER(!(isIRI(?o)))
+}
+

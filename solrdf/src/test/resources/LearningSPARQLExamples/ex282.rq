@@ -1,0 +1,27 @@
+# filename: ex282.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX dm:   <http://learningsparql.com/ns/demo#> 
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+CONSTRUCT
+{  ?rowURI rdfs:type skos:Concept ;
+           skos:prefLabel ?taggedUSTerm, ?taggedGBTerm . }
+WHERE
+{
+   ?cell1 dm:row ?rownum ;
+          dm:column 1 ; 
+          rdfs:label ?USTerm . 
+
+   BIND (STRLANG(?USTerm,"en-US") AS ?taggedUSTerm)
+
+   ?cell2 dm:row ?rownum ;
+          dm:column 2 ; 
+          rdfs:label ?GBTerm . 
+
+   BIND (STRLANG(?GBTerm,"en-GB") AS ?taggedGBTerm) 
+
+   BIND (URI(CONCAT("http://learningsparql.com/ns/terms#t",str(?rownum))) 
+         AS ?rowURI)
+}
+

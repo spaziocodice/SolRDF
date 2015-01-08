@@ -1,0 +1,11 @@
+# filename: ex489.rq
+
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT *
+WHERE 
+{
+  ?s a owl:Class . 
+  FILTER(CONTAINS(LCASE(str(?s)),"price"))
+}
+

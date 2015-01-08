@@ -1,0 +1,18 @@
+# filename: ex523.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+PREFIX d:  <http://learningsparql.com/ns/data#>
+
+CONSTRUCT
+{ ?p ab:hasAunt ?aunt . }
+WHERE
+{
+  ?p ab:hasParent ?parent .
+     ?parent ab:hasParent ?g .
+     ?aunt ab:hasParent ?g ;
+           ab:gender d:female .
+
+# FILTER (?parent != ?aunt)  
+  FILTER (!sameTerm(?parent,?aunt))
+}
+

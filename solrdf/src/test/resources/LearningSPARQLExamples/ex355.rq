@@ -1,0 +1,6 @@
+# filename: ex355.rq
+SELECT ?elvisbday WHERE {
+  <http://dbpedia.org/resource/Elvis_Presley> 
+  <http://dbpedia.org/property/dateOfBirth> ?elvisbday .
+}
+

@@ -1,0 +1,9 @@
+# filename: ex521.ttl
+
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+skos:prefLabel rdfs:subPropertyOf rdfs:label .
+d:i4230 skos:prefLabel "Frank" . 
+# d:i4230 rdfs:label "Frank" . 

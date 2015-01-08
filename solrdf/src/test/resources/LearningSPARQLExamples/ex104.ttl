@@ -1,0 +1,15 @@
+# filename: ex104.ttl
+
+@prefix dm: <http://learningsparql.com/ns/demo#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+d:item432 dm:cost 8 ;
+          dm:location <http://dbpedia.org/resource/Boston> .
+d:item857 dm:cost 12 ;
+          dm:location <http://dbpedia.org/resource/Montreal> .
+d:item693 dm:cost 10 ; 
+          dm:location "Heidelberg" . 
+d:item126 dm:cost 5 ;
+          dm:location <http://dbpedia.org/resource/Lisbon> .
+
+

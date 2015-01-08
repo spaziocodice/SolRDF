@@ -1,0 +1,12 @@
+# filename: ex494.rq 
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT ?description ?date ?amount
+WHERE
+{
+  ?meal e:description ?description ;
+        e:date ?date ;
+        e:amount ?amount . 
+}
+

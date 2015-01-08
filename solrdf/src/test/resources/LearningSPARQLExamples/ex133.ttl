@@ -1,0 +1,9 @@
+# filename: ex133.ttl
+
+@prefix images: <http://www.somepublisher.com/img/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+
+images:f43240.jpg dc:creator "Richard Mutt" ;
+                  dc:title "Fountain" ;
+                  dc:format "jpeg" . 
+

@@ -1,0 +1,15 @@
+# filename: ex241.ttl
+
+@prefix dm:   <http://learningsparql.com/ns/demo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+d:id1 dm:location _:b1 .
+d:id2 dm:location <http://dbpedia.org/resource/Montréal> .
+d:id3 dm:amount 3 . 
+d:id4 dm:amount "4"^^xsd:integer . 
+d:id5 dm:amount 1.0e5 . 
+d:id6 rdfs:label "5 bucks" . 
+d:id7 dm:shipped true  . 
+

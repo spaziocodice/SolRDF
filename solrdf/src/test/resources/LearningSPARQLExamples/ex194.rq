@@ -1,0 +1,20 @@
+# filename: ex194.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+PREFIX v:  <http://www.w3.org/2006/vcard/ns#>
+
+CONSTRUCT
+{
+ ?s v:given-name  ?firstName ;
+    v:family-name ?lastName ;
+    v:email       ?email ;
+    v:homeTel     ?homeTel . 
+}
+WHERE
+{
+ ?s ab:firstName ?firstName ;
+    ab:lastName  ?lastName ;
+    ab:email     ?email .
+    OPTIONAL 
+    { ?s ab:homeTel ?homeTel . }
+}

@@ -1,0 +1,18 @@
+# filename: ex205.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dm:  <http://learningsparql.com/ns/demo#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT
+{
+  ?item dm:problem dm:prob32 .
+  dm:prob32 rdfs:label "Amount must be an integer." . 
+}
+
+WHERE
+{
+  ?item dm:amount ?amount .
+  FILTER ((datatype(?amount)) != xsd:integer) 
+}
+

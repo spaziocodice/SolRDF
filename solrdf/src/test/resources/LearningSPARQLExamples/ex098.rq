@@ -1,0 +1,16 @@
+# filename: ex098.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+PREFIX d:  <http://learningsparql.com/ns/data#> 
+
+SELECT * 
+WHERE
+{
+       { ?person ab:firstName ?first ; ab:lastName ?last . }
+
+       UNION
+
+       { ?course ab:courseTitle ?courseName . }
+
+}
+

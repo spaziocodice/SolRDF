@@ -1,0 +1,13 @@
+# filename: ex044.ttl
+
+@prefix ab:   <http://learningsparql.com/ns/addressbook#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ab:playsInstrument
+      rdf:type rdf:Property ;
+      rdfs:comment "Identifies the instrument that someone plays" ;
+      rdfs:label "plays instrument" ;
+      rdfs:domain ab:Musician ;
+      rdfs:range ab:MusicalInstrument .  
+

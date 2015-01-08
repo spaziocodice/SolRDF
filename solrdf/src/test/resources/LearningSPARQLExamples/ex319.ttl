@@ -1,0 +1,8 @@
+<http://rdf.freebase.com/ns/en.tommy_potter>	
+    <http://rdf.freebase.com/ns/people.person.date_of_birth>	
+    "1918-09-21" .
+
+<http://rdf.freebase.com/ns/en.tommy_potter>	
+    owl:sameAs	
+    <http://dbpedia.org/resource/Tommy_Potter> . 
+

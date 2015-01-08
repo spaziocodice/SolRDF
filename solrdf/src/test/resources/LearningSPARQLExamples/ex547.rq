@@ -1,0 +1,4 @@
+# filename: ex547.rq
+
+SELECT * WHERE 
+{ <http://www.worldcat.org/isbn/0062515861> ?p ?o }

@@ -1,0 +1,7 @@
+# filename: ex153.rq
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT (MAX(?amount) as ?maxAmount) 
+WHERE { ?meal e:amount ?amount . }
+

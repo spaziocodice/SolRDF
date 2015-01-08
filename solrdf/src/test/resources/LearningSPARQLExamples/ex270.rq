@@ -1,0 +1,7 @@
+# filename: ex270.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+
+SELECT ?label 
+WHERE { ?s rdfs:label ?label .}
+

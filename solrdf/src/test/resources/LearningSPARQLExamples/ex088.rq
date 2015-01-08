@@ -1,0 +1,16 @@
+# filename: ex088.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?firstName ?lastName ?streetAddress ?city ?region ?postalCode
+WHERE 
+{ 
+  ?s ab:firstName ?firstName ;
+     ab:lastName ?lastName ;
+     ab:address ?address . 
+
+  ?address ab:postalCode ?postalCode ;
+           ab:city ?city ;
+           ab:streetAddress ?streetAddress ;
+           ab:region ?region . 
+}

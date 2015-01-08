@@ -1,0 +1,28 @@
+# filename: ex536.ttl
+
+@prefix ab:   <http://learningsparql.com/ns/addressbook#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+ab:Person a owl:Class .
+ab:MusicalInstrument a owl:Class .
+
+ab:firstName rdfs:domain ab:Person ;
+             rdfs:label "first name" .   
+ab:lastName  rdfs:domain ab:Person ;
+             rdfs:label "last name" .  
+ab:homeTel   rdfs:domain ab:Person ;
+             rdfs:label "home telephone" .  
+ab:email     rdfs:domain ab:Person ;
+             rdfs:label "email address" .  
+
+ab:plays rdfs:domain ab:Person . 
+ab:plays rdfs:range ab:MusicalInstrument . 
+
+ab:guitar a ab:MusicalInstrument ;
+          rdfs:label "guitar" .  
+ab:bass   a ab:MusicalInstrument ;
+          rdfs:label "bass" .  
+ab:drums  a ab:MusicalInstrument ;
+           rdfs:label "drums" .  
+

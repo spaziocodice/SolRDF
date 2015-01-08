@@ -1,0 +1,11 @@
+#filename: ex509.rq
+
+PREFIX db: <http://dbpedia.org/resource/>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT ?pacinoFilm
+WHERE
+{
+  ?pacinoFilm dbo:starring db:Al_Pacino .
+  ?pacinoFilm dbo:starring db:Robert_De_Niro . 
+}
+

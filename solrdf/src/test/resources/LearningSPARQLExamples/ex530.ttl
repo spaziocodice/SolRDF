@@ -1,0 +1,7 @@
+# filename: ex530.ttl
+
+@prefix d:  <http://learningsparql.com/ns/data#> .
+@prefix dm: <http://learningsparql.com/ns/demo#> .
+
+d:x dm:tag "seven" . 
+d:x dm:tag "eight" . 

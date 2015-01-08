@@ -1,0 +1,12 @@
+# filename: ex520.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+SELECT ?first ?last ?homeTel
+WHERE 
+{
+  OPTIONAL { ?s ab:homeTel ?homeTel .}
+  ?s ab:firstName ?first .
+  FILTER(CONTAINS(?last,"M"))
+  ?s ab:lastName ?last . 
+}
+ORDER BY ?last

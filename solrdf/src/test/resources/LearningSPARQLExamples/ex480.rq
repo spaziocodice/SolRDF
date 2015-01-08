@@ -1,0 +1,9 @@
+# filename: ex480.rq
+
+PREFIX dcterms: <http://purl.org/dc/terms/> 
+
+#DELETE {?document dcterms:dateCopyrighted "2013" . }
+#INSERT {?document dcterms:dateCopyrighted "2014" . }
+CONSTRUCT{?document dcterms:dateCopyrighted "2013" . }
+WHERE  {?document dcterms:dateCopyrighted "2013" . }
+

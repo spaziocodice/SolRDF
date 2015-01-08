@@ -1,0 +1,14 @@
+# filename: ex170.rq
+
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX gp:   <http://wifo5-04.informatik.uni-mannheim.de/gutendata/resource/people/>
+
+SELECT ?p ?o 
+WHERE
+{ 
+  SERVICE <http://wifo5-04.informatik.uni-mannheim.de/gutendata/sparql>
+  { gp:Hocking_Joseph ?p ?o . }
+}
+
+

@@ -1,0 +1,11 @@
+# filename: ex409.ttl
+
+@prefix dm:   <http://learningsparql.com/ns/demo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+
+d:id1 rdfs:label "book" .
+d:id2 rdfs:label "5 bucks"@en-US . 
+d:id3 dm:shipped true  . 
+d:id4 dm:location _:b1 .
+d:id5 dm:amount 3 . 

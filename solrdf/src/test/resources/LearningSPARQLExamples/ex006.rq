@@ -1,0 +1,9 @@
+# filename: ex006.rq
+
+SELECT ?craigEmail
+WHERE
+{
+  <http://learningsparql.com/ns/addressbook#craig> 
+  <http://learningsparql.com/ns/addressbook#email> 
+  ?craigEmail . 
+}

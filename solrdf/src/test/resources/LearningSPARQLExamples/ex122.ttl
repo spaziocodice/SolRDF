@@ -1,0 +1,13 @@
+# filename: ex122.ttl 
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+d:i5433 ab:firstName "Katherine" ; 
+        ab:lastName  "Duncan" ; 
+        ab:email     "katherine.duncan@elpaso.com" . 
+
+d:i2194 ab:firstName "Bradley" ; 
+        ab:lastName  "Perry" ; 
+        ab:email     "bradley.perry@corning.com" . 
+

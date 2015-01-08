@@ -1,0 +1,8 @@
+#filename: ex524.rq
+
+PREFIX apf: <http://jena.hpl.hp.com/ARQ/property#>
+
+SELECT ?o
+WHERE
+{ ?s apf:versionARQ ?o }
+

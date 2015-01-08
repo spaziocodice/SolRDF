@@ -1,0 +1,15 @@
+# filename: ex421.ttl
+
+@prefix ab:   <http://learningsparql.com/ns/addressbook#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ab:Musician rdf:type rdfs:Class . # could have said a instead of rdf:type
+
+d:i8301 rdf:type ab:Musician ;
+        ab:firstName "Craig" ;
+        ab:lastName  "Ellis" . 
+
+ab:Person a rdfs:Class .          # could have said rdf:type instead of a
+ab:Musician rdfs:subClassOf ab:Person . 

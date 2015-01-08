@@ -1,0 +1,16 @@
+# filename: ex406.rq
+
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?name ?homepage ?description 
+WHERE
+{
+   ?co dcterms:subject
+       <http://dbpedia.org/resource/Category:Wind_power_companies> ;
+   rdfs:label ?name ;
+   rdfs:comment ?description ;
+   <http://dbpedia.org/property/homepage> ?homepage .
+   FILTER ( lang(?name) = "en" )
+   FILTER ( lang(?description) = "en" )
+}

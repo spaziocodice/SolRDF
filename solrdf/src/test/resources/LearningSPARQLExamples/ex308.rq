@@ -1,0 +1,13 @@
+# filename: ex308.rq
+
+PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>
+PREFIX d:   <http://learningsparql.com/ns/data#> 
+
+SELECT DISTINCT ?s ?sLocalname ?sNamespace 
+WHERE
+{
+  ?s ?p ?o .
+  BIND (afn:localname(?s) AS ?sLocalname )
+  BIND (afn:namespace(?s) AS ?sNamespace )
+}
+

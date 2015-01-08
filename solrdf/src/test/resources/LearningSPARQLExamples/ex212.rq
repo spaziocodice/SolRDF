@@ -1,0 +1,19 @@
+# filename: ex212.rq
+
+PREFIX spin: <http://spinrdf.org/spin#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX dm:   <http://learningsparql.com/ns/demo#> 
+
+CONSTRUCT
+{
+    _:b0 a spin:ConstraintViolation .
+    _:b0 rdfs:comment "Location value must be a URI" .
+    _:b0 spin:violationRoot ?this .
+
+}
+WHERE
+{
+    ?this dm:location ?city .
+    FILTER (!isURI(?city)) .
+}
+

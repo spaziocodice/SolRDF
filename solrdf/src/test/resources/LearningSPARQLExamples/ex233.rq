@@ -1,0 +1,11 @@
+# filename: ex233.rq
+
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+PREFIX d:  <http://learningsparql.com/ns/data#>
+SELECT *
+WHERE {
+  ?item dm:quantity ?quantity; 
+        dm:costPerItem ?cost . 
+  BIND ( (?quantity * ?cost) as ?total )
+}
+

@@ -1,0 +1,10 @@
+# filename: ex538.rq
+
+SELECT DISTINCT ?graph ?property
+WHERE 
+{ 
+  { ?s ?property ?o . }
+  UNION
+  { GRAPH ?graph { ?s ?property ?o } }  
+}
+# LIMIT 50

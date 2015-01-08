@@ -1,0 +1,17 @@
+# filename: ex257.rq
+
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?o ?integerTest ?decimalTest ?floatTest ?doubleTest
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (xsd:integer(?o) as ?integerTest)
+  BIND (xsd:decimal(?o) as ?decimalTest)
+  BIND (xsd:float(?o) as ?floatTest)
+  BIND (xsd:double(?o) as ?doubleTest)
+}
+
+
+

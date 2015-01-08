@@ -1,0 +1,9 @@
+# filename: ex444.rq 
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+
+SELECT  ?property
+WHERE {
+  ?property a rdf:Property .   # could have said rdf:type instead of a
+}
+

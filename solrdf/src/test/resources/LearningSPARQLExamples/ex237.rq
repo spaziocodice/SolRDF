@@ -1,0 +1,19 @@
+# filename: ex237.rq
+
+PREFIX dm:   <http://learningsparql.com/ns/demo#> 
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+CONSTRUCT { ?locationURI rdf:type dm:Place . }
+WHERE 
+{
+  ?item dm:location ?locationValue .
+  BIND (IF(isURI(?locationValue),
+                 ?locationValue,
+                 URI(CONCAT("http://learningsparql.com/ns/data#",
+                            ENCODE_FOR_URI(?locationValue)))
+           ) AS ?locationURI
+
+       ) . 
+}
+
+

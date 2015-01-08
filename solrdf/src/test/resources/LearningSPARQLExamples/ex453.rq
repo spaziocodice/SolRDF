@@ -1,0 +1,8 @@
+# filename: ex453.rq
+
+PREFIX gr: <http://purl.org/goodrelations/v1#>
+
+SELECT (COUNT(?o) AS ?hasNextTotal)
+WHERE
+{ ?s gr:hasNext ?o }
+

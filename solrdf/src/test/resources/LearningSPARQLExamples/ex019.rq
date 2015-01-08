@@ -1,0 +1,11 @@
+# filename: ex019.rq
+
+PREFIX a: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?propertyName ?propertyValue 
+WHERE
+{
+  ?person a:firstName "Cindy" . 
+  ?person a:lastName  "Marshall" . 
+  ?person ?propertyName ?propertyValue . 
+}

@@ -1,0 +1,24 @@
+# filename: ex491.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+PREFIX nn: <http://learningsparql.com/new/namespace/>
+
+CONSTRUCT 
+{
+  ?personURI ab:firstName ?fn ;
+             ab:lastName ?ln ;
+             ab:email ?email ;
+             ab:homeTel ?tel .
+}
+WHERE {
+  ?person ab:firstName ?fn ;
+          ab:lastName ?ln ;
+          ab:email ?email . 
+  OPTIONAL {
+    ?person ab:homeTel ?tel .
+  }
+  BIND(ENCODE_FOR_URI(CONCAT(?fn,?ln)) AS ?encodedName)
+  BIND("http://learningsparql.com/new/namespace/" AS ?baseURI)
+  BIND(URI(CONCAT(?baseURI,?encodedName)) AS ?personURI)
+}
+

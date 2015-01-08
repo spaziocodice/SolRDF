@@ -1,0 +1,7 @@
+# filename: ex010.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?propertyName ?propertyValue
+WHERE
+{ ab:cindy ?propertyName ?propertyValue . }

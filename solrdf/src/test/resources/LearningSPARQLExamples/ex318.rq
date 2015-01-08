@@ -1,0 +1,5 @@
+# filename ex318.rq
+
+SELECT * WHERE 
+{<http://rdf.freebase.com/ns/en.tommy_potter> ?p ?o }
+

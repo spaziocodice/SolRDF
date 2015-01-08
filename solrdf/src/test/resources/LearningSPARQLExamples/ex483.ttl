@@ -1,0 +1,19 @@
+# filename: ex483.ttl
+
+@prefix dm:   <http://learningsparql.com/ns/demo#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+d:item1 rdfs:label "kerosene, 1 quart" ;
+        dm:amount "14"^^xsd:integer . 
+
+d:item2 rdfs:label "double-knit polyester vest" ; 
+        dm:amount 10 .
+
+d:item3 rdfs:label "gold-plated chain" ;
+        dm:amount "30"^^xsd:string .
+
+d:item4 rdfs:label "reverse flange" ;
+        dm:amount "12" . 
+

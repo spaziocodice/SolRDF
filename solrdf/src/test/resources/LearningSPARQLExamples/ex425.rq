@@ -1,0 +1,12 @@
+# filename: ex425.rq
+
+PREFIX dm:   <http://learningsparql.com/ns/demo#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+
+SELECT ?name
+WHERE
+{
+  ?musician a dm:TexasGuitarPlayer ;
+            rdfs:label ?name . 
+}
+

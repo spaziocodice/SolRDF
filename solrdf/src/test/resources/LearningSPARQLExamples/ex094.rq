@@ -1,0 +1,12 @@
+# filename: ex094.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+SELECT DISTINCT ?first ?last 
+WHERE
+{
+  ?s ab:takingCourse ?class ;
+     ab:firstName ?first ;
+     ab:lastName ?last . 
+}
+

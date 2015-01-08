@@ -1,0 +1,12 @@
+# filename: ex115.ttl
+
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+
+d:one   rdfs:label "one" . 
+d:two   rdfs:label "two" . 
+d:three rdfs:label "three" . 
+d:four  rdfs:label "four" . 
+d:five  rdfs:label "five" . 
+d:six   rdfs:label "six" . 
+

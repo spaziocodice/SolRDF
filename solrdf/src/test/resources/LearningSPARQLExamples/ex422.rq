@@ -1,0 +1,12 @@
+# filename: ex422.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?first ?last
+WHERE 
+{ 
+  ?person a ab:Person ;
+          ab:firstName ?first ;
+          ab:lastName ?last . 
+}
+

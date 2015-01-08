@@ -1,0 +1,10 @@
+# filename: ex438.ttl
+
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+
+d:emp91234 a d:Employee .      # "a" a shortcut for "rdf:type" 
+d:Employee a rdfs:Class . 
+d:Employee a owl:Class . 
+

@@ -1,0 +1,33 @@
+# filename: ex046.ttl
+
+@prefix ab:   <http://learningsparql.com/ns/addressbook#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+ab:i0432  
+   ab:firstName "Richard" ;
+   ab:lastName  "Mutt" ;
+   ab:spouse    ab:i9771 . 
+
+ab:i8301  
+   ab:firstName "Craig" ;
+   ab:lastName  "Ellis" ;
+   ab:patient   ab:i9771 . 
+
+ab:i9771
+   ab:firstName "Cindy" ; 
+   ab:lastName  "Marshall" .  
+
+ab:spouse
+   rdf:type owl:SymmetricProperty ; 
+   rdfs:comment "Identifies someone's spouse" .
+
+ab:patient 
+   rdf:type rdf:Property ;
+   rdfs:comment "Identifies a doctor's patient" . 
+
+ab:doctor 
+   rdf:type rdf:Property ;
+   rdfs:comment "Identifies a doctor treating the named resource" ;
+   owl:inverseOf ab:patient . 

@@ -1,0 +1,8 @@
+# filename: ex218.rq
+
+PREFIX d:  <http://learningsparql.com/ns/data#> 
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+
+SELECT ?s
+WHERE { ?s ?p 1 . } 
+

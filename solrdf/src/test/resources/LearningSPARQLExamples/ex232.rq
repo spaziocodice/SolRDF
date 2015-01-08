@@ -1,0 +1,14 @@
+# filename: ex232.rq
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT ?description ?amount ?tip ?total 
+       
+WHERE {
+  ?meal e:description ?description ;
+        e:amount ?amount . 
+  BIND ((?amount * .2) AS ?tip) 
+  BIND ((?amount + ?tip) AS ?total)
+
+}
+

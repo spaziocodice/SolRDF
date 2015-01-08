@@ -1,0 +1,13 @@
+# filename: ex187.ttl
+
+@prefix d:  <http://learningsparql.com/ns/data#> .
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+
+d:jane ab:hasParent d:gene .
+d:gene ab:hasParent d:pat ;
+       ab:gender    d:female .
+d:joan ab:hasParent d:pat ;
+       ab:gender    d:female . 
+d:pat  ab:gender    d:male .
+d:mike ab:hasParent d:joan .
+

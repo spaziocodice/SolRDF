@@ -1,0 +1,11 @@
+# filename: ex463.rq
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?property
+WHERE 
+{
+  ?person a foaf:Person ;
+          ?property ?value . 
+}
+

@@ -1,0 +1,14 @@
+# filename: ex285.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema> 
+
+SELECT ?label ?strlenTest ?substrTest ?ucaseTest ?lcaseTest
+WHERE
+{
+  ?s rdfs:label ?label .
+  BIND (STRLEN(?label) AS ?strlenTest)
+  BIND (SUBSTR(?label,4,2) AS ?substrTest)
+  BIND (UCASE(?label) AS ?ucaseTest)
+  BIND (LCASE(?label) AS ?lcaseTest)
+}
+

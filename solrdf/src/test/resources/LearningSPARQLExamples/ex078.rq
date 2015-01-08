@@ -1,0 +1,8 @@
+# filename: ex078.rq
+
+PREFIX : <http://learningsparql.com/ns/papers#>
+PREFIX c: <http://learningsparql.com/ns/citations#> 
+
+SELECT ?s
+WHERE { ?s c:cites+ :paperA . }
+

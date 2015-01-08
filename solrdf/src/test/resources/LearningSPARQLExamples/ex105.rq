@@ -1,0 +1,11 @@
+# filename: ex105.rq
+
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+
+SELECT ?s ?cost
+WHERE
+{
+  ?s dm:cost ?cost .
+  FILTER (?cost < 10)
+}
+

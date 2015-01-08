@@ -1,0 +1,13 @@
+# filename: ex507.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?craigEmail ?craigTelephone
+WHERE
+{
+  ?person ab:firstName "Craig" . 
+  ?person ab:email ?craigEmail . 
+  OPTIONAL { ?person ab:homeTel ?craigTelephone }
+  FILTER(regex(?craigEmail,"yahoo"))
+}
+

@@ -1,0 +1,13 @@
+# filename: ex180.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+CONSTRUCT
+{ ?course ab:courseTitle ?courseName . }
+FROM NAMED <ex125.ttl>
+FROM NAMED <ex122.ttl>
+WHERE
+{
+  GRAPH <ex125.ttl> { ?course ab:courseTitle ?courseName }
+}
+

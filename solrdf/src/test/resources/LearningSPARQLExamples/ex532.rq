@@ -1,0 +1,9 @@
+# filename: ex532.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX void: <http://rdfs.org/ns/void#> 
+
+SELECT ?property
+WHERE 
+{ ?property rdfs:domain void:Linkset }
+

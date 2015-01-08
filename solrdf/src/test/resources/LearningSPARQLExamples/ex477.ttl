@@ -1,0 +1,11 @@
+# filename: ex477.ttl
+
+@prefix dm:      <http://learningsparql.com/ns/demo#> .
+@prefix dc:      <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+dm:i590 dc:title "Installation Guide" ; dcterms:dateCopyrighted "2012" . 
+dm:i591 dc:title "Users Guide" ; dcterms:dateCopyrighted "2013" .  
+dm:i592 dc:title "API Reference" ; dcterms:dateCopyrighted "2013" .  
+dm:i593 dc:title "Tutorial" ; dcterms:dateCopyrighted "2011" . 
+dm:i594 dc:title "Reference Guide" ; dcterms:dateCopyrighted "2013" .  

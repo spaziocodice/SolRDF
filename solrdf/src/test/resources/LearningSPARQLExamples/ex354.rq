@@ -1,0 +1,25 @@
+# filename: ex354.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+PREFIX d:  <http://learningsparql.com/ns/data#> 
+PREFIX g:  <http://learningsparql.com/graphs/> 
+
+SELECT ?first ?last ?courseTitle WHERE
+{
+
+  { GRAPH g:people 
+    { ?student ab:firstName ?first ;
+               ab:lastName ?last .
+    }
+  }
+
+  { GRAPH g:enrollment
+    { ?student ab:takingCourse ?course . }
+  }
+
+  { GRAPH g:courses
+    { ?course ab:courseTitle ?courseTitle . }
+  }
+
+}
+

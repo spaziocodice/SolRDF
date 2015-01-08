@@ -1,0 +1,10 @@
+# filename: ex134.ttl
+
+@prefix dc: <http://purl.org/dc/elements/1.1/> . 
+
+<ex125.ttl> dc:date "2011-09-23" ;
+            dc:creator "Richard Mutt" .
+
+<ex122.ttl> dc:date "2011-09-24" ;
+            dc:creator "Richard Mutt" .
+

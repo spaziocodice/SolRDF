@@ -1,0 +1,14 @@
+# filename: ex287.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema> 
+
+SELECT ?label ?startsTest ?endsTest ?containsTest ?regexTest
+WHERE
+{
+  ?s rdfs:label ?label .
+  BIND (STRSTARTS(?label,"12") AS ?startsTest)
+  BIND (STRENDS(?label,"ing") AS ?endsTest)
+  BIND (CONTAINS(?label," ") AS ?containsTest)
+  BIND (regex(?label,"\\d{3}") AS ?regexTest)
+}
+

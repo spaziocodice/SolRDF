@@ -1,0 +1,16 @@
+# filename: ex217.ttl
+
+@prefix d:   <http://learningsparql.com/ns/data#> .
+@prefix dm:  <http://learningsparql.com/ns/demo#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix mt:  <http://learningsparql.com/ns/mytypesystem#> . 
+
+d:item1a dm:prop "1" . 
+d:item1b dm:prop "1"^^xsd:integer . 
+d:item1c dm:prop 1 . 
+d:item1d dm:prop 1.0e5 . 
+d:item2a dm:prop "two" . 
+d:item2b dm:prop "two"^^xsd:string . 
+d:item2c dm:prop "two"^^mt:potrzebies .
+d:item2d dm:prop "two"@en . 
+

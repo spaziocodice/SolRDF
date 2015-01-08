@@ -1,0 +1,16 @@
+# filename: ex049.rq
+
+PREFIX d: <http://dbpedia.org/ontology/>
+
+SELECT ?artistName ?albumName 
+WHERE
+{
+  ?album d:producer :Timbaland .
+  ?album d:musicalArtist ?artist . 
+  ?album rdfs:label ?albumName . 
+  ?artist rdfs:label ?artistName . 
+  FILTER ( lang(?artistName) = "en" )
+  FILTER ( lang(?albumName) = "en" )
+
+}
+

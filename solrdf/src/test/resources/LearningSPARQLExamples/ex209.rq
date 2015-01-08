@@ -1,0 +1,52 @@
+# filename: ex209.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dm:  <http://learningsparql.com/ns/demo#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT
+{
+  ?prob32item dm:problem dm:prob32 .
+  dm:prob32 rdfs:label "Amount must be an integer." . 
+
+  ?prob29item dm:problem dm:prob29 .
+  dm:prob29 rdfs:label "Location value must be a URI." . 
+
+  ?prob44item dm:problem dm:prob44 .
+  dm:prob44 rdfs:label "Expenditures over 100 require grade 5 approval." . 
+
+  dm:probXX rdfs:label "This is a dummy problem." . 
+}
+
+WHERE
+{
+  {
+    ?prob32item dm:amount ?amount .
+    FILTER ((datatype(?amount)) != xsd:integer) 
+  }
+  
+  UNION
+
+  {
+    ?prob29item dm:location ?city .
+    FILTER (!(isURI(?city)))
+  }
+
+  UNION 
+
+  {
+    ?prob44item dm:cost ?cost ;
+                dm:amount ?amount .
+    OPTIONAL 
+    {
+      ?item dm:approval ?approvingEmployee . 
+      ?approvingEmployee dm:jobGrade ?grade . 
+    }
+
+    BIND (?cost * ?amount AS ?totalCost) .
+    FILTER ((?totalCost > 100) &&
+            ( (!(bound(?grade)) || (?grade < 5 ) )))   
+  }
+
+}
+

@@ -1,0 +1,14 @@
+# filename: ex188.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+PREFIX d:  <http://learningsparql.com/ns/data#>
+
+CONSTRUCT
+{ ?p ab:hasGrandfather ?g . }
+WHERE
+{
+  ?p ab:hasParent ?parent .
+  ?parent ab:hasParent ?g .
+  ?g ab:gender d:male .
+}
+

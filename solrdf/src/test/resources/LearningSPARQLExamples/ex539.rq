@@ -1,0 +1,15 @@
+# filename: ex539.rq
+
+PREFIX cat:     <http://dbpedia.org/resource/Category:>
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:     <http://www.w3.org/2002/07/owl#>
+PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+
+SELECT ?p ?o 
+WHERE
+{
+  SERVICE <http://DBpedia.org/sparql>
+  { <http://dbpedia.org/resource/Joseph_Hocking> ?p ?o . }
+}
+

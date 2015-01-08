@@ -1,0 +1,5 @@
+# filename: ex038.ttl
+
+<http://www.w3.org/People/Berners-Lee/card#i> 
+<http://www.w3.org/2000/01/rdf-schema#label>
+"Tim Berners-Lee" . 

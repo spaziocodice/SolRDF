@@ -1,0 +1,15 @@
+# filename: ex135.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/> 
+
+SELECT ?graph ?email
+FROM <ex134.ttl> 
+FROM NAMED <ex125.ttl>
+FROM NAMED <ex122.ttl> 
+WHERE
+{
+  ?graph dc:date "2011-09-24" . 
+  { GRAPH ?graph { ?s ab:email ?email } }
+}
+

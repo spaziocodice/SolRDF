@@ -1,0 +1,11 @@
+# filename: ex107.rq
+
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+
+SELECT ?s ?city
+WHERE
+{
+  ?s dm:location ?city .
+  FILTER (!(isURI(?city)))
+}
+

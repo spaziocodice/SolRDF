@@ -1,0 +1,12 @@
+# filename: ex228.rq
+
+PREFIX d:   <http://learningsparql.com/ns/data#>
+PREFIX e:   <http://learningsparql.com/ns/expenses#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+SELECT ?s ?p ?o
+WHERE {
+  ?s e:amount ?amount;
+     ?p ?o . 
+  FILTER (?amount < 20) 
+}

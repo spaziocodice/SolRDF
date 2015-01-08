@@ -1,0 +1,14 @@
+# filename: ex065.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT ?first ?last 
+WHERE
+{
+  ?s ab:firstName ?first ;
+     ab:lastName ?last .
+
+  OPTIONAL { ?s ab:workTel ?workNum . }
+  FILTER (!bound(?workNum))
+}
+

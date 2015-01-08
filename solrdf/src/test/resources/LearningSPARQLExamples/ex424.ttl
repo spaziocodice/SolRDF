@@ -1,0 +1,56 @@
+# filename: ex424.ttl
+
+@prefix d:       <http://learningsparql.com/ns/data#> .
+@prefix dm:      <http://learningsparql.com/ns/demo#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+d:CA rdfs:label "California" .
+d:TX rdfs:label "Texas" .
+d:NY rdfs:label "New York" .
+
+d:m1 rdfs:label "Bonnie Raitt" ;
+     dm:plays d:Guitar ;
+     dm:stateOfBirth d:CA .
+
+d:m2 rdfs:label "Charlie Christian" ;
+     dm:plays d:Guitar ;
+     dm:stateOfBirth d:TX .
+
+d:m3 rdfs:label "Dusty Hill" ;
+     dm:plays d:Bass ;
+     dm:stateOfBirth d:TX .
+
+d:m4 rdfs:label "Kim Gordon" ;
+     dm:plays d:Bass ;
+     dm:stateOfBirth d:NY .
+
+d:m5 rdfs:label "Red Garland" ;
+     dm:plays d:Piano ;
+     dm:stateOfBirth d:TX .
+
+d:m6 rdfs:label "Roky Erickson" ;
+     dm:plays d:Guitar ;
+     dm:stateOfBirth d:TX .
+
+dm:Guitarist
+   owl:equivalentClass
+           [ rdf:type owl:Restriction ;
+             owl:hasValue d:Guitar ;
+             owl:onProperty dm:plays
+           ] .
+
+dm:Texan
+   owl:equivalentClass
+           [ rdf:type owl:Restriction ;
+             owl:hasValue d:TX ;
+             owl:onProperty dm:stateOfBirth
+           ] .
+
+dm:TexasGuitarPlayer
+   owl:equivalentClass
+        [ rdf:type owl:Class ;
+          owl:intersectionOf (dm:Texan dm:Guitarist)
+        ] .
+

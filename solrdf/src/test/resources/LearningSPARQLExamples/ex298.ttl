@@ -1,0 +1,10 @@
+# filename: ex298.ttl
+
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix d:   <http://learningsparql.com/ns/data#> .
+@prefix t:   <http://purl.org/tio/ns#> . 
+
+d:meeting1 t:starts "2011-10-14T12:30:00.000-05:00"^^xsd:dateTime . 
+
+d:meeting2 t:starts "2011-10-15T12:30:00"^^xsd:dateTime . 
+

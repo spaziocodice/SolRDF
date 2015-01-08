@@ -1,0 +1,11 @@
+# filename: ex251.rq
+
+PREFIX d:   <http://learningsparql.com/ns/data#> 
+
+SELECT ?s ?testStr
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (str(?o) AS ?testStr)
+}
+

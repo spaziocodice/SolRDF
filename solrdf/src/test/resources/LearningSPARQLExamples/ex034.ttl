@@ -1,0 +1,9 @@
+# filename: ex034.ttl
+
+@prefix d:   <http://learningsparql.com/ns/data#> .
+@prefix dm: <http://learningsparql.com/ns/demo#> .
+
+d:item342 dm:shipped     "2011-02-14"^^<http://www.w3.org/2001/XMLSchema#date> . 
+d:item342 dm:quantity    4 . 
+d:item342 dm:invoiced    true .  
+d:item342 dm:costPerItem 3.50 . 

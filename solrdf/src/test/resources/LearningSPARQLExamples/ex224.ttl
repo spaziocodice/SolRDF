@@ -1,0 +1,15 @@
+# filename: ex224.ttl
+
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+d:item1 rdfs:label "sample string 1" .
+d:item2 rdfs:label 'sample string 2' .
+d:item3 rdfs:label 'These quotes are "ironic" quotes.' .
+d:item4 rdfs:label "These too are \"ironic\" quotes." .
+d:item5 rdfs:label "McDonald's is not my kind of place." . 
+d:item6 rdfs:label """this
+
+has two carriage returns in the middle.""" . 
+
+

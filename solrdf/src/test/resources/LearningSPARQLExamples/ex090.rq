@@ -1,0 +1,6 @@
+# filename: ex090.rq
+
+SELECT ?p 
+WHERE
+{ ?s ?p ?o . }
+

@@ -1,0 +1,6 @@
+# filename: ex039.ttl
+
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://dbpedia.org/resource/Switzerland> rdfs:label "Switzerland"@en,
+  "Suiza"@es, "Sveitsi"@fi, "Suisse"@fr .

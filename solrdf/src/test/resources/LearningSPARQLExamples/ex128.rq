@@ -1,0 +1,12 @@
+# filename: ex128.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+SELECT ?g
+FROM NAMED <ex125.ttl>
+FROM NAMED <ex122.ttl>
+WHERE
+{
+  GRAPH ?g { ?s ?p ?o }
+}
+

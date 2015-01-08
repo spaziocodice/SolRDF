@@ -1,0 +1,7 @@
+# filename: ex540.rq
+
+CONSTRUCT 
+FROM <http://rdf.freebase.com/rdf/en.joseph_hocking>
+WHERE 
+{ ?s ?p ?o }
+

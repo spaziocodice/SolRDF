@@ -1,0 +1,15 @@
+# filename: ex299.rq
+
+PREFIX d: <http://learningsparql.com/ns/data#> 
+PREFIX t: <http://purl.org/tio/ns#> 
+
+SELECT ?mtg ?yearTest ?monthTest ?dayTest ?hoursTest ?minutesTest
+WHERE
+{
+  ?mtg t:starts ?startTime . 
+  BIND (year(?startTime) AS ?yearTest)
+  BIND (month(?startTime) AS ?monthTest)
+  BIND (day(?startTime) AS ?dayTest)
+  BIND (hours(?startTime) AS ?hoursTest)
+  BIND (minutes(?startTime) AS ?minutesTest)
+}

@@ -1,0 +1,16 @@
+# filename: ex327.ttl
+
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> . 
+@prefix d:    <http://learningsparql.com/ns/data#> .
+
+d:c1 a skos:Concept ;
+     skos:prefLabel "Mammal" . 
+
+d:c2 a skos:Concept ;
+     skos:prefLabel "Dog" ;
+     skos:broader d:c1 . 
+
+d:c3 a skos:Concept ;
+     skos:prefLabel "Cat" ;
+     skos:broader d:c1 . 
+

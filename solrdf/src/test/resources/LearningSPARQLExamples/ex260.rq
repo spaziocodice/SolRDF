@@ -1,0 +1,12 @@
+# filename: ex260.rq
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?o ?stringTest ?boolTest
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (xsd:string(?o) as ?stringTest)
+  BIND (xsd:boolean(?o) as ?boolTest)
+}
+

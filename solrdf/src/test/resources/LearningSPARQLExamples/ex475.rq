@@ -1,0 +1,19 @@
+# filename: ex475.rq
+
+PREFIX gp:   <http://wifo5-04.informatik.uni-mannheim.de/gutendata/resource/people/>
+
+SELECT ?dbpProperty ?dbpValue ?gutenProperty ?gutenValue 
+WHERE
+{
+  SERVICE <http://DBpedia.org/sparql>
+    {
+      <http://dbpedia.org/resource/Joseph_Hocking> ?dbpProperty ?dbpValue .
+    }
+
+  SERVICE <http://wifo5-04.informatik.uni-mannheim.de/gutendata/sparql>
+    {
+      gp:Hocking_Joseph ?gutenProperty ?gutenValue . 
+    }
+}
+
+

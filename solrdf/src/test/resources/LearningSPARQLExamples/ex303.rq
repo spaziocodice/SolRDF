@@ -1,0 +1,11 @@
+# filename: ex303.rq
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?currentTime ?currentSeconds
+WHERE
+{
+   BIND (now() AS ?currentTime)
+   BIND (seconds(?currentTime) AS ?currentSeconds)
+}
+

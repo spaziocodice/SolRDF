@@ -1,0 +1,12 @@
+# filename: ex144.rq
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT ?mealCode ?amount 
+WHERE
+{
+  ?meal e:description ?description ;
+        e:amount ?amount .
+  BIND (UCASE(SUBSTR(?description,1,3)) as ?mealCode)
+}
+

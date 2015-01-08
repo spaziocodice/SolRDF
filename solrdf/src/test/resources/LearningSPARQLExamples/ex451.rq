@@ -1,0 +1,10 @@
+# filename: ex451.rq
+
+PREFIX gr: <http://purl.org/goodrelations/v1#>
+
+SELECT DISTINCT ?class
+WHERE {
+?s gr:hasNext ?o ;
+   a ?class . 
+}
+

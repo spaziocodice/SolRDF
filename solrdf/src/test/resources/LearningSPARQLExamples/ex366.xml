@@ -1,0 +1,32 @@
+<sparql xmlns="http://www.w3.org/2005/sparql-results#"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.w3.org/2001/sw/DataAccess/rf1/result2.xsd">
+
+  <head>
+    <variable name="film"/>
+    <variable name="title"/>
+  </head>
+
+  <results distinct="false" ordered="true">
+
+    <result>
+      <binding name="film">
+        <uri>http://dbpedia.org/resource/The_Night_of_the_Hunter_%28film%29</uri>
+      </binding>
+      <binding name="title">
+        <literal xml:lang="en">The Night of the Hunter (film)</literal>
+      </binding>
+    </result>
+
+    <result>
+      <binding name="film">
+        <uri>http://dbpedia.org/resource/The_Man_on_the_Eiffel_Tower</uri>
+      </binding>
+      <binding name="title">
+        <literal xml:lang="en">The Man on the Eiffel Tower</literal>
+      </binding>
+    </result>
+
+  </results>
+
+</sparql>

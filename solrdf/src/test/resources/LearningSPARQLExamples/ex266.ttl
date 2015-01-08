@@ -1,0 +1,17 @@
+# filename: ex266.ttl
+
+@prefix im: <http://learningsparql.com/ns/importedData#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+d:item1 im:product "kerosene" ;
+        im:amount "14" ; 
+        im:units "liters" . 
+
+d:item2 im:product "double-knit polyester" ; 
+        im:amount "10" ;
+        im:units "squareMeters" . 
+
+d:item3 im:product "gold-plated chain" ;
+        im:amount "30" ; 
+        im:units "centimeters" . 
+

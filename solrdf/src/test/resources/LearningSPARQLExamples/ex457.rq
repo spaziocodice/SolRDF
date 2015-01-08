@@ -1,0 +1,8 @@
+# filename: ex457.rq
+
+SELECT ?class (COUNT(?s) AS ?instanceTotal)
+WHERE
+{ ?s a ?class. }
+GROUP BY ?class
+ORDER BY DESC(?instanceTotal)
+

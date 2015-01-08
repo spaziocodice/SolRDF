@@ -1,0 +1,10 @@
+# filename: ex485.rq
+
+SELECT DISTINCT ?p 
+WHERE
+{
+  ?s ?p ?o .
+  MINUS { ?p a ?someType }
+}
+ORDER BY ?p
+

@@ -1,0 +1,12 @@
+# filename: ex418.rq
+
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+PREFIX dc:  <http://purl.org/dc/elements/1.1/> 
+
+SELECT ?filename ?creator 
+WHERE
+{
+  ?resource nfo:fileName ?filename ;
+            dc:creator ?creator . 
+}
+

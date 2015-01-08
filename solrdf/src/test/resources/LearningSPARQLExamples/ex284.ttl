@@ -1,0 +1,9 @@
+# filename: ex284.ttl
+
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+
+d:item1 rdfs:label "My String" . 
+
+d:item2 rdfs:label "123456" . 
+

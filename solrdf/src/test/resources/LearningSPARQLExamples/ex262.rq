@@ -1,0 +1,11 @@
+# filename: ex262.rq
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?o ?dateTimeTest
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (xsd:dateTime(?o) as ?dateTimeTest)
+}
+

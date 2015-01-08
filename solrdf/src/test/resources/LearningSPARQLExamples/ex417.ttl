@@ -1,0 +1,23 @@
+# filename: ex417.ttl
+
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dm:   <http://learningsparql.com/ns/demo#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix dc:   <http://purl.org/dc/elements/1.1/> . 
+@prefix nfo:  <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#> . 
+
+dm:composer rdfs:subPropertyOf dc:creator . 
+dm:photographer rdfs:subPropertyOf dc:creator . 
+
+d:file02924 nfo:fileName "9894397.mp3" ;
+            dm:composer "Charles Ives" . 
+
+d:file74395 nfo:fileName "884930.mp3" ;
+            dm:composer "Eric Satie" . 
+
+d:file69383 nfo:fileName "119933.mp3" ;
+            dm:photographer "Diane Arbus" . 
+
+d:file54839 nfo:fileName "204364.mp3" ;
+            dm:photographer "Henry Fox Talbot" . 
+

@@ -1,0 +1,12 @@
+# filename: ex084.rq
+
+PREFIX : <http://learningsparql.com/ns/papers#>
+PREFIX c: <http://learningsparql.com/ns/citations#> 
+
+SELECT ?s
+WHERE
+{
+  ?s c:cites/^c:cites :paperF .
+  FILTER(?s != :paperF) 
+}
+

@@ -1,0 +1,11 @@
+# filename: ex139.rq
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT ?description ?amount ((?amount * .2) AS ?tip) 
+       ((?amount + ?tip) AS ?total)
+WHERE
+{
+  ?meal e:description ?description ;
+        e:amount ?amount . 
+}

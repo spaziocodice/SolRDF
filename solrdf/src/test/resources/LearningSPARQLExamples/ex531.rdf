@@ -1,0 +1,8 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:j.0="http://learningsparql.com/ns/demo#" > 
+  <rdf:Description rdf:about="http://learningsparql.com/ns/data#x">
+    <j.0:tag>one</j.0:tag>
+    <j.0:tag>two</j.0:tag>
+  </rdf:Description>
+</rdf:RDF>

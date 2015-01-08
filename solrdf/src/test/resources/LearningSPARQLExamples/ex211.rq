@@ -1,0 +1,19 @@
+# filename: ex211.rq
+
+PREFIX sch: <http://purl.org/net/schemarama#>
+PREFIX dm:  <http://learningsparql.com/ns/demo#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+CONSTRUCT
+{
+  [] rdf:type sch:Error;
+        sch:message "location value should be a URI";
+        sch:implicated ?s.
+
+} 
+WHERE
+{
+  ?s dm:location ?city .
+  FILTER (!(isURI(?city)))
+}
+

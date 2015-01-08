@@ -1,0 +1,12 @@
+# filename: ex230.rq
+
+PREFIX d:   <http://learningsparql.com/ns/data#>
+PREFIX e:   <http://learningsparql.com/ns/expenses#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+SELECT ?s ?p ?o
+WHERE {
+  ?s e:date ?date;
+     ?p ?o . 
+  FILTER (?date >= "2011-10-14T12:00:00"^^xsd:dateTime) 
+}

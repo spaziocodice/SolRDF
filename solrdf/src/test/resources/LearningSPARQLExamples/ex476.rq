@@ -1,0 +1,10 @@
+# filename: ex476.rq
+
+CONSTRUCT  
+{ <http://dbpedia.org/resource/Joseph_Hocking> ?p ?o . }
+WHERE
+{
+  SERVICE <http://DBpedia.org/sparql>
+   { <http://dbpedia.org/resource/Joseph_Hocking> ?p ?o . }
+}
+

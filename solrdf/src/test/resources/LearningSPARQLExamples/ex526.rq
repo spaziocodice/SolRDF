@@ -1,0 +1,9 @@
+# filename: ex526.rq
+
+PREFIX tops: <http://www.topbraid.org/tops#>
+SELECT *
+WHERE
+{
+  ?index tops:for(3 6)
+  BIND(?index*100 AS ?mult)
+}

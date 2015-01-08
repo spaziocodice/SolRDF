@@ -1,0 +1,8 @@
+# filename: ex136.rq
+
+SELECT DISTINCT ?g 
+WHERE
+{
+  GRAPH ?g {?s ?p ?o }
+}
+

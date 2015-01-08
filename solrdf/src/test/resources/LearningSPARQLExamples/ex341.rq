@@ -1,0 +1,6 @@
+# filename: ex341.rq
+
+SELECT ?g 
+WHERE
+{ GRAPH ?g {} }
+

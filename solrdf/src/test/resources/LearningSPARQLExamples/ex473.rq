@@ -1,0 +1,9 @@
+# filename: ex473.rq
+
+SELECT *
+WHERE
+{
+  ?s ?p ?o .
+  FILTER (CONTAINS(LCASE(str(?o)), "publish")) 
+} 
+

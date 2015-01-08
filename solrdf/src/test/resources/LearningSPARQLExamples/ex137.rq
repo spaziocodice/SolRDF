@@ -1,0 +1,18 @@
+# filename: ex137.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#>
+
+SELECT ?lastName ?courseName 
+WHERE
+{
+  {
+    SELECT ?lastName 
+    WHERE { ?student ab:lastName ?lastName . }
+  }
+
+  {
+    SELECT ?courseName 
+    WHERE { ?course ab:courseTitle ?courseName . }
+  }
+
+}

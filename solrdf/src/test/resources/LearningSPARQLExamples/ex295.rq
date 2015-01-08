@@ -1,0 +1,9 @@
+# filename: ex295.rq
+
+SELECT ?randTest1 ?randTest2
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (rand() AS ?randTest1)
+  BIND (floor(rand()*11)+20 AS ?randTest2)
+}

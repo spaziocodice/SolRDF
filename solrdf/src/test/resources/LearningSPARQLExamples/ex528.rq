@@ -1,0 +1,12 @@
+# filename: ex528.rq
+
+PREFIX co: <http://www.geonames.org/countries/#>
+
+SELECT  ?name ?population
+WHERE
+{ 
+  ?place gs:nearby(51.1789 -1.8264 10) ;
+         gn:name ?name ; 
+         gn:population ?population .  
+}
+

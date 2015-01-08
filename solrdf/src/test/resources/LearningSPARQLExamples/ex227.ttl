@@ -1,0 +1,18 @@
+# filename: ex227.ttl
+
+@prefix e:   <http://learningsparql.com/ns/expenses#> .
+@prefix d:   <http://learningsparql.com/ns/data#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+d:m40392 e:description "breakfast" ;
+         e:date "2011-10-14T08:53:00"^^xsd:dateTime ;
+         e:amount 6.53 . 
+
+d:m40393 e:description "lunch" ;
+         e:date "2011-10-14T13:19:00"^^xsd:dateTime ;
+         e:amount 11.13 . 
+
+d:m40394 e:description "dinner" ;
+         e:date "2011-10-14T19:04:00"^^xsd:dateTime ;
+         e:amount 28.30 . 
+

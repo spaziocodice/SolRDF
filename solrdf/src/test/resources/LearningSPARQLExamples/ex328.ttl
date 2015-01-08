@@ -1,0 +1,30 @@
+# filename: ex328.ttl
+
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> . 
+@prefix xl:   <http://www.w3.org/2008/05/skos-xl#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix dc:   <http://purl.org/dc/elements/1.1/> . 
+
+d:c1 a skos:Concept ;
+     xl:prefLabel d:label1 . 
+
+d:c2 a skos:Concept ;
+     xl:prefLabel d:label2 ;
+     skos:broader d:c1 . 
+
+d:c3 a skos:Concept ;
+     xl:prefLabel d:label3 ;
+     skos:broader d:c1 . 
+
+d:label1 a xl:Label ;
+         xl:literalForm "Mammal" ;
+         dc:source <http://en.wikipedia.org/wiki/Mammal> . 
+
+d:label2 a xl:Label ;
+         xl:literalForm "Dog" ;
+         dc:source <http://en.wikipedia.org/wiki/Dog> . 
+
+d:label3 a xl:Label ;
+         xl:literalForm "Cat" ;
+         dc:source <http://en.wikipedia.org/wiki/Cat> . 
+

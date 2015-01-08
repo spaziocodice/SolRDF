@@ -1,0 +1,6 @@
+# filename: ex036.ttl
+
+@prefix v:  <http://www.w3.org/2006/vcard/> .
+
+<http://www.w3.org/People/Berners-Lee/card#i> v:title "Director"@en .
+<http://www.w3.org/People/Berners-Lee/card#i> v:title "Directeur"@fr .

@@ -1,0 +1,15 @@
+# filename: ex293.rq
+
+PREFIX dm:  <http://learningsparql.com/ns/demo#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+SELECT ?amount ?absTest ?roundTest ?ceilTest ?floorTest
+WHERE
+{
+  ?s dm:amount ?amount . 
+  BIND (abs(?amount) AS ?absTest ) 
+  BIND (round(?amount) AS ?roundTest ) 
+  BIND (ceil(?amount) AS ?ceilTest ) 
+  BIND (floor(?amount) AS ?floorTest ) 
+}
+

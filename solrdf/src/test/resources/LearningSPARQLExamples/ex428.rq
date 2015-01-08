@@ -1,0 +1,13 @@
+# filename: ex428.rq
+
+PREFIX d:  <http://learningsparql.com/ns/data#> 
+PREFIX dm: <http://learningsparql.com/ns/demo#> 
+
+CONSTRUCT 
+{ ?resource a dm:TexasGuitarPlayer }
+WHERE
+{
+  ?resource dm:stateOfBirth d:TX ;
+            dm:plays d:Guitar .
+}
+

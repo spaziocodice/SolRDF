@@ -1,0 +1,18 @@
+# filename: ex267.rq
+
+PREFIX im: <http://learningsparql.com/ns/importedData#> 
+PREFIX dm: <http://learningsparql.com/ns/demo#>
+PREFIX u:  <http://learningsparql.com/ns/units#>
+
+CONSTRUCT { ?s dm:amount ?newAmount . }
+WHERE 
+{
+  ?s im:product ?prodName ;
+     im:amount ?amount ; 
+     im:units ?units .
+
+  BIND (STRDT(?amount,
+              URI(CONCAT("http://learningsparql.com/ns/units#",?units)))
+        AS ?newAmount)
+}
+

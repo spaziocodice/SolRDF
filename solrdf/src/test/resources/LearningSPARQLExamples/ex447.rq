@@ -1,0 +1,8 @@
+# filename: ex447.rq
+
+SELECT DISTINCT ?class 
+WHERE {
+  ?instance a ?class . 
+}
+ORDER by ?class
+

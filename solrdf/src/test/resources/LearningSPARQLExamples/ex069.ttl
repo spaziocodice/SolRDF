@@ -1,0 +1,35 @@
+# filename: ex069.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+# People
+
+d:i0432 ab:firstName "Richard" ; 
+        ab:lastName  "Mutt" ; 
+        ab:email     "richard49@hotmail.com" . 
+
+d:i9771 ab:firstName "Cindy" ; 
+        ab:lastName  "Marshall" ; 
+        ab:email     "cindym@gmail.com" . 
+
+d:i8301 ab:firstName "Craig" ; 
+        ab:lastName  "Ellis" ; 
+        ab:email     "c.ellis@usairwaysgroup.com" . 
+
+# Courses
+
+d:course34 ab:courseTitle "Modeling Data with OWL" .
+d:course71 ab:courseTitle "Enhancing Websites with RDFa" .
+d:course59 ab:courseTitle "Using SPARQL with non-RDF Data" .
+d:course85 ab:courseTitle "Updating Data with SPARQL" .
+
+# Who's taking which courses
+
+d:i8301 ab:takingCourse d:course59 . 
+d:i9771 ab:takingCourse d:course34 . 
+d:i0432 ab:takingCourse d:course85 . 
+d:i0432 ab:takingCourse d:course59 . 
+d:i9771 ab:takingCourse d:course59 . 
+
+

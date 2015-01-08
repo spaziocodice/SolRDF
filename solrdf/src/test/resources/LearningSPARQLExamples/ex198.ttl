@@ -1,0 +1,32 @@
+# filename: ex198.ttl
+
+@prefix dm: <http://learningsparql.com/ns/demo#> .
+@prefix d:  <http://learningsparql.com/ns/data#> .
+
+d:item432 dm:cost 8.50 ;
+          dm:amount 14 ;
+          dm:approval d:emp079 ;
+          dm:location <http://dbpedia.org/resource/Boston> .
+
+d:item201 dm:cost 9.25 ;
+          dm:amount 12 ;
+          dm:approval d:emp092 ;
+          dm:location <http://dbpedia.org/resource/Ghent> .
+
+d:item857 dm:cost 12 ;
+          dm:amount 10 ;   
+          dm:location <http://dbpedia.org/resource/Montreal> .
+
+d:item693 dm:cost 10.25 ; 
+          dm:amount 1.5 ;
+          dm:location "Heidelberg" . 
+
+d:item126 dm:cost 5.05 ;
+          dm:amount 4 ;
+          dm:location <http://dbpedia.org/resource/Lisbon> .
+
+
+d:emp092  dm:jobGrade 1 .
+d:emp041  dm:jobGrade 3 .
+d:emp079  dm:jobGrade 5 .
+

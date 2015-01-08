@@ -1,0 +1,9 @@
+# filename: ex469.rq
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX gr: <http://purl.org/goodrelations/v1#>
+
+SELECT *
+WHERE
+{ gr:hasNext rdfs:range ?rangeValue . }
+

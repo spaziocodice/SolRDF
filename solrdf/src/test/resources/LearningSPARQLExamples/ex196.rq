@@ -1,0 +1,29 @@
+# filename: ex196.rq
+
+PREFIX cat:  <http://dbpedia.org/resource/Category:>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX gp:   <http://wifo5-04.informatik.uni-mannheim.de/gutendata/resource/people/>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX d:    <http://learningsparql.com/ns/data#>
+CONSTRUCT
+{  
+  d:HockingJoseph ?dbpProperty ?dbpValue ;
+                  ?gutenProperty ?gutenValue .
+
+}
+WHERE
+{
+  SERVICE <http://DBpedia.org/sparql>
+  {
+    <http://dbpedia.org/resource/Joseph_Hocking> ?dbpProperty ?dbpValue .
+  }
+
+  SERVICE <http://wifo5-04.informatik.uni-mannheim.de/gutendata/sparql>
+  {
+    gp:Hocking_Joseph ?gutenProperty ?gutenValue . 
+  }
+
+}

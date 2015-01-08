@@ -1,0 +1,6 @@
+# filename: ex442.ttl (excerpt from void.ttl)
+
+void:Linkset a rdfs:Class, owl:Class;
+    rdfs:label "linkset";
+    rdfs:comment "A collection of RDF links between two void:Datasets.";
+    rdfs:subClassOf void:Dataset .

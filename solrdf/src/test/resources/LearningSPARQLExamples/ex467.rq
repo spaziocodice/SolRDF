@@ -1,0 +1,8 @@
+# filename: ex467.rq
+
+PREFIX gr: <http://purl.org/goodrelations/v1#>
+
+SELECT DISTINCT ?value
+WHERE
+{ ?s gr:hasNext ?value }
+

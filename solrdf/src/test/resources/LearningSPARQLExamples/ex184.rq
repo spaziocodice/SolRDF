@@ -1,0 +1,10 @@
+# filename: ex184.rq
+
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+CONSTRUCT
+{
+  <http://learningsparql.com/ns/data/book312> dc:title "Jabez Easterbrook" . 
+}
+WHERE
+{}
+

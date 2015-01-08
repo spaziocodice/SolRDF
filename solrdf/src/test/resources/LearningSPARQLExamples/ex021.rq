@@ -1,0 +1,11 @@
+# filename: ex021.rq
+
+PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
+
+SELECT *
+WHERE
+{
+  ?s ?p ?o . 
+  FILTER (regex(?o, "yahoo","i"))
+}
+

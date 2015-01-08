@@ -1,0 +1,9 @@
+# filename: ex278.ttl
+
+@prefix d:    <http://learningsparql.com/ns/data#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema> .
+
+d:item1 rdfs:label "dog" . 
+d:item2 rdfs:label "cat"@en . 
+d:item3 rdfs:label "turtle"@en-US . 
+

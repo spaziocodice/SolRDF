@@ -1,0 +1,18 @@
+# filename: ex100.ttl
+
+@prefix ab: <http://learningsparql.com/ns/addressbook#> .
+@prefix d:   <http://learningsparql.com/ns/data#> .
+
+d:i0432 ab:firstName  "Richard" ;
+        ab:lastName   "Mutt" ;
+        ab:instrument "sax" ;
+        ab:instrument "clarinet" . 
+
+d:i9771 ab:firstName  "Cindy" ;
+        ab:lastName   "Marshall" ;
+        ab:instrument "drums" . 
+
+d:i8301 ab:firstName  "Craig" ;
+        ab:lastName   "Ellis" ; 
+        ab:instrument "trumpet" . 
+

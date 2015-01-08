@@ -1,0 +1,8 @@
+# filename: ex182.rq
+
+CONSTRUCT 
+{ ?s ?p ?o }
+FROM <http://rdf.freebase.com/rdf/en.joseph_hocking>
+WHERE 
+{ ?s ?p ?o }
+

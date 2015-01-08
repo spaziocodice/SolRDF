@@ -1,0 +1,30 @@
+# filename: ex281.ttl
+
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dm:   <http://learningsparql.com/ns/demo#> .
+@prefix d:    <http://learningsparql.com/ns/data#> .
+
+d:cell1 dm:row 1 ; 
+        dm:column 1 ; 
+        rdfs:label "truck" .
+
+d:cell2 dm:row 1 ; 
+        dm:column 2 ; 
+        rdfs:label "lorry" .
+
+d:cell3 dm:row 2 ; 
+        dm:column 1 ; 
+        rdfs:label "apartment" .
+
+d:cell4 dm:row 2 ; 
+        dm:column 2 ; 
+        rdfs:label "flat" .
+
+d:cell5 dm:row 3 ; 
+        dm:column 1 ; 
+        rdfs:label "elevator" .
+
+d:cell6 dm:row 3 ; 
+        dm:column 2 ; 
+        rdfs:label "lift" .
+

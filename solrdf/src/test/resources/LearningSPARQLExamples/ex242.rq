@@ -1,0 +1,15 @@
+# filename: ex242.rq
+
+PREFIX dbr: <http://dbpedia.org/resource/>
+SELECT ?o ?blankTest ?literalTest ?numericTest ?IRITest ?URITest
+WHERE 
+{
+  ?s ?p ?o . 
+  BIND (isBlank(?o) as ?blankTest)
+  BIND (isLiteral(?o) as ?literalTest)
+  BIND (isNumeric(?o) as ?numericTest)
+  BIND (isIRI(?o) as ?IRITest)
+  BIND (isURI(?o) as ?URITest)
+}
+
+

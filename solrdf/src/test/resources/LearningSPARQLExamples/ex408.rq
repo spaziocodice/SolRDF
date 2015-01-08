@@ -1,0 +1,6 @@
+# filename: ex408.rq
+
+SELECT ?s ?o 
+WHERE 
+{ ?s ?p ?o }
+

@@ -1,0 +1,5 @@
+<http://learningsparql.com/ns/data#x>
+      <http://learningsparql.com/ns/demo#tag>
+                    "two" ;
+      <http://learningsparql.com/ns/demo#tag>
+                    "one" .

@@ -1,0 +1,8 @@
+# filename: ex440.rq
+
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+
+SELECT * 
+WHERE 
+{ ?class a owl:Class }
+

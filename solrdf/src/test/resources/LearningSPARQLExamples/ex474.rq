@@ -1,0 +1,9 @@
+# filename: ex474.rq
+
+SELECT ?p ?o 
+WHERE
+{
+  SERVICE <http://DBpedia.org/sparql>
+    { <http://dbpedia.org/resource/Joseph_Hocking> ?p ?o . }
+}
+

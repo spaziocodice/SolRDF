@@ -1,0 +1,7 @@
+# filename: ex156.rq
+
+PREFIX e: <http://learningsparql.com/ns/expenses#> 
+
+SELECT (AVG(?amount) as ?avgAmount) 
+WHERE { ?meal e:amount ?amount . }
+

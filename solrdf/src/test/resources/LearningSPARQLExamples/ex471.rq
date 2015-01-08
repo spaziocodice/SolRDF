@@ -1,0 +1,14 @@
+# filename: ex471.rq
+
+PREFIX dc:   <http://purl.org/dc/elements/1.1/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX void: <http://vocab.deri.ie/void#>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+
+SELECT ?creator ?propertyName ?propertyValue 
+WHERE 
+{
+  ?s dc:creator ?creator . 
+  ?creator ?propertyName ?propertyValue . 
+}
+
