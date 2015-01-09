@@ -54,7 +54,7 @@ import com.hp.hpl.jena.update.UpdateFactory;
  *  
  * @author Andrea Gazzarini
  * @since 1.0
- */
+ */ 
 public class LearningSparql_ITCase {
 	protected final String examplesDir = "src/test/resources/LearningSPARQLExamples";
 

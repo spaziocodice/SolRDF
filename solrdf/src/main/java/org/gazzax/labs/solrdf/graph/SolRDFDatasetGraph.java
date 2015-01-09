@@ -34,9 +34,26 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	final QParser qParser;
 	
 	/**
-	 * Builds a new Dataset graph with the given factory.
+	 * Builds a new Dataset graph with the given data.
 	 * 
-	 * @param factory the storage layer (abstract) factory.
+	 * @param request the Solr query request.
+	 * @param response the Solr query response.
+	 */
+	public SolRDFDatasetGraph(
+			final SolrQueryRequest request, 
+			final SolrQueryResponse response) {
+		this.request = request;
+		this.response = response;
+		this.qParser = null;
+	}	
+	
+	/**
+	 * Builds a new Dataset graph with the given data.
+	 * 
+	 * @param request the Solr query request.
+	 * @param response the Solr query response.
+	 * @param qParser the (SPARQL) query parser.
+	 * 
 	 */
 	public SolRDFDatasetGraph(
 			final SolrQueryRequest request, 
