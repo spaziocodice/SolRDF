@@ -11,6 +11,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.SolrInputDocument;
@@ -23,7 +24,7 @@ import org.apache.solr.search.SyntaxError;
 import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.DeleteUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
-import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.Field; 
 import org.gazzax.labs.solrdf.Strings;
 import org.slf4j.LoggerFactory;
 
@@ -63,28 +64,6 @@ public class SolRDFGraph extends GraphBase {
 	final int fetchSize;
 	
 	/**
-	 * Creates a write-only {@link Graph}.
-	 * This is used when we only need to add / change data (e.g. bulk loading). 
-	 * 
-	 * @param request the current Solr request
-	 * @return a write-only {@link Graph}. Any attempt to use this instance for reading data will raise an exception.
-	 */
-	public static SolRDFGraph writableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final int fetchSize) {
-		return new SolRDFGraph(graphNode, request, response, fetchSize);
-	}
-
-	/**
-	 * Creates a write-only {@link Graph}.
-	 * This is used when we only need to add / change data (e.g. bulk loading). 
-	 * 
-	 * @param request the current Solr request
-	 * @return a write-only {@link Graph}. Any attempt to use this instance for reading data will raise an exception.
-	 */
-	public static SolRDFGraph writableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response) {
-		return new SolRDFGraph(graphNode, request, response, DEFAULT_FETCH_SIZE);
-	}
-
-	/**
 	 * Creates a Read / Write {@link Graph}.
 	 * 
 	 * @param request the current Solr request.
@@ -106,10 +85,15 @@ public class SolRDFGraph extends GraphBase {
 		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize);
 	}
 
-	private SolRDFGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final int fetchSize) {
-		this(graphNode, request, response, null, fetchSize);
-	}
-
+	/**
+	 * Builds a new {@link SolRDFGraph} with the given data.
+	 * 
+	 * @param graphNode the graph name.
+	 * @param request the Solr query request.
+	 * @param response the Solr query response.
+	 * @param qparser the query parser.
+	 * @param fetchSize the fetch size that will be used in queries.
+	 */
 	private SolRDFGraph(
 		final Node graphNode, 
 		final SolrQueryRequest request, 
@@ -160,8 +144,13 @@ public class SolRDFGraph extends GraphBase {
 	
 	@Override
 	public void performDelete(final Triple triple) {
-		// TODO
-		throw new DeleteDeniedException("NOT YET IMPLEMENTED");
+		final DeleteUpdateCommand deleteCommand = new DeleteUpdateCommand(request);
+		deleteCommand.query = deleteQuery(triple);
+		try {
+			updateProcessor.processDelete(deleteCommand);
+		} catch (final Exception exception) {
+			throw new DeleteDeniedException("Unable to clean this graph " + this);
+		}		
 	}
 	
 	@Override
@@ -189,7 +178,7 @@ public class SolRDFGraph extends GraphBase {
 		deleteCommand.query = "*:*";
 		deleteCommand.commitWithin = 1000;
 		try {
-			request.getCore().getUpdateHandler().deleteByQuery(deleteCommand);
+			updateProcessor.processDelete(deleteCommand);
 	        getEventManager().notifyEvent(this, GraphEvents.removeAll);
 		} catch (final Exception exception) {
 			throw new DeleteDeniedException("Unable to clean this graph " + this);
@@ -257,5 +246,51 @@ public class SolRDFGraph extends GraphBase {
 		cmd.setFilterList(filters);
 
 	    return new DeepPagingIterator(searcher, cmd, sortSpec);
+	}	
+	
+	/**
+	 * Builds a DELETE query.
+	 * 
+	 * @param triple the triple (maybe a pattern?) that must be deleted.
+	 * @return a DELETE query.
+	 */
+	String deleteQuery(final Triple triple) {
+		final StringBuilder builder = new StringBuilder();
+		if (triple.getSubject().isConcrete()) {
+			builder.append(Field.S).append(":\"").append(ClientUtils.escapeQueryChars(asNt(triple.getSubject()))).append("\"");
+		}
+		
+		if (triple.getPredicate().isConcrete()) {
+			if (builder.length() != 0) {
+				builder.append(" AND ");
+			}
+			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
+		}
+			
+//		if (triple.getObject().isConcrete()) {
+//			if (builder.length() != 0) {
+//				builder.append(" AND ");
+//			}
+//			final Node o = triple.getObject();
+//			if (o.isLiteral()) {
+//				final String language = o.getLiteralLanguage();
+//				if (Strings.isNotNullOrEmptyString(language)) {
+//					builder.add(new TermQuery(new Term(Field.LANG, language)));
+//				}
+//				
+//				final String literalValue = o.getLiteralLexicalForm(); 
+//				final RDFDatatype dataType = o.getLiteralDatatype();
+//				registry.get(dataType != null ? dataType.getURI() : null).collectConstraint(filters, literalValue);
+//			} else {
+//				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));			
+//			}
+//		}
+			
+		
+		if (graphNode != null) {
+			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(c)).append("\"");
+		}
+		
+		return builder.toString();
 	}	
 }

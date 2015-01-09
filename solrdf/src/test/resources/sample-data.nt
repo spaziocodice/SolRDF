@@ -1,0 +1,3 @@
+<http://example/book2> <http://example.org/ns#price> "42" .
+<http://example/book2> <http://purl.org/dc/elements/1.1/title> "David Copperfield" .
+<http://example/book2> <http://purl.org/dc/elements/1.1/creator> "Edmund Wells" .
