@@ -37,6 +37,7 @@ public class RdfUpdateRequestHandler extends UpdateRequestHandler {
 	 * @since 1.0
 	 */
 	class RdfDataLoader extends ContentStreamLoader {
+		final static int READ_BUFFER_DEFAULT_SIZE = 512;
 		final ExecutorService executor = Executors.newSingleThreadExecutor();
 		
 		@Override
@@ -46,9 +47,12 @@ public class RdfUpdateRequestHandler extends UpdateRequestHandler {
 				final ContentStream stream, 
 				final UpdateRequestProcessor processor) throws Exception {
 			
-			final StringWriter writer = new StringWriter(stream.getSize() != null ? stream.getSize().intValue() : 512);
-			IOUtils.copy(stream.getStream(), writer, "UTF-8");
+			final StringWriter writer = new StringWriter(
+					stream.getSize() != null 
+						? stream.getSize().intValue() 
+						: READ_BUFFER_DEFAULT_SIZE);
 			
+			IOUtils.copy(stream.getStream(), writer, "UTF-8");
 			UpdateAction.execute(
 					UpdateFactory.create(writer.toString()), 
 					new SolRDFDatasetGraph(request, response));

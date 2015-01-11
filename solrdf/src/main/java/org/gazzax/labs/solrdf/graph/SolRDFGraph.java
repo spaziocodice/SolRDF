@@ -44,11 +44,13 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
 /**
  * SolRDF {@link Graph} implementation.
  * 
+ * TODO: query builder logic is spread among this class and {@link FieldInjectorRegistry}. 
+ * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
 public class SolRDFGraph extends GraphBase {
-	static int DEFAULT_FETCH_SIZE = 10;
+	static int DEFAULT_QUERY_FETCH_SIZE = 10;
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
@@ -60,8 +62,9 @@ public class SolRDFGraph extends GraphBase {
 	final QParser qParser;
 	
 	final Node graphNode;
-	final String c;
-	final int fetchSize;
+	final String graphNodeStringified;
+	
+	final int queryFetchSize;
 	
 	/**
 	 * Creates a Read / Write {@link Graph}.
@@ -71,7 +74,7 @@ public class SolRDFGraph extends GraphBase {
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
 	public static SolRDFGraph readableAndWritableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final QParser qParser) {
-		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_FETCH_SIZE);
+		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE);
 	}
 
 	/**
@@ -101,14 +104,14 @@ public class SolRDFGraph extends GraphBase {
 		final QParser qparser, 
 		final int fetchSize) {
 		this.graphNode = graphNode;
-		this.c = graphNode !=null ? asNtURI(graphNode) : null;
+		this.graphNodeStringified = graphNode !=null ? asNtURI(graphNode) : null;
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateCommand.solrDoc = new SolrInputDocument();
 		this.updateProcessor = request.getCore().getUpdateProcessingChain("dedupe").createProcessor(request, response);
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
-		this.fetchSize = fetchSize;
+		this.queryFetchSize = fetchSize;
 	}
 	
 	@Override
@@ -116,7 +119,7 @@ public class SolRDFGraph extends GraphBase {
 		resetUpdateCommand();
 		
 		final SolrInputDocument document = updateCommand.solrDoc;		
-		document.setField(Field.C, c);
+		document.setField(Field.C, graphNodeStringified);
 		document.setField(Field.S, asNt(triple.getSubject()));
 		document.setField(Field.P, asNtURI(triple.getPredicate()));
 		
@@ -208,7 +211,7 @@ public class SolRDFGraph extends GraphBase {
 	    final SortSpec sortSpec = qParser.getSort(true);
 	    cmd.setQuery(new MatchAllDocsQuery());
 	    cmd.setSort(sortSpec.getSort());
-	    cmd.setLen(fetchSize);
+	    cmd.setLen(queryFetchSize);
 	    
 	    final List<Query> filters = new ArrayList<Query>();
 	    
@@ -233,7 +236,7 @@ public class SolRDFGraph extends GraphBase {
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
 				final RDFDatatype dataType = o.getLiteralDatatype();
-				registry.get(dataType != null ? dataType.getURI() : null).collectConstraint(filters, literalValue);
+				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(filters, literalValue);
 			} else {
 				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));			
 			}
@@ -267,28 +270,33 @@ public class SolRDFGraph extends GraphBase {
 			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
 		}
 			
-//		if (triple.getObject().isConcrete()) {
-//			if (builder.length() != 0) {
-//				builder.append(" AND ");
-//			}
-//			final Node o = triple.getObject();
-//			if (o.isLiteral()) {
-//				final String language = o.getLiteralLanguage();
-//				if (Strings.isNotNullOrEmptyString(language)) {
-//					builder.add(new TermQuery(new Term(Field.LANG, language)));
-//				}
-//				
-//				final String literalValue = o.getLiteralLexicalForm(); 
-//				final RDFDatatype dataType = o.getLiteralDatatype();
-//				registry.get(dataType != null ? dataType.getURI() : null).collectConstraint(filters, literalValue);
-//			} else {
-//				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));			
-//			}
-//		}
+		if (triple.getObject().isConcrete()) {
+			if (builder.length() != 0) {
+				builder.append(" AND ");
+			}
+			
+			final Node o = triple.getObject();
+			if (o.isLiteral()) {
+				final String language = o.getLiteralLanguage();
+				if (Strings.isNotNullOrEmptyString(language)) {
+					builder
+						.append(Field.LANG)
+						.append(":")
+						.append(language)
+						.append(" AND ");
+				}
+				
+				final String literalValue = o.getLiteralLexicalForm(); 
+				final RDFDatatype dataType = o.getLiteralDatatype();
+				registry.get(dataType != null ? dataType.getURI() : null).addConstraint(builder, literalValue);
+			} else {
+				registry.catchAllInjector().addConstraint(builder, asNt(o));
+			}
+		}
 			
 		
 		if (graphNode != null) {
-			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(c)).append("\"");
+			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
 		}
 		
 		return builder.toString();

@@ -42,7 +42,15 @@ class FieldInjectorRegistry {
 		 * @param filters the filter list.
 		 * @param value the new constraint value. 
 		 */
-		void collectConstraint(List<Query> filters, String value);
+		void addFilterConstraint(List<Query> filters, String value);
+		
+		/**
+		 * Appends to a given {@link StringBuilder}, and additional AND clause with the given value.
+		 * 
+		 * @param builder the query builder.
+		 * @param value the value of the additional constraint.
+		 */
+		void addConstraint(StringBuilder builder, String value);
 	}
 	
 	final FieldInjector booleanFieldInjector = new FieldInjector() {
@@ -52,9 +60,14 @@ class FieldInjectorRegistry {
 		}
 
 		@Override
-		public void collectConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value) {
 			filters.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, value)));
 		}
+		
+		@Override
+		public void addConstraint(final StringBuilder builder, final String value) {
+			builder.append(Field.BOOLEAN_OBJECT).append(":").append(value);
+		}		
 	};
 
 	final FieldInjector numericFieldInjector = new FieldInjector() {
@@ -64,8 +77,13 @@ class FieldInjectorRegistry {
 		}
 		
 		@Override
-		public void collectConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value) {
 			filters.add(new TermQuery(new Term(Field.NUMERIC_OBJECT, value)));
+		}		
+
+		@Override
+		public void addConstraint(final StringBuilder builder, final String value) {
+			builder.append(Field.NUMERIC_OBJECT).append(":").append(value);
 		}		
 	};
 	
@@ -76,9 +94,14 @@ class FieldInjectorRegistry {
 		}
 		
 		@Override
-		public void collectConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value) {
 			filters.add(new TermQuery(new Term(Field.DATE_OBJECT, value)));
 		}				
+
+		@Override
+		public void addConstraint(final StringBuilder builder, final String value) {
+			builder.append(Field.DATE_OBJECT).append(":").append(value);
+		}		
 	};
 	
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
@@ -88,9 +111,14 @@ class FieldInjectorRegistry {
 		}
 
 		@Override
-		public void collectConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value) {
 			filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, value)));
 		}		
+		
+		@Override
+		public void addConstraint(final StringBuilder builder, final String value) {
+			builder.append(Field.TEXT_OBJECT).append(":\"").append(value).append("\"");
+		}				
 	};
 	
 	final Map<String, FieldInjector> injectors = new HashMap<String, FieldInjector>();
