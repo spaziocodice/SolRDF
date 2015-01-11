@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.WebContent;
 import org.apache.jena.riot.lang.PipedQuadsStream;
 import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedTriplesStream;
@@ -139,6 +140,8 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 		for (final Lang language : RDFLanguages.getRegisteredLanguages()) {
 			registry.put(language.getContentType().toHeaderString(), loader);
 		}
+		registry.put(WebContent.contentTypeSPARQLUpdate, new Sparql11UpdateRdfDataLoader());
+
 		return registry;
 	}
 	
