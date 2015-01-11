@@ -24,7 +24,7 @@ The very first time you run this command a lot of things will be downloaded, Sol
 
 SolRDF is up and running! Now let's add some data. Open a new shell and type the following
 
-> curl -v http://localhost:8080/solr/store/update?commit=true \  
+> curl -v http://localhost:8080/solr/store/update/bulk?commit=true \  
   -H "Content-Type: application/n-triples" \  
   --data-binary @/tmp/solrdf-download/solrdf/src/sample-data/bsbm-generated-dataset.nt  
 
