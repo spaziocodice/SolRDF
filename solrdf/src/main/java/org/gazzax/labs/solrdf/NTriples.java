@@ -379,10 +379,11 @@ public abstract class NTriples {
 	}
 
 	/**
-	 * .
-	 * @param decimal
-	 * @param length
-	 * @return
+	 * Produces an hex string based on the given decimal input.
+	 * 
+	 * @param decimal the input number.
+	 * @param length the overall length of the returned string.
+	 * @return an hex string based on the given decimal input.
 	 */
 	public static String hex(final int decimal, final int length) {
 		final StringBuilder builder = new StringBuilder(length);

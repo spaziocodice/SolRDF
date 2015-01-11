@@ -26,7 +26,7 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
  * @since 1.0
  */
 public class SparqlSearchComponent extends SearchComponent {
-	private final static String DEFAULT_DEF_TYPE = "sparql";
+	private static final String DEFAULT_DEF_TYPE = "sparql";
 	
 	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
@@ -62,6 +62,8 @@ public class SparqlSearchComponent extends SearchComponent {
 			case Query.QueryTypeConstruct: 
 				response.add(Names.QUERY_RESULT, execution.execConstruct());
 				break;
+			default:
+				throw new IllegalArgumentException("Unknown query type: " + query.getQueryType());
 			}
 		} catch (final Exception exception) {
 			throw new IOException(exception);

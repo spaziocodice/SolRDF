@@ -27,7 +27,7 @@ class FieldInjectorRegistry {
 	 * @author Andrea Gazzarini
 	 * @since 1.0
 	 */
-	static interface FieldInjector {
+	interface FieldInjector {
 		/**
 		 * Injects a given value into a document.
 		 * 
@@ -89,7 +89,7 @@ class FieldInjectorRegistry {
 	
 	final FieldInjector dateTimeFieldInjector = new FieldInjector() {
 		@Override
-		public void inject(final SolrInputDocument document, Object value) {
+		public void inject(final SolrInputDocument document, final Object value) {
 			document.setField(Field.DATE_OBJECT, ((XSDDateTime)value).asCalendar().getTime());
 		}
 		

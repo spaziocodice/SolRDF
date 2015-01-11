@@ -35,7 +35,7 @@ import com.hp.hpl.jena.rdf.model.Model;
  * @since 1.0
  */
 public class SPARQLResponseWriter implements QueryResponseWriter {
-	private static abstract interface ResponseWriter {
+	interface ResponseWriter {
 		/**
 		 * Writes out the response.
 		 * 
@@ -46,7 +46,7 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 		 * @throws IOException in case of I/O failure-
 		 */
 		@SuppressWarnings("rawtypes")
-		abstract void doWrite(NamedList response, Writer writer, QueryExecution execution, String contentType) throws IOException;
+		void doWrite(NamedList response, Writer writer, QueryExecution execution, String contentType) throws IOException;
 	}
 
 	private Map<Integer, ResponseWriter> writers = new HashMap<Integer, ResponseWriter>();  
@@ -72,7 +72,9 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 			responseWriter.doWrite(values, writer, execution, accept);
 		} finally {
 			if (execution != null) {
-				try {execution.close();} catch (final Exception ignore) {}
+				// CHECKSTYLE:OFF
+				try { execution.close();} catch (final Exception ignore) {}
+				// CHECKSTYLE:ON
 			}
 		}				
 	}

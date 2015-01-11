@@ -28,7 +28,7 @@ import com.hp.hpl.jena.graph.Triple;
  * @since 1.0
  */
 public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
-	protected final static Set<String> TRIPLE_FIELDS = new HashSet<String>();
+	protected static final Set<String> TRIPLE_FIELDS = new HashSet<String>();
 	static {
 		TRIPLE_FIELDS.add(Field.S);
 		TRIPLE_FIELDS.add(Field.P);
@@ -137,7 +137,8 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * Builds a new iterator with the given data.
 	 * 
 	 * @param searcher the Solr index searcher.
-	 * @param queryCommand the query command that will be submitted.
+	 * @param queryCommand the query command that will be submitted.static 
+	 * @param sort the sort specs.
 	 */
 	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort) {
 		this.searcher = searcher;

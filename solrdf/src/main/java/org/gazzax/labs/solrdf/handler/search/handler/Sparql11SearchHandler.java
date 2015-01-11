@@ -2,23 +2,22 @@ package org.gazzax.labs.solrdf.handler.search.handler;
 
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.ContentStream;
-import org.apache.solr.core.RequestHandlers;
 import org.apache.solr.handler.RequestHandlerBase;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 
 /**
- * A {@link RequestHandlers} that dispatches Query and Update requests across dedicated handlers.
+ * A RequestHandler that dispatches Query and Update requests across dedicated handlers.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
 public class Sparql11SearchHandler extends RequestHandlerBase {
-	static String SEARCH_HANDLER_PARAMETER_NAME = "s";
-	static String DEFAULT_SEARCH_HANDLER_NAME = "/sparql-query";
+	static final String SEARCH_HANDLER_PARAMETER_NAME = "s";
+	static final String DEFAULT_SEARCH_HANDLER_NAME = "/sparql-query";
 	
-	static String UPDATE_HANDLER_PARAMETER_NAME = "u";
-	static String DEFAULT_UPDATE_HANDLER_NAME = "/sparql-update";
+	static final String UPDATE_HANDLER_PARAMETER_NAME = "u";
+	static final String DEFAULT_UPDATE_HANDLER_NAME = "/sparql-update";
 	
 	@Override
 	public void handleRequestBody(

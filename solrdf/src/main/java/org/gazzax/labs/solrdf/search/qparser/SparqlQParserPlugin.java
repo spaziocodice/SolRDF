@@ -11,7 +11,7 @@ import org.apache.solr.search.QParserPlugin;
  * Acts as a factory and configuration point for SPARQL {@link QParser}s.
  * 
  * @author Andrea Gazzarini
- * @sice 1.0
+ * @since 1.0
  */
 public class SparqlQParserPlugin extends QParserPlugin {
 	@Override

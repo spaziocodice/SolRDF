@@ -24,12 +24,11 @@ import org.apache.solr.search.SyntaxError;
 import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.DeleteUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
-import org.gazzax.labs.solrdf.Field; 
+import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Strings;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -44,13 +43,11 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
 /**
  * SolRDF {@link Graph} implementation.
  * 
- * TODO: query builder logic is spread among this class and {@link FieldInjectorRegistry}. 
- * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SolRDFGraph extends GraphBase {
-	static int DEFAULT_QUERY_FETCH_SIZE = 10;
+public final class SolRDFGraph extends GraphBase {
+	static final int DEFAULT_QUERY_FETCH_SIZE = 10;
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
@@ -69,22 +66,36 @@ public class SolRDFGraph extends GraphBase {
 	/**
 	 * Creates a Read / Write {@link Graph}.
 	 * 
+	 * @param graphNode the graph node.
 	 * @param request the current Solr request.
-	 * @param qp the query parser associated with the current request.
+	 * @param response the current Solr response.
+	 * @param qParser the query parser associated with the current request.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
-	public static SolRDFGraph readableAndWritableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final QParser qParser) {
+	public static SolRDFGraph readableAndWritableGraph(
+			final Node graphNode, 
+			final SolrQueryRequest request, 
+			final SolrQueryResponse response, 
+			final QParser qParser) {
 		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE);
 	}
 
 	/**
 	 * Creates a Read / Write {@link Graph}.
 	 * 
+	 * @param graphNode the graph node.
 	 * @param request the current Solr request.
-	 * @param qp the query parser associated with the current request.
+	 * @param response the current Solr response.
+	 * @param qParser the query parser associated with the current request.
+	 * @param fetchSize the read fetch size.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
-	public static SolRDFGraph readableAndWritableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final QParser qParser, final int fetchSize) {
+	public static SolRDFGraph readableAndWritableGraph(
+			final Node graphNode, 
+			final SolrQueryRequest request, 
+			final SolrQueryResponse response, 
+			final QParser qParser, 
+			final int fetchSize) {
 		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize);
 	}
 
@@ -95,7 +106,7 @@ public class SolRDFGraph extends GraphBase {
 	 * @param request the Solr query request.
 	 * @param response the Solr query response.
 	 * @param qparser the query parser.
-	 * @param fetchSize the fetch size that will be used in queries.
+	 * @param fetchSize the fetch size that will be used in reads.
 	 */
 	private SolRDFGraph(
 		final Node graphNode, 
@@ -104,7 +115,7 @@ public class SolRDFGraph extends GraphBase {
 		final QParser qparser, 
 		final int fetchSize) {
 		this.graphNode = graphNode;
-		this.graphNodeStringified = graphNode !=null ? asNtURI(graphNode) : null;
+		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateCommand.solrDoc = new SolrInputDocument();
@@ -198,6 +209,9 @@ public class SolRDFGraph extends GraphBase {
 		}
 	}
 	
+	/**
+	 * Resets the {@link AddUpdateCommand} used for updates.
+	 */
 	void resetUpdateCommand() {
 		final SolrInputDocument tripleDocument = updateCommand.solrDoc;
 		tripleDocument.clear();
@@ -206,7 +220,14 @@ public class SolRDFGraph extends GraphBase {
 		updateCommand.solrDoc = tripleDocument;
 	}
 	
-	Iterator<Triple> query(final TripleMatch query) throws SyntaxError {
+	/**
+	 * Executes a query using the given triple pattern.
+	 * 
+	 * @param pattern the triple pattern
+	 * @return an iterator containing matching triples.
+	 * @throws SyntaxError in case the query cannot be executed because syntax errors.
+	 */
+	Iterator<Triple> query(final TripleMatch pattern) throws SyntaxError {
 	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
 	    final SortSpec sortSpec = qParser.getSort(true);
 	    cmd.setQuery(new MatchAllDocsQuery());
@@ -215,9 +236,9 @@ public class SolRDFGraph extends GraphBase {
 	    
 	    final List<Query> filters = new ArrayList<Query>();
 	    
-		final Node s = query.getMatchSubject();
-		final Node p = query.getMatchPredicate();
-		final Node o = query.getMatchObject();
+		final Node s = pattern.getMatchSubject();
+		final Node p = pattern.getMatchPredicate();
+		final Node o = pattern.getMatchObject();
 		
 		if (s != null) {
 			filters.add(new TermQuery(new Term(Field.S, asNt(s))));

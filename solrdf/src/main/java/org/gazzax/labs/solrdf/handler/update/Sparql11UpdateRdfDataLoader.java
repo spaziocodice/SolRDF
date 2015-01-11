@@ -14,13 +14,16 @@ import com.hp.hpl.jena.update.UpdateAction;
 import com.hp.hpl.jena.update.UpdateFactory;
 
 /**
- * Loads an RDF {@link ContentStream} into Solr.
+ * Loads A SPARQL 1.1 Update {@link ContentStream} into Solr.
  * 
+ * SPARQL Update is a W3C standard for an RDF update language with SPARQL syntax. 
+ * 
+ * @see http://www.w3.org/TR/sparql11-update
  * @author Andrea Gazzarini
  * @since 1.0
  */
 class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
-	final static int READ_BUFFER_DEFAULT_SIZE = 512;
+	static final int READ_BUFFER_DEFAULT_SIZE = 512;
 
 	@Override
 	public void load(

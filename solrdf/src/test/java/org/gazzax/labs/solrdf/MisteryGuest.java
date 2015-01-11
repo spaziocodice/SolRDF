@@ -6,7 +6,7 @@ package org.gazzax.labs.solrdf;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class MisteryGuest {
+public final class MisteryGuest {
 	public final String [] datasets;
 	public final String query;
 	public final String description;

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertSame;
 
 import java.util.Map.Entry;
 
-import org.gazzax.labs.solrdf.graph.FieldInjectorRegistry;
 import org.gazzax.labs.solrdf.graph.FieldInjectorRegistry.FieldInjector;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +17,9 @@ import org.junit.Test;
 public class FieldInjectorRegistryTestCase {
 	private FieldInjectorRegistry cut;
 	
+	/**
+	 * Setup fixture for this test case.
+	 */
 	@Before
 	public void setUp() {
 		cut = new FieldInjectorRegistry();

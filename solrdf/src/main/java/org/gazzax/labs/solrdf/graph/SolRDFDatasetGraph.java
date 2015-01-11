@@ -18,12 +18,11 @@ import org.gazzax.labs.solrdf.Field;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
 import com.hp.hpl.jena.sparql.core.Quad;
 
 /**
- * SolRDF (Solr low level) implementation of a Jena {@link Dataset}.
+ * SolRDF (Solr low level) implementation of a Jena Dataset.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
@@ -102,7 +101,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected void addToDftGraph(final Node s, final Node p, final Node o) {
-		getDefaultGraph().add(new Triple(s,p,o));
+		getDefaultGraph().add(new Triple(s, p, o));
 	}
 
 	@Override
@@ -112,7 +111,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected void deleteFromDftGraph(final Node s, final Node p, final Node o) {
-		getDefaultGraph().delete(new Triple(s,p,o));
+		getDefaultGraph().delete(new Triple(s, p, o));
 	}
 
 	@Override
