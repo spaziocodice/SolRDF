@@ -50,7 +50,7 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public class SolRDFGraph extends GraphBase {
-	static int DEFAULT_FETCH_SIZE = 10;
+	static int DEFAULT_QUERY_FETCH_SIZE = 10;
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
@@ -74,7 +74,7 @@ public class SolRDFGraph extends GraphBase {
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
 	public static SolRDFGraph readableAndWritableGraph(final Node graphNode, final SolrQueryRequest request, final SolrQueryResponse response, final QParser qParser) {
-		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_FETCH_SIZE);
+		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE);
 	}
 
 	/**
