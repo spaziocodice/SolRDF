@@ -28,18 +28,18 @@ SolRDF is up and running! Now let's add some data. Open a new shell and type the
   -H "Content-Type: application/n-triples" \  
   --data-binary @/tmp/solrdf-download/solrdf/src/sample-data/bsbm-generated-dataset.nt  
 
-Ok, you just added (about) 5000 triples. Now, it's time to execute some query:
+Ok, you just added about 5000 triples. Now, it's time to execute some query:
 
 > curl "http://127.0.0.1:8080/solr/store/sparql" \  
   --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \  
-  -H "Accept: application/sparql-results+json"  
+  -H "Accept: application/sparql-results+xml"  
 
 > ...      
 
 >  curl "http://127.0.0.1:8080/solr/store/sparql" \   
   --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \  
-  -H "Accept: application/sparql-results+xml"  
+  -H "Accept: application/sparql-results+json"  
   
 >  ...
 
-Et voilà! Enjoy! I'm still working on that...so if you meet some annoying bug feel free to give me a shout ;)
+Et voilà! Enjoy! As you can imagine I'm still working on that...so if you meet some annoying bug feel free to give me a shout ;)
