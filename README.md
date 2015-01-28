@@ -1,9 +1,9 @@
 SolRDF
 ======
 
-SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data.
+SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data
 
-The following page will guide you through the SolRDF quick installation. I assume you already have Java (7), Maven (3.x) and git on your system.
+This page will guide you through the SolRDF quick installation. I assume you already have Java (7), Maven (3.x) and git on your system.
 
 Checkout the project Open a new shell and type the following:
 
