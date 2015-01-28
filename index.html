@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>SolRDF by agazzarini</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>SolRDF</h1>
+        <p>An RDF plugin for Solr  </p>
+        <p class="view"><a href="https://github.com/agazzarini/SolRDF">View the Project on GitHub <small>agazzarini/SolRDF</small></a></p>
+        <ul>
+          <li><a href="https://github.com/agazzarini/SolRDF/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/agazzarini/SolRDF/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/agazzarini/SolRDF">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data.</p>
+
+<p>The difference between SolRDF and the jena-nosql project (specifically the Solr binding) is that in SolRDF the extensions are on the server side, while jena-nosql is a client-side project. </p>
+
+<p>The following page will guide you through the SolRDF quick installation. I assume you already have Java (7), Maven (3.x) and git on your system.</p>
+
+<p>Checkout the project Open a new shell and type the following:</p>
+
+<blockquote>
+<p>cd /tmp<br>
+git clone <a href="https://github.com/agazzarini/SolRDF.git">https://github.com/agazzarini/SolRDF.git</a> solrdf-download</p>
+</blockquote>
+
+<p>Build and run SolrRDF</p>
+
+<blockquote>
+<p>cd solrdf-download/solrdf<br>
+mvn clean install cargo:run  </p>
+</blockquote>
+
+<p>The very first time you run this command a lot of things will be downloaded, Solr included. At the end you should see sheomething like this:</p>
+
+<p>[INFO] Jetty 7.6.15.v20140411 Embedded started on port [8080]
+[INFO] Press Ctrl-C to stop the container...</p>
+
+<p>SolRDF is up and running! Now let's add some data. Open a new shell and type the following</p>
+
+<blockquote>
+<p>curl -v http://localhost:8080/solr/store/update/bulk?commit=true \<br>
+  -H "Content-Type: application/n-triples" \<br>
+  --data-binary @/tmp/solrdf-download/solrdf/src/sample-data/bsbm-generated-dataset.nt  </p>
+</blockquote>
+
+<p>Ok, you just added about 5000 triples. Now, it's time to execute some query:</p>
+
+<blockquote>
+<p>curl "<a href="http://127.0.0.1:8080/solr/store/sparql">http://127.0.0.1:8080/solr/store/sparql</a>" \<br>
+  --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \<br>
+  -H "Accept: application/sparql-results+xml"  </p>
+
+<p>...      </p>
+
+<p>curl "<a href="http://127.0.0.1:8080/solr/store/sparql">http://127.0.0.1:8080/solr/store/sparql</a>" \<br>
+  --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \<br>
+  -H "Accept: application/sparql-results+json"  </p>
+
+<p>...</p>
+</blockquote>
+
+<p>Et voilà! Enjoy! As you can imagine I'm still working on that...so if you meet some annoying bug feel free to give me a shout ;)</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/agazzarini">agazzarini</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
