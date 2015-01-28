@@ -17,17 +17,10 @@
 		<lockType>${solr.lock.type:native}</lockType>
 	</indexConfig>
 	<updateHandler class="solr.DirectUpdateHandler2">
-	<!-- 
-		AUTO COMMIT has been disabled because using configuration you can specify
-		the "commitWithin" msecs periods in adds and deletes. 
-		If you want to use the autoCommit feature please make sure you set a value of -1 for both values above.
-	 -->
-	 <!-- 
 		<autoCommit>
 			<maxTime>15000</maxTime>
 			<openSearcher>false</openSearcher>
 		</autoCommit>
-	 -->	
 	</updateHandler>
 	<query>
 		<maxBooleanClauses>1024</maxBooleanClauses>
@@ -52,6 +45,17 @@
 			addHttpRequestToContext="true"/>
 		<httpCaching never304="true" />
 	</requestDispatcher>
+	
+	<!-- 
+		SOLR Query endpoint (see https://github.com/agazzarini/SolRDF/issues/25)
+	-->	
+	<requestHandler name="/solr-query" class="solr.SearchHandler">
+		<lst name="defaults">
+			<str name="echoParams">none</str>
+			<int name="rows">10</int>
+			<str name="wt">xml</str>
+		</lst>
+	</requestHandler>
 	
 	<!-- 
 		RequestHandler acting as SPARQL endpoint / facade 
