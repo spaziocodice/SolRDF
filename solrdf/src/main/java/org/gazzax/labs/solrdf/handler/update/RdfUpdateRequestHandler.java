@@ -22,17 +22,18 @@ public class RdfUpdateRequestHandler extends UpdateRequestHandler {
 	@SuppressWarnings("rawtypes")
 	protected Map<String, ContentStreamLoader> createDefaultLoaders(final NamedList parameters) {
 		final Map<String, ContentStreamLoader> registry = new HashMap<String, ContentStreamLoader>();
+		registry.put("application/rdf+xml", new Sparql11UpdateRdfDataLoader());
 		registry.put(WebContent.contentTypeSPARQLUpdate, new Sparql11UpdateRdfDataLoader());
 		return registry;
 	}
 	
 	@Override
 	public String getDescription() {
-		return "RDFBulkUpdateRequestHandler";
+		return "SPARQL 1.1 Update Request Handler";
 	}
 	
 	@Override
 	public String getSource() {
-		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/handler/update/RdfUpdateRequestHandler.java $";
+		return "https://github.com/agazzarini/SolRDF";
 	}
 }

@@ -2,24 +2,30 @@ package org.gazzax.labs.solrdf.response;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpHeaders;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.ResultSetMgr;
+import org.apache.jena.riot.WebContent;
 import org.apache.jena.riot.resultset.ResultSetLang;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.QueryResponseWriter;
 import org.apache.solr.response.SolrQueryResponse;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.restlet.data.CharacterSet;
 import org.restlet.engine.io.WriterOutputStream;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -28,14 +34,20 @@ import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 
 /**
- * Formats a SPARQL result.
+ * Writes out on the outgoing stream a SPARQL result.
  * 
  * @see http://www.w3.org/TR/rdf-sparql-XMLres
  * @author Andrea Gazzarini
  * @since 1.0
  */
 public class SPARQLResponseWriter implements QueryResponseWriter {
-	interface ResponseWriter {
+	/**
+	 * A {@link WriterStrategy} physically writes results on the outgoing stream, according with a given query type.
+	 * 
+	 * @author Andrea Gazzarini
+	 * @since 1.0
+	 */
+	interface WriterStrategy {
 		/**
 		 * Writes out the response.
 		 * 
@@ -49,27 +61,45 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 		void doWrite(NamedList response, Writer writer, QueryExecution execution, String contentType) throws IOException;
 	}
 
-	private Map<Integer, ResponseWriter> writers = new HashMap<Integer, ResponseWriter>();  
+	/**
+	 * A {@link ContentTypeChosingStrategy} is responsible for determining the right content type. 
+	 * It will be execute its logic according with the incoming request and the kind of query that has been executed.
+	 * 
+	 * @author Andrea Gazzarini
+	 * @since 1.0
+	 */
+	interface ContentTypeChoiceStrategy {
+		/**
+		 * Returns the content type that will be associated with the response.
+		 * 
+		 * @param detectedMediaTypes media types which are acceptable for the response.
+		 * @return the content type that will be associated with the response.
+		 */
+		String getContentType(final String [] detectedMediaTypes);
+	}
+
+	private final static Log LOGGER = new Log(LoggerFactory.getLogger(SPARQLResponseWriter.class));
+	
+	private Map<Integer, WriterStrategy> writers = new HashMap<Integer, WriterStrategy>();  
+	Map<Integer, ContentTypeChoiceStrategy> contentTypeChoiceStrategies = new HashMap<Integer, ContentTypeChoiceStrategy>();  
 	
 	@Override
 	public void write(
 			final Writer writer, 
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response) throws IOException {		
-		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get("httpRequest");
-		final String accept = httpRequest.getHeader(HttpHeaders.ACCEPT);
-		
 		QueryExecution execution = null;
 		final NamedList<?> values = response.getValues();
 		try {
-			final Query query = (Query)values.get(Names.QUERY);
+			final Query query = (Query)request.getContext().get(Names.QUERY);
 			execution = (QueryExecution) values.get(Names.QUERY_EXECUTION);
 			if (query == null || execution == null) {
+				LOGGER.error(MessageCatalog._00091_NULL_QUERY_OR_EXECUTION);
 				return;
 			}
 			
-			final ResponseWriter responseWriter = writers.get(query.getQueryType());
-			responseWriter.doWrite(values, writer, execution, accept);
+			final WriterStrategy responseWriter = writers.get(query.getQueryType());
+			responseWriter.doWrite(values, writer, execution, getContentType(request));
 		} finally {
 			if (execution != null) {
 				// CHECKSTYLE:OFF
@@ -83,62 +113,98 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 	public String getContentType(final SolrQueryRequest request, final SolrQueryResponse response) {
 		return getContentType(request);
 	}
+
+	private List<String> selectContentTypes = new ArrayList<String>();
+	private List<String> askContentTypes = new ArrayList<String>();
+	private List<String> constructContentTypes = new ArrayList<String>();
+	private List<String> describeContentTypes = new ArrayList<String>();
+
+	/**
+	 * Returns the appropriate content type chooser, according with the incoming data.  
+	 * 
+	 * @param queryType the query type (e.g. Ask, Select, Construct, Describe)
+	 * @param configuration the response writer configuration.
+	 * @param contentTypesContainer the list that will hold the supported content types for a specific query (type).
+	 * @return the appropriate content type chooser, according with the incoming data.  
+	 */
+	@SuppressWarnings("rawtypes")
+	private ContentTypeChoiceStrategy contentTypeChoiceStrategy(
+			final int queryType, 
+			final NamedList configuration,
+			final List<String> contentTypesContainer) {
+		contentTypesContainer.addAll(Arrays.asList(((String) configuration.get(String.valueOf(queryType))).split(",")));
+		return new ContentTypeChoiceStrategy() {	
+			@Override
+			public String getContentType(final String [] detectedMediaTypes) {
+				if (detectedMediaTypes == null) {
+					return contentTypesContainer.iterator().next();
+				}
+				
+				for (final String mediaType : detectedMediaTypes) {
+					if (contentTypesContainer.contains(mediaType)) {
+						return mediaType;
+					}
+				}
+				return contentTypesContainer.iterator().next();
+			}
+		}; 
+	}
 	
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void init(final NamedList args) {
-		writers.put(Query.QueryTypeAsk, new ResponseWriter() {
+	public void init(final NamedList configuration) {
+		ResultSetLang.init();
+
+		final NamedList configurationByQueryType = (NamedList) configuration.get("content-types");
+		contentTypeChoiceStrategies.put(Query.QueryTypeSelect, contentTypeChoiceStrategy(Query.QueryTypeSelect, configurationByQueryType, selectContentTypes));
+		contentTypeChoiceStrategies.put(Query.QueryTypeAsk, contentTypeChoiceStrategy(Query.QueryTypeAsk, configurationByQueryType, askContentTypes));
+		contentTypeChoiceStrategies.put(Query.QueryTypeDescribe, contentTypeChoiceStrategy(Query.QueryTypeDescribe, configurationByQueryType, describeContentTypes));
+		contentTypeChoiceStrategies.put(Query.QueryTypeConstruct, contentTypeChoiceStrategy(Query.QueryTypeConstruct, configurationByQueryType, constructContentTypes));
+		
+		writers.put(Query.QueryTypeAsk, new WriterStrategy() {
 			@Override
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
 					final QueryExecution execution, 
 					final String contentType) {
-				Boolean askResult = response.getBooleanArg(Names.QUERY_RESULT);
-				if ("text/csv".equals(contentType) || "text/plain".equals(contentType)) {
+				final Boolean askResult = response.getBooleanArg(Names.QUERY_RESULT);
+				if (WebContent.contentTypeTextCSV.equals(contentType) || WebContent.contentTypeTextPlain.equals(contentType)) {
 					ResultSetFormatter.outputAsCSV(askResult);
-				} else if ("text/tab-separated-values".equals(contentType)) {
+				} else if (WebContent.contentTypeTextTSV.equals(contentType)) {
 					ResultSetFormatter.outputAsTSV(askResult);
-				} else if ("application/sparql-results+xml".equals(contentType)) {
+				} else if (ResultSetLang.SPARQLResultSetXML.getHeaderString().equals(contentType)) {
 					ResultSetFormatter.outputAsXML(askResult);
-				} else if ("application/sparql-results+json".equals(contentType)) {
+				} else if (ResultSetLang.SPARQLResultSetJSON.getHeaderString().equals(contentType)) {
 					ResultSetFormatter.outputAsJSON(askResult);
 				} 
 			}
 		});
-
-		final Lang defaultLang = ResultSetLang.SPARQLResultSetXML;
 		
-		writers.put(Query.QueryTypeSelect, new ResponseWriter() {
+		writers.put(Query.QueryTypeSelect, new WriterStrategy() {
 			@Override
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
 					final QueryExecution execution, 
 					final String contentType) {
-				final ResultSet resultSet = (ResultSet) response.get(Names.QUERY_RESULT);
-				Lang lang = RDFLanguages.contentTypeToLang(contentType);
-				if (lang == null) {
-					lang = defaultLang;
-				}
 				ResultSetMgr.write(
 					new WriterOutputStream(writer, CharacterSet.UTF_8), 
-					resultSet, 
-					lang);
+					(ResultSet) response.get(Names.QUERY_RESULT), 
+					RDFLanguages.contentTypeToLang(contentType));
 			}
 		});
 		
-		final ResponseWriter modelResponseWriter = new ResponseWriter() {
+		final WriterStrategy modelResponseWriter = new WriterStrategy() {
 			@Override
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
 					final QueryExecution execution, 
 					final String contentType) {
-				final Model model = (Model) response.get(Names.QUERY_RESULT);
 				RDFDataMgr.write(
 						new WriterOutputStream(writer, CharacterSet.UTF_8), 
-						model, 
+						(Model) response.get(Names.QUERY_RESULT), 
 						RDFLanguages.contentTypeToLang(contentType));
 			}
 		};
@@ -148,20 +214,40 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 	}
 	
 	/**
-	 * Determines the content type associated with this response writer.
-	 * 
-	 * The mime type is first determined using the Accept request header. 
-	 * If that is null, then the text/plain is assumed as default content type.
+	 * Determines the content type that will be associated with this response writer.
 	 * 
 	 * @param request the current Solr request.
 	 * @return the content type associated with this response writer.
 	 */
 	String getContentType(final SolrQueryRequest request) {
-		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get("httpRequest");
-		String accept = httpRequest.getHeader(HttpHeaders.ACCEPT);
-		if (accept == null) {
-			accept = "text/plain";
+		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY);
+		final String accept = httpRequest.getHeader(HttpHeaders.ACCEPT);
+		
+		final Query query = (Query)request.getContext().get(Names.QUERY);
+		final String [] mediaTypes = accept != null ? accept.split(",") : null;
+		String [] requestedMediaTypes = null;
+		if (mediaTypes != null) {
+			requestedMediaTypes = new String[mediaTypes.length];
+			for (int i = 0; i < mediaTypes.length; i++) {
+				requestedMediaTypes[i] = cleanMediaType(mediaTypes[i]);
+			}
 		}
-		return accept;		
+		
+		final String contentType = contentTypeChoiceStrategies.get(query.getQueryType()).getContentType(requestedMediaTypes);
+
+		LOGGER.debug(MessageCatalog._00092_NEGOTIATED_CONTENT_TYPE, query.getQueryType(), accept, contentType);
+		
+		return contentType;
+	}
+	
+	/**
+	 * Removes from a given media type header all parameters.
+	 * 
+	 * @param mediaType the incoming media type header.
+	 * @return the media type without parameters (if any).
+	 */
+	String cleanMediaType(final String mediaType) {
+		final int parametersStartIndex = mediaType.indexOf(";");
+		return parametersStartIndex == -1 ? mediaType : mediaType.substring(0, parametersStartIndex);
 	}
 }

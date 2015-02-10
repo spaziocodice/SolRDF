@@ -10,4 +10,6 @@ public interface Names {
 	String QUERY_EXECUTION = "query.execution";
 	String QUERY_RESULT = "query.result";
 	String QUERY = "query";
+	
+	String HTTP_REQUEST_KEY = "httpRequest";
 }

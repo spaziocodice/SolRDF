@@ -1,22 +1,23 @@
 package org.gazzax.labs.solrdf;
 
+import java.util.Random;
+
 /**
  * A bunch of test utilities.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
- */ 
+ */       
 public abstract class TestUtility {
+	public static final Random RANDOMIZER = new Random();
 	public static final String DUMMY_BASE_URI = "http://example.org/";
 	
 	/**
-	 * Waits for a second.
+	 * Returns a pseudorandom string.
+	 * 
+	 * @return a pseudorandom string.
 	 */
-	public static void eheh() {
-		try {
-			Thread.sleep(2000);
-		} catch (final Exception ignore) {
-			// Ignore
-		}
+	public static String randomString() {
+		return String.valueOf(System.currentTimeMillis() + RANDOMIZER.nextLong());
 	}
-}
+}   

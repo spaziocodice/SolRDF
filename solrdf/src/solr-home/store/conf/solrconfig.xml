@@ -46,6 +46,14 @@
 		<httpCaching never304="true" />
 	</requestDispatcher>
 	
+	<!-- SPARQL 1.1 Graph Store protocol endpoint -->
+	<requestHandler name="/rdf-graph-store" class="org.gazzax.labs.solrdf.handler.search.handler.Sparql11GraphStoreProtocolHandler" default="true">
+		<lst name="invariants">
+			<str name="s">/sparql-query</str>
+			<str name="u">/sparql-update</str>
+		</lst>
+	</requestHandler>
+	
 	<!-- 
 		SOLR Query endpoint (see https://github.com/agazzarini/SolRDF/issues/25)
 	-->	
@@ -100,6 +108,10 @@
 			<str name="update.chain">dedupe</str>
 		</lst>
 	</requestHandler>
+	
+	<!-- Classic Solr UpdateRequestHandler -->
+	<requestHandler name="/update" class="org.apache.solr.handler.UpdateRequestHandler"/>
+		
 	<requestHandler name="/analysis/field" startup="lazy" class="solr.FieldAnalysisRequestHandler" />
 	<requestHandler name="/analysis/document" class="solr.DocumentAnalysisRequestHandler" startup="lazy" />
 	<requestHandler name="/admin/" class="solr.admin.AdminHandlers" />
@@ -124,6 +136,16 @@
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
 	<queryResponseWriter name="application/sparql-results+xml" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter">
+		<lst name="content-types">
+			<!-- SELECT -->
+			<str name="111">application/sparql-results+xml,application/sparql-results+json,text/csv,text/plain,text/tab-separated-values</str>
+			<!-- CONSTRUCT -->
+			<str name="222">application/rdf+xml,application/n-triples,text/turtles</str>
+			<!-- DESCRIBE -->
+			<str name="333">application/rdf+xml,application/n-triples,text/turtles</str>
+			<!-- ASK -->
+			<str name="444">text/csv,text/plain,text/tab-separated-values,application/sparql-results+xml,application/sparql-results+json</str>
+		</lst>		
 		<lst name="writers">
 			<str name="application/sparql-results+xml"></str>
 		</lst>

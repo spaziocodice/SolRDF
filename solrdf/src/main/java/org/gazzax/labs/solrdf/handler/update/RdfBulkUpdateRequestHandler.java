@@ -31,7 +31,7 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 
 /**
- * A subclass of {@link UpdateRequestHandler} specific for RDF formats.
+ * A subclass of {@link UpdateRequestHandler} for handlong RDF bulk loadings.
  * 
  * @author Andrea Gazzarini
  * @since 1.0

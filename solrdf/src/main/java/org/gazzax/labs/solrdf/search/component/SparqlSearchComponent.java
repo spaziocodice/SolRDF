@@ -46,6 +46,7 @@ public class SparqlSearchComponent extends SearchComponent {
 					query, 
 					DatasetFactory.create(new SolRDFDatasetGraph(request, response, parser)));
 			
+	    	request.getContext().put(Names.QUERY, query);
 			response.add(Names.QUERY, query);
 			response.add(Names.QUERY_EXECUTION, execution);			
 			

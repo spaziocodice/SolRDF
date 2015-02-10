@@ -34,11 +34,11 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 
 	@Override
 	public String getDescription() {
-		return getClass().getName();
+		return "SPARQL 1.1 Search Handler";
 	}
 
 	@Override
 	public String getSource() {
-		return "N.A.";
+		return "https://github.com/agazzarini/SolRDF";
 	}
 }

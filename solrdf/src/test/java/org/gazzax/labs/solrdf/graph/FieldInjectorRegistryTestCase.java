@@ -16,7 +16,7 @@ import org.junit.Test;
  */
 public class FieldInjectorRegistryTestCase {
 	private FieldInjectorRegistry cut;
-	
+	 
 	/**
 	 * Setup fixture for this test case.
 	 */
