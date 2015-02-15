@@ -10,6 +10,7 @@ import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
+import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
@@ -34,11 +35,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	    final SolrQueryResponse response = responseBuilder.rsp;
 
 	    try {
-			final QParser parser = QParser.getParser(
-					queryString(request), 
-					DEFAULT_DEF_TYPE, 
-					request);
-	    	
+			final QParser parser = qParser(request);
 	    	final SparqlQuery wrapper = (SparqlQuery) parser.getQuery();
 	    	final Query query = wrapper.getQuery();
 	    	
@@ -85,6 +82,20 @@ public class SparqlSearchComponent extends SearchComponent {
 	public void prepare(final ResponseBuilder responseBuilder) {
 		// Nothing to be done here...
 	}	
+	
+	/**
+	 * Returns the {@link QParser} associated with this request.
+	 * 
+	 * @param request the {@link SolrQueryRequest}.
+	 * @return the {@link QParser} associated with this request.
+	 * @throws SyntaxError in case of syntax errors.
+	 */
+	QParser qParser(final SolrQueryRequest request) throws SyntaxError {
+		return QParser.getParser(
+				queryString(request), 
+				DEFAULT_DEF_TYPE, 
+				request);		
+	}
 	
 	/**
 	 * Returns the query string associated with the current request.
