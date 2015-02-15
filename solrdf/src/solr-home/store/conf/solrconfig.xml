@@ -85,10 +85,11 @@
 			<str name="defType">sparql</str>
 			<int name="rows">10</int>
 			<str name="sort">id asc</str>
-			<str name="wt">application/sparql-results+xml</str>
+			<str name="wt">application/sparql-results</str>
 		</lst>
 		<arr name="components">
 			<str>sparql-query</str>
+			<str>facet</str>
 		</arr>		
 	</requestHandler>
 
@@ -135,7 +136,7 @@
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
-	<queryResponseWriter name="application/sparql-results+xml" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter">
+	<queryResponseWriter name="application/sparql-results" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter">
 		<lst name="content-types">
 			<!-- SELECT -->
 			<str name="111">application/sparql-results+xml,application/sparql-results+json,text/csv,text/plain,text/tab-separated-values</str>
@@ -146,9 +147,6 @@
 			<!-- ASK -->
 			<str name="444">text/csv,text/plain,text/tab-separated-values,application/sparql-results+xml,application/sparql-results+json</str>
 		</lst>		
-		<lst name="writers">
-			<str name="application/sparql-results+xml"></str>
-		</lst>
 	</queryResponseWriter>
 	<admin>
 		<defaultQuery>*:*</defaultQuery>
