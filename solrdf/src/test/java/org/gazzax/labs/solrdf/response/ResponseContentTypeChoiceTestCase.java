@@ -1,7 +1,8 @@
 package org.gazzax.labs.solrdf.response;
 
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

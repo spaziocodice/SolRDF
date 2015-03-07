@@ -19,13 +19,16 @@ import org.apache.lucene.util.Bits;
 public class SparqlQuery extends Query {
 	final com.hp.hpl.jena.query.Query query;
 	
+	final boolean hybrid;
+	
 	/**
 	 * Builds a new query with the given data.
 	 * 
 	 * @param query the wrapped query.
 	 */
-	public SparqlQuery(final com.hp.hpl.jena.query.Query query) {
+	public SparqlQuery(final com.hp.hpl.jena.query.Query query, final boolean hybrid) {
 		this.query = query;
+		this.hybrid = hybrid;
 	}
 	
 	/**
@@ -35,6 +38,15 @@ public class SparqlQuery extends Query {
 	 */
 	public com.hp.hpl.jena.query.Query getQuery() {
 		return query;
+	}
+	
+	/**
+	 * Returns true if this query contains both a SPARQL query and other Solr parameters.
+	 * 
+	 * @return true if this query contains both a SPARQL query and other Solr parameters.
+	 */
+	public boolean isHybrid() {
+		return hybrid;
 	}
 	
 	@Override

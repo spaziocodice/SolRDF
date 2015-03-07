@@ -1,3 +1,6 @@
 <http://example/book2> <http://example.org/ns#price> "42" .
 <http://example/book2> <http://purl.org/dc/elements/1.1/title> "David Copperfield" .
 <http://example/book2> <http://purl.org/dc/elements/1.1/creator> "Edmund Wells" .
+<http://example/book2> <http://example.org/ns#price> "14.3" .
+<http://example/book2> <http://purl.org/dc/elements/1.1/title> "Andrea Gazzarini" .
+<http://example/book2> <http://purl.org/dc/elements/1.1/creator> "Apache Solr Essentials" .

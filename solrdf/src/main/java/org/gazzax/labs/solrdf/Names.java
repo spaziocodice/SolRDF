@@ -12,4 +12,7 @@ public interface Names {
 	String QUERY = "query";
 	
 	String HTTP_REQUEST_KEY = "httpRequest";
+	String SOLR_REQUEST = "solr.request";
+	String SOLR_RESPONSE = "solr.response";
+	String HYBRID_MODE = "hybrid.mode";
 }

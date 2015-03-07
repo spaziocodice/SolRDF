@@ -53,12 +53,11 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 		 * 
 		 * @param response the response value object.
 		 * @param writer the output writer.
-		 * @param execution the query execution.
 		 * @param contentType determines the output format.
 		 * @throws IOException in case of I/O failure-
 		 */
 		@SuppressWarnings("rawtypes")
-		void doWrite(NamedList response, Writer writer, QueryExecution execution, String contentType) throws IOException;
+		void doWrite(NamedList response, Writer writer, String contentType) throws IOException;
 	}
 
 	/**
@@ -81,6 +80,9 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 	private final static Log LOGGER = new Log(LoggerFactory.getLogger(SPARQLResponseWriter.class));
 	
 	private Map<Integer, WriterStrategy> writers = new HashMap<Integer, WriterStrategy>();  
+	private Map<String, WriterStrategy> compositeWriters = new HashMap<String, WriterStrategy>();  
+	private Map<String, String> contentTypeRewrites = new HashMap<String, String>();
+	
 	Map<Integer, ContentTypeChoiceStrategy> contentTypeChoiceStrategies = new HashMap<Integer, ContentTypeChoiceStrategy>();  
 	
 	@Override
@@ -88,30 +90,38 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 			final Writer writer, 
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response) throws IOException {		
-		QueryExecution execution = null;
 		final NamedList<?> values = response.getValues();
+		final Query query = (Query)request.getContext().get(Names.QUERY);
+		final QueryExecution execution = (QueryExecution)response.getValues().get(Names.QUERY_EXECUTION);
 		try {
-			final Query query = (Query)request.getContext().get(Names.QUERY);
-			execution = (QueryExecution) values.get(Names.QUERY_EXECUTION);
 			if (query == null || execution == null) {
 				LOGGER.error(MessageCatalog._00091_NULL_QUERY_OR_EXECUTION);
 				return;
 			}
 			
-			final WriterStrategy responseWriter = writers.get(query.getQueryType());
-			responseWriter.doWrite(values, writer, execution, getContentType(request));
+			final boolean isHybridMode = Boolean.TRUE.equals(request.getContext().get(Names.HYBRID_MODE));
+			if (isHybridMode) {
+				response.add(Names.SOLR_REQUEST, request);
+				response.add(Names.SOLR_RESPONSE, response);
+				
+				final String contentType = contentTypeRewrites.get(getContentType(request));
+				compositeWriters.get(contentType).doWrite(values, writer, contentType);
+			} else {
+				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request));
+			}
 		} finally {
 			if (execution != null) {
 				// CHECKSTYLE:OFF
 				try { execution.close();} catch (final Exception ignore) {}
 				// CHECKSTYLE:ON
-			}
-		}				
+			}			
+		}			
 	}
 
 	@Override
 	public String getContentType(final SolrQueryRequest request, final SolrQueryResponse response) {
-		return getContentType(request);
+		final boolean isHybridMode = Boolean.TRUE.equals(request.getContext().get(Names.HYBRID_MODE));
+		return isHybridMode ? contentTypeRewrites.get(getContentType(request)) : getContentType(request);
 	}
 
 	private List<String> selectContentTypes = new ArrayList<String>();
@@ -161,12 +171,13 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 		contentTypeChoiceStrategies.put(Query.QueryTypeDescribe, contentTypeChoiceStrategy(Query.QueryTypeDescribe, configurationByQueryType, describeContentTypes));
 		contentTypeChoiceStrategies.put(Query.QueryTypeConstruct, contentTypeChoiceStrategy(Query.QueryTypeConstruct, configurationByQueryType, constructContentTypes));
 		
+		contentTypeRewrites.put(WebContent.contentTypeResultsXML, "text/xml");
+		
 		writers.put(Query.QueryTypeAsk, new WriterStrategy() {
 			@Override
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
-					final QueryExecution execution, 
 					final String contentType) {
 				final Boolean askResult = response.getBooleanArg(Names.QUERY_RESULT);
 				if (WebContent.contentTypeTextCSV.equals(contentType) || WebContent.contentTypeTextPlain.equals(contentType)) {
@@ -180,14 +191,28 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 				} 
 			}
 		});
+
+		compositeWriters.put("text/xml", new WriterStrategy() {
+			@Override
+			public void doWrite(
+					final NamedList response, 
+					final Writer writer, 
+					final String contentType) throws IOException {
+				final CompoundXMLWriter xmlw = new CompoundXMLWriter(
+						writer, 
+						(SolrQueryRequest) response.get(Names.SOLR_REQUEST), 
+						(SolrQueryResponse) response.get(Names.SOLR_RESPONSE));
+				xmlw.writeResponse();
+			}
+		});
 		
 		writers.put(Query.QueryTypeSelect, new WriterStrategy() {
 			@Override
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
-					final QueryExecution execution, 
 					final String contentType) {
+				
 				ResultSetMgr.write(
 					new WriterOutputStream(writer, CharacterSet.UTF_8), 
 					(ResultSet) response.get(Names.QUERY_RESULT), 
@@ -200,7 +225,6 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 			public void doWrite(
 					final NamedList response, 
 					final Writer writer, 
-					final QueryExecution execution, 
 					final String contentType) {
 				RDFDataMgr.write(
 						new WriterOutputStream(writer, CharacterSet.UTF_8), 

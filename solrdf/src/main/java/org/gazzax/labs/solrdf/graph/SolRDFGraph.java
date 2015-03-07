@@ -63,6 +63,8 @@ public final class SolRDFGraph extends GraphBase {
 	
 	final int queryFetchSize;
 	
+	final GraphEventListener listener;
+	
 	/**
 	 * Creates a Read / Write {@link Graph}.
 	 * 
@@ -76,8 +78,9 @@ public final class SolRDFGraph extends GraphBase {
 			final Node graphNode, 
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
-			final QParser qParser) {
-		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE);
+			final QParser qParser,
+			final GraphEventListener listener) {
+		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
 	/**
@@ -95,8 +98,9 @@ public final class SolRDFGraph extends GraphBase {
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
 			final QParser qParser, 
-			final int fetchSize) {
-		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize);
+			final int fetchSize,
+			final GraphEventListener listener) {
+		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize, listener);
 	}
 
 	/**
@@ -113,7 +117,8 @@ public final class SolRDFGraph extends GraphBase {
 		final SolrQueryRequest request, 
 		final SolrQueryResponse response, 
 		final QParser qparser, 
-		final int fetchSize) {
+		final int fetchSize, 
+		final GraphEventListener listener) {
 		this.graphNode = graphNode;
 		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
 		this.request = request;
@@ -123,6 +128,7 @@ public final class SolRDFGraph extends GraphBase {
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
 		this.queryFetchSize = fetchSize;
+		this.listener = listener;
 	}
 	
 	@Override
@@ -269,7 +275,7 @@ public final class SolRDFGraph extends GraphBase {
 		
 		cmd.setFilterList(filters);
 
-	    return new DeepPagingIterator(searcher, cmd, sortSpec);
+	    return new DeepPagingIterator(searcher, cmd, sortSpec, listener);
 	}	
 	
 	/**
