@@ -36,11 +36,20 @@ public class SparqlQParser extends QParser {
 	@Override 
 	public Query parse() throws SyntaxError {
 		try {
-			return new SparqlQuery(
-					QueryFactory.create(qstr), 
-					req.getParams().getBool(FacetParams.FACET, false));
+			return new SparqlQuery(QueryFactory.create(qstr), isHybrid());
 		} catch (final Exception exception) {
 			throw new SyntaxError(exception);
 		}
+	}
+	
+	/**
+	 * Returns true if the query is hybrid (e.g. SPARQL with Solr parameters)
+	 * 
+	 * At the moment only the facet parameter switches on the hybrid mode.
+	 * 
+	 * @return true if the query is hybrid (e.g. SPARQL with Solr parameters)
+	 */
+	boolean isHybrid() {
+		return req.getParams().getBool(FacetParams.FACET, false);
 	}
 }

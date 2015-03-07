@@ -26,7 +26,7 @@ public class SparqlQParserPlugin extends QParserPlugin {
 	@Override
 	@SuppressWarnings("rawtypes") 
 	public void init(final NamedList args) {
-		// Nothing to be done at the momyny
+		// Nothing to be done at the moment.
 	}
 	
 	@Override

@@ -85,7 +85,7 @@
 			<str name="defType">sparql</str>
 			<int name="rows">10</int>
 			<str name="sort">id asc</str>
-			<str name="wt">application/sparql-results</str>
+			<str name="wt">hybrid</str>
 		</lst>
 		<arr name="components">
 			<str>sparql-query</str>
@@ -136,7 +136,7 @@
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
-	<queryResponseWriter name="application/sparql-results" class="org.gazzax.labs.solrdf.response.SPARQLResponseWriter">
+	<queryResponseWriter name="hybrid" class="org.gazzax.labs.solrdf.response.HybridResponseWriter">
 		<lst name="content-types">
 			<!-- SELECT -->
 			<str name="111">application/sparql-results+xml,application/sparql-results+json,text/csv,text/plain,text/tab-separated-values</str>

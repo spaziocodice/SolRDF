@@ -17,6 +17,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.response.XMLWriter;
 
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.resultset.XMLOutput;
 
@@ -28,7 +29,7 @@ import com.hp.hpl.jena.sparql.resultset.XMLOutput;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-class CompoundXMLWriter extends XMLWriter {
+class HybridXMLWriter extends XMLWriter {
 	protected static final char[] XML_PROCESSING_INSTR = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".toCharArray();
 	protected static final char[] RESPONSE_ROOT_ELEMENT_START = ("<response>\n").toCharArray();
 	protected static final char[] RESPONSE_ROOT_ELEMENT_END = ("</response>").toCharArray();
@@ -37,13 +38,13 @@ class CompoundXMLWriter extends XMLWriter {
 	protected static final char[] XML_STYLESHEET_END = "\"?>\n".toCharArray();
 
 	/**
-	 * Builds a new {@link CompoundXMLWriter} with the given data.
+	 * Builds a new {@link HybridXMLWriter} with the given data.
 	 * 
 	 * @param writer the output {@link Writer}.
 	 * @param request the current {@link SolrQueryRequest}.
 	 * @param response the current {@link SolrQueryResponse}.
 	 */
-	CompoundXMLWriter(
+	HybridXMLWriter(
 			final Writer writer, 
 			final SolrQueryRequest request,
 			final SolrQueryResponse response) {
@@ -70,7 +71,7 @@ class CompoundXMLWriter extends XMLWriter {
 		if (req.getParams().getBool(CommonParams.OMIT_HEADER, false)) {
 			responseValues.remove("responseHeader");
 		} else {
-			((NamedList)responseValues.get("responseHeader")).add("query", responseValues.remove("query"));
+			((NamedList)responseValues.get("responseHeader")).add("query", responseValues.remove("query").toString());
 		}
 		
 		for (final Entry<String, ?> entry : responseValues) {
@@ -93,11 +94,11 @@ class CompoundXMLWriter extends XMLWriter {
 	 */
 	public void writeValue(final String name, final Object value, final NamedList<?> data) throws IOException {
 		if (value == null) {
-			writeNull(name);
+			writeNull(name);	
 		} else if (value instanceof ResultSet) {
 			 final XMLOutput outputter = new XMLOutput(false);
 			 outputter.format(new WriterOutputStream(writer), (ResultSet)value) ;
-		} else if (value instanceof String) {
+		} else if (value instanceof String || value instanceof Query) {
 			writeStr(name, value.toString(), false);
 		} else if (value instanceof Number) {
 			if (value instanceof Integer || value instanceof Short || value instanceof Byte) {

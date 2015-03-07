@@ -40,7 +40,7 @@ import com.hp.hpl.jena.rdf.model.Model;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SPARQLResponseWriter implements QueryResponseWriter {
+public class HybridResponseWriter implements QueryResponseWriter {
 	/**
 	 * A {@link WriterStrategy} physically writes results on the outgoing stream, according with a given query type.
 	 * 
@@ -77,7 +77,7 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 		String getContentType(final String [] detectedMediaTypes);
 	}
 
-	private final static Log LOGGER = new Log(LoggerFactory.getLogger(SPARQLResponseWriter.class));
+	private final static Log LOGGER = new Log(LoggerFactory.getLogger(HybridResponseWriter.class));
 	
 	private Map<Integer, WriterStrategy> writers = new HashMap<Integer, WriterStrategy>();  
 	private Map<String, WriterStrategy> compositeWriters = new HashMap<String, WriterStrategy>();  
@@ -106,6 +106,8 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 				
 				final String contentType = contentTypeRewrites.get(getContentType(request));
 				compositeWriters.get(contentType).doWrite(values, writer, contentType);
+				
+				
 			} else {
 				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request));
 			}
@@ -198,7 +200,7 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 					final NamedList response, 
 					final Writer writer, 
 					final String contentType) throws IOException {
-				final CompoundXMLWriter xmlw = new CompoundXMLWriter(
+				final HybridXMLWriter xmlw = new HybridXMLWriter(
 						writer, 
 						(SolrQueryRequest) response.get(Names.SOLR_REQUEST), 
 						(SolrQueryResponse) response.get(Names.SOLR_RESPONSE));
@@ -244,10 +246,14 @@ public class SPARQLResponseWriter implements QueryResponseWriter {
 	 * @return the content type associated with this response writer.
 	 */
 	String getContentType(final SolrQueryRequest request) {
+		final Query query = (Query)request.getContext().get(Names.QUERY);
+		if (query == null) {
+			return null;
+		}
+
 		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY);
 		final String accept = httpRequest.getHeader(HttpHeaders.ACCEPT);
 		
-		final Query query = (Query)request.getContext().get(Names.QUERY);
 		final String [] mediaTypes = accept != null ? accept.split(",") : null;
 		String [] requestedMediaTypes = null;
 		if (mediaTypes != null) {
