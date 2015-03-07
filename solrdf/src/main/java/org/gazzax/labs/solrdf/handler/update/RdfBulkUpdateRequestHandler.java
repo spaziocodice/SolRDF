@@ -103,7 +103,7 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 					}
 				});
 				
-				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response, null);
+				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response, null, null);
 				final Graph defaultGraph = dataset.getDefaultGraph();
 				while (iterator.hasNext()) {
 					defaultGraph.add(iterator.next());

@@ -37,6 +37,7 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 
 	private final SolrIndexSearcher searcher;
 	final SolrIndexSearcher.QueryCommand queryCommand;
+	final GraphEventListener listener;
 	private DocList page;
 	
 	private CursorMark nextCursorMark;
@@ -91,11 +92,14 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		@Override
 		public Triple next() {
 			try {
-				final Document document = searcher.doc(iterator().nextDoc(), TRIPLE_FIELDS);
-				return Triple.create(
+				final int nextDocId = iterator().nextDoc();
+				final Document document = searcher.doc(nextDocId, TRIPLE_FIELDS);
+				final Triple triple = Triple.create(
 						NTriples.asURIorBlankNode((String) document.get(Field.S)), 
 						NTriples.asURI((String) document.get(Field.P)),
 						NTriples.asNode((String) document.get(Field.O)));
+				listener.afterTripleHasBeenBuilt(triple, nextDocId);
+				return triple;
 			} catch (final IOException exception) {
 				throw new RuntimeException(exception);
 			}
@@ -140,11 +144,12 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param queryCommand the query command that will be submitted.static 
 	 * @param sort the sort specs.
 	 */
-	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort) {
+	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort, final GraphEventListener listener) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
 		this.queryCommand.setCursorMark(sentCursorMark);
+		this.listener = listener;
 	}
 
 	@Override

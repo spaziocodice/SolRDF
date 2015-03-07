@@ -1,0 +1,86 @@
+<response>
+<lst name="responseHeader"><int name="status">0</int><int name="QTime">249</int></lst>
+</response>
+<response>
+<lst name="responseHeader"><int name="status">0</int><int name="QTime">339</int></lst><str name="query">SELECT  *
+WHERE
+  { ?s ?p ?o}
+LIMIT   10
+</str><?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="s"/>
+    <variable name="p"/>
+    <variable name="o"/>
+  </head>
+  <results>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://purl.org/dc/elements/1.1/title</uri>
+      </binding>
+      <binding name="o">
+        <literal>Andrea Gazzarini</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://example.org/ns#price</uri>
+      </binding>
+      <binding name="o">
+        <literal>42</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://purl.org/dc/elements/1.1/title</uri>
+      </binding>
+      <binding name="o">
+        <literal>David Copperfield</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://example.org/ns#price</uri>
+      </binding>
+      <binding name="o">
+        <literal>14.3</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://purl.org/dc/elements/1.1/creator</uri>
+      </binding>
+      <binding name="o">
+        <literal>Apache Solr Essentials</literal>
+      </binding>
+    </result>
+    <result>
+      <binding name="s">
+        <uri>http://example/book2</uri>
+      </binding>
+      <binding name="p">
+        <uri>http://purl.org/dc/elements/1.1/creator</uri>
+      </binding>
+      <binding name="o">
+        <literal>Edmund Wells</literal>
+      </binding>
+    </result>
+  </results>
+</sparql>
+<lst name="facet_counts"><lst name="facet_queries"/><lst name="facet_fields"><lst name="p"><int name="&lt;http://example.org/ns#price>">2</int><int name="&lt;http://purl.org/dc/elements/1.1/creator>">2</int><int name="&lt;http://purl.org/dc/elements/1.1/title>">2</int></lst></lst><lst name="facet_dates"/><lst name="facet_ranges"/></lst>
+</response>

@@ -1,6 +1,7 @@
 package org.gazzax.labs.solrdf.search.qparser;
 
 import org.apache.lucene.search.Query;
+import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
@@ -35,9 +36,20 @@ public class SparqlQParser extends QParser {
 	@Override 
 	public Query parse() throws SyntaxError {
 		try {
-			return new SparqlQuery(QueryFactory.create(qstr));
+			return new SparqlQuery(QueryFactory.create(qstr), isHybrid());
 		} catch (final Exception exception) {
 			throw new SyntaxError(exception);
 		}
+	}
+	
+	/**
+	 * Returns true if the query is hybrid (e.g. SPARQL with Solr parameters)
+	 * 
+	 * At the moment only the facet parameter switches on the hybrid mode.
+	 * 
+	 * @return true if the query is hybrid (e.g. SPARQL with Solr parameters)
+	 */
+	boolean isHybrid() {
+		return req.getParams().getBool(FacetParams.FACET, false);
 	}
 }

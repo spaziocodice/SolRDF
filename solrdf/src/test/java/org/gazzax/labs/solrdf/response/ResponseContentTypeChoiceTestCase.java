@@ -1,7 +1,8 @@
 package org.gazzax.labs.solrdf.response;
 
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,13 +25,13 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
 
 /**
- * {@link SPARQLResponseWriter} test case.
+ * {@link HybridResponseWriter} test case.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
 public class ResponseContentTypeChoiceTestCase {
-	private SPARQLResponseWriter cut;
+	private HybridResponseWriter cut;
 	private SolrQueryRequest request;
 	private SolrQueryResponse response;
 	private HttpServletRequest httpRequest;
@@ -50,7 +51,7 @@ public class ResponseContentTypeChoiceTestCase {
 	 */
 	@Before
 	public void setUp() {
-		cut = new SPARQLResponseWriter();
+		cut = new HybridResponseWriter();
 		request = mock(SolrQueryRequest.class);
 		response = mock(SolrQueryResponse.class);
 		httpRequest = mock(HttpServletRequest.class);

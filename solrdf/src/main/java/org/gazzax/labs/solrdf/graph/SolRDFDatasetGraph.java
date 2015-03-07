@@ -32,6 +32,8 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	final SolrQueryResponse response;
 	final QParser qParser;
 	
+	final GraphEventListener listener;
+	
 	/**
 	 * Builds a new Dataset graph with the given data.
 	 * 
@@ -41,9 +43,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	public SolRDFDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response) {
-		this.request = request;
-		this.response = response;
-		this.qParser = null;
+		this(request, response, null, null);
 	}	
 	
 	/**
@@ -57,10 +57,12 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	public SolRDFDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response,
-			final QParser qParser) {
+			final QParser qParser,
+			final GraphEventListener listener) {
 		this.request = request;
 		this.response = response;
 		this.qParser = qParser;
+		this.listener = listener;
 	}
 
 	@Override
@@ -75,12 +77,12 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return SolRDFGraph.readableAndWritableGraph(graphNode, request, response, qParser);
+		return SolRDFGraph.readableAndWritableGraph(graphNode, request, response, qParser, listener);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return SolRDFGraph.readableAndWritableGraph(null, request, response, qParser);
+		return SolRDFGraph.readableAndWritableGraph(null, request, response, qParser, listener);
 	}
 
 	@Override
