@@ -6,7 +6,7 @@ import org.junit.Test;
 
 /**
  * {@link Strings} test case.
- * 
+ *  
  * @author Andrea Gazzarini
  * @since 1.0
  */

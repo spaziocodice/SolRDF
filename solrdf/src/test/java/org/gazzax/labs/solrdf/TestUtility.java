@@ -7,7 +7,7 @@ import java.util.Random;
  * 
  * @author Andrea Gazzarini
  * @since 1.0
- */       
+ */        
 public abstract class TestUtility {
 	public static final Random RANDOMIZER = new Random();
 	public static final String DUMMY_BASE_URI = "http://example.org/";
