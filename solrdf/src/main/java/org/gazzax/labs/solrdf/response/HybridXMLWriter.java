@@ -16,6 +16,7 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.response.XMLWriter;
+import org.gazzax.labs.solrdf.Names;
 
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.ResultSet;
@@ -77,7 +78,7 @@ class HybridXMLWriter extends XMLWriter {
 		for (final Entry<String, ?> entry : responseValues) {
 			writeValue(entry.getKey(), entry.getValue(), responseValues);			
 		}
-		
+	
 		writer.write(RESPONSE_ROOT_ELEMENT_END);
 	}
 	
@@ -96,8 +97,18 @@ class HybridXMLWriter extends XMLWriter {
 		if (value == null) {
 			writeNull(name);	
 		} else if (value instanceof ResultSet) {
-			 final XMLOutput outputter = new XMLOutput(false);
-			 outputter.format(new WriterOutputStream(writer), (ResultSet)value) ;
+			final int start = req.getParams().getInt(CommonParams.START, 0);
+			final int rows = req.getParams().getInt(CommonParams.ROWS, 10);
+			
+			writeStartDocumentList("response", start, rows, (Integer) data.remove(Names.NUM_FOUND), 1.0f);
+			final XMLOutput outputter = new XMLOutput(false);
+			outputter.format(
+					new WriterOutputStream(writer), 
+						new PagedResultSet(
+							(ResultSet)value, 
+					 		rows,
+					 		start));
+			writeEndDocumentList();
 		} else if (value instanceof String || value instanceof Query) {
 			writeStr(name, value.toString(), false);
 		} else if (value instanceof Number) {

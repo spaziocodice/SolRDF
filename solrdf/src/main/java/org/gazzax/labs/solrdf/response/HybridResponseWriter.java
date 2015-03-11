@@ -105,9 +105,9 @@ public class HybridResponseWriter implements QueryResponseWriter {
 				response.add(Names.SOLR_RESPONSE, response);
 				
 				final String contentType = contentTypeRewrites.get(getContentType(request));
-				compositeWriters.get(contentType).doWrite(values, writer, contentType);
-				
-				
+				WriterStrategy strategy = compositeWriters.get(contentType);
+				strategy = strategy != null ? strategy : compositeWriters.get("text/xml");
+				strategy.doWrite(values, writer, contentType);
 			} else {
 				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request));
 			}

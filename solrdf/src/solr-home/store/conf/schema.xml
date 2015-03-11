@@ -13,7 +13,7 @@
 
 		<!-- O section -->
 		<!-- This is the triple object that is stored verbatim -->		
-		<field name="o" type="string" indexed="false" stored="true"/>
+		<field name="o" type="string" indexed="true" stored="true"/>
 		<field name="o_s" type="string" indexed="true" stored="false"/>
 		<field name="o_b" type="boolean" indexed="true" stored="false" />
 		<field name="o_d" type="datetime" indexed="true" stored="false" />

@@ -27,6 +27,8 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFactory;
+import com.hp.hpl.jena.query.ResultSetRewindable;
 import com.hp.hpl.jena.rdf.model.Model;
 
 /**
@@ -74,18 +76,27 @@ public class SparqlSearchComponent extends SearchComponent {
 			case Query.QueryTypeSelect: {
 				final ResultSet resultSet = execution.execSelect();
 				
-				// We need to find a way to (alt)
-				// - don't parse the resultset
-				// - reuse in the RW the parse results
-				// We could set something in the triple match to avoid Triple creation in the (DeepPaging)Iterator
-				final Iterator<Triple> iterator = resultSet.getResourceModel().getGraph().find(Node.ANY, Node.ANY, Node.ANY);
-				while (iterator.hasNext()) { iterator.next(); }
-
-		    	final DocListAndSet results = new DocListAndSet();
-		    	results.docSet = new HashDocSet(docs.buffer, 0, docs.elementsCount);
-		    	responseBuilder.setResults(results);
-
-				response.add(Names.QUERY_RESULT, resultSet);
+				if (wrapper.isHybrid()) {
+					// We need to find a way to (alt)
+					// - don't parse the resultset
+					// - reuse in the RW the parse results
+					// We could set something in the triple match to avoid Triple creation in the (DeepPaging)Iterator
+					while (resultSet.hasNext()) { resultSet.next(); }
+	
+			    	final DocListAndSet results = new DocListAndSet();
+			    	results.docSet = new HashDocSet(docs.buffer, 0, docs.elementsCount);	
+			    	
+			    	responseBuilder.setResults(results);
+			    	
+			    	execution.close();
+			    	final QueryExecution execution1 = QueryExecutionFactory.create(
+			    			query, 
+							DatasetFactory.create(new SolRDFDatasetGraph(request, response, parser, listener)));
+					response.add(Names.QUERY_RESULT, execution1.execSelect());
+					response.add(Names.NUM_FOUND, docs.elementsCount);					
+				} else {
+					response.add(Names.QUERY_RESULT, resultSet);					
+				}
 				break;
 			}
 			case Query.QueryTypeDescribe: {

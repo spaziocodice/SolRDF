@@ -147,6 +147,7 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort, final GraphEventListener listener) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
+		sort.setOffset(0);
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
 		this.queryCommand.setCursorMark(sentCursorMark);
 		this.listener = listener;
