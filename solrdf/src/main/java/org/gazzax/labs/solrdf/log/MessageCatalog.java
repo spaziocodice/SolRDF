@@ -10,6 +10,7 @@ package org.gazzax.labs.solrdf.log;
 public interface MessageCatalog {
 	String PREFIX = "<SOLRDF";
 	
+	String _00090_SWITCHING_2_HYB_MODE = PREFIX + "-00090> : Switching to Hybrid mode.";
 	String _00091_NULL_QUERY_OR_EXECUTION = PREFIX + "-00091> : Query or QueryExecution cannot be null.";
 	String _00092_NEGOTIATED_CONTENT_TYPE = PREFIX + "-00092> : Query type %s, incoming Accept header is %s, applied Content-type is %s";
 	 

@@ -47,7 +47,7 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public final class SolRDFGraph extends GraphBase {
-	static final int DEFAULT_QUERY_FETCH_SIZE = 10;
+	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
@@ -63,7 +63,7 @@ public final class SolRDFGraph extends GraphBase {
 	
 	final int queryFetchSize;
 	
-	final GraphEventListener listener;
+	final GraphEventConsumer listener;
 	
 	/**
 	 * Creates a Read / Write {@link Graph}.
@@ -79,7 +79,7 @@ public final class SolRDFGraph extends GraphBase {
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
 			final QParser qParser,
-			final GraphEventListener listener) {
+			final GraphEventConsumer listener) {
 		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
@@ -99,7 +99,7 @@ public final class SolRDFGraph extends GraphBase {
 			final SolrQueryResponse response, 
 			final QParser qParser, 
 			final int fetchSize,
-			final GraphEventListener listener) {
+			final GraphEventConsumer listener) {
 		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize, listener);
 	}
 
@@ -118,7 +118,7 @@ public final class SolRDFGraph extends GraphBase {
 		final SolrQueryResponse response, 
 		final QParser qparser, 
 		final int fetchSize, 
-		final GraphEventListener listener) {
+		final GraphEventConsumer listener) {
 		this.graphNode = graphNode;
 		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
 		this.request = request;
@@ -239,6 +239,7 @@ public final class SolRDFGraph extends GraphBase {
 	    cmd.setQuery(new MatchAllDocsQuery());
 	    cmd.setSort(sortSpec.getSort());
 	    cmd.setLen(queryFetchSize);
+	    cmd.setFlags(cmd.getFlags() | SolrIndexSearcher.GET_DOCSET);
 	    
 	    final List<Query> filters = new ArrayList<Query>();
 	    
@@ -251,7 +252,7 @@ public final class SolRDFGraph extends GraphBase {
 		}
 		
 		if (p != null) {
-			filters.add(new TermQuery(new Term(Field.P, asNt(p))));
+			filters.add(new TermQuery(new Term(Field.P, asNtURI(p))));
 		}
 		
 		if (o != null) {

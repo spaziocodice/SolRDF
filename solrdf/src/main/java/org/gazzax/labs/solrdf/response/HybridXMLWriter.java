@@ -37,6 +37,7 @@ class HybridXMLWriter extends XMLWriter {
 
 	protected static final char[] XML_STYLESHEET = "<?xml-stylesheet type=\"text/xsl\" href=\"".toCharArray();
 	protected static final char[] XML_STYLESHEET_END = "\"?>\n".toCharArray();
+	protected static final String RESPONSE_HEADER = "responseHeader";
 
 	/**
 	 * Builds a new {@link HybridXMLWriter} with the given data.
@@ -70,9 +71,9 @@ class HybridXMLWriter extends XMLWriter {
 
 		final NamedList<?> responseValues = rsp.getValues();
 		if (req.getParams().getBool(CommonParams.OMIT_HEADER, false)) {
-			responseValues.remove("responseHeader");
+			responseValues.remove(RESPONSE_HEADER);
 		} else {
-			((NamedList)responseValues.get("responseHeader")).add("query", responseValues.remove("query").toString());
+			((NamedList)responseValues.get(RESPONSE_HEADER)).add(Names.QUERY, responseValues.remove(Names.QUERY).toString());
 		}
 		
 		for (final Entry<String, ?> entry : responseValues) {
@@ -99,15 +100,9 @@ class HybridXMLWriter extends XMLWriter {
 		} else if (value instanceof ResultSet) {
 			final int start = req.getParams().getInt(CommonParams.START, 0);
 			final int rows = req.getParams().getInt(CommonParams.ROWS, 10);
-			
 			writeStartDocumentList("response", start, rows, (Integer) data.remove(Names.NUM_FOUND), 1.0f);
 			final XMLOutput outputter = new XMLOutput(false);
-			outputter.format(
-					new WriterOutputStream(writer), 
-						new PagedResultSet(
-							(ResultSet)value, 
-					 		rows,
-					 		start));
+			outputter.format(new WriterOutputStream(writer), (ResultSet)value);
 			writeEndDocumentList();
 		} else if (value instanceof String || value instanceof Query) {
 			writeStr(name, value.toString(), false);

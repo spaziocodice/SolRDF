@@ -11,6 +11,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.search.DocSet;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.gazzax.labs.solrdf.Field;
@@ -28,11 +29,29 @@ import com.hp.hpl.jena.sparql.core.Quad;
  * @since 1.0
  */
 public class SolRDFDatasetGraph extends DatasetGraphCaching {
+	final static GraphEventConsumer NULL_GRAPH_EVENT_CONSUMER = new GraphEventConsumer() {
+		
+		@Override
+		public boolean requireTripleBuild() {
+			return true;
+		}
+		
+		@Override
+		public void onDocSet(DocSet docSet) {
+			// Nothing to be done here.
+		}
+		
+		@Override
+		public void afterTripleHasBeenBuilt(final Triple triple, final int docId) {
+			// Nothing to be done here.
+		}
+	};
+	
 	final SolrQueryRequest request;
 	final SolrQueryResponse response;
 	final QParser qParser;
 	
-	final GraphEventListener listener;
+	final GraphEventConsumer listener;
 	
 	/**
 	 * Builds a new Dataset graph with the given data.
@@ -58,11 +77,11 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response,
 			final QParser qParser,
-			final GraphEventListener listener) {
+			final GraphEventConsumer listener) {
 		this.request = request;
 		this.response = response;
 		this.qParser = qParser;
-		this.listener = listener;
+		this.listener = listener != null ? listener : NULL_GRAPH_EVENT_CONSUMER;
 	}
 
 	@Override
