@@ -83,7 +83,6 @@
 		<lst name="invariants">
 			<str name="echoParams">none</str>
 			<str name="defType">sparql</str>
-			<int name="rows">10</int>
 			<str name="sort">id asc</str>
 			<str name="wt">hybrid</str>
 		</lst>

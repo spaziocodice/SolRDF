@@ -11,22 +11,21 @@ import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.DocListAndSet;
-import org.apache.solr.search.HashDocSet;
+import org.apache.solr.search.DocSet;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
-import org.gazzax.labs.solrdf.graph.GraphEventListener;
+import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
 
-import com.carrotsearch.hppc.IntArrayList;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetRewindable;
 import com.hp.hpl.jena.rdf.model.Model;
 
 /**
@@ -37,11 +36,14 @@ import com.hp.hpl.jena.rdf.model.Model;
  */
 public class SparqlSearchComponent extends SearchComponent {
 	private static final String DEFAULT_DEF_TYPE = "sparql";
-	
+			
 	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
+
+	    final int start = request.getParams().getInt(CommonParams.START, 0);
+		final int rows = request.getParams().getInt(CommonParams.ROWS, 10);
 	    
 	    try {
 			final QParser parser = qParser(request);
@@ -49,21 +51,37 @@ public class SparqlSearchComponent extends SearchComponent {
 	    	request.getContext().put(Names.HYBRID_MODE, wrapper.isHybrid());
 	    	
 	    	final Query query = wrapper.getQuery();
-	    	final IntArrayList docs = new IntArrayList(50);
-	    	final GraphEventListener listener = new GraphEventListener() {
-				@Override
-				public void afterTripleHasBeenBuilt(final Triple triple, final int docId) {
-					docs.add(docId);
-				}
-			};
-	    	
+	    	final DocListAndSet results = new DocListAndSet();
+
 			final QueryExecution execution = QueryExecutionFactory.create(
 	    			query, 
-					DatasetFactory.create(new SolRDFDatasetGraph(request, response, parser, listener)));
+					DatasetFactory.create(
+							new SolRDFDatasetGraph(
+									request, 
+									response, 
+									parser, 
+									wrapper.isHybrid() 
+										? new GraphEventConsumer() {
+											int currentRow;
+											
+								    		@Override
+											public void afterTripleHasBeenBuilt(final Triple triple, final int docId) {
+												currentRow++;
+											}
+
+											@Override
+											public boolean requireTripleBuild() {
+												return currentRow >= start && currentRow < start + rows;
+											}
+
+											@Override
+											public void onDocSet(final DocSet docSet) {
+												results.docSet = results.docSet != null ? results.docSet.union(docSet) : docSet;
+											}
+										}
+										: null)));
 	    	
 	    	request.getContext().put(Names.QUERY, query);
-	    	
-
 	    	response.add(Names.QUERY, query);
 			response.add(Names.QUERY_EXECUTION, execution);
 			
@@ -72,30 +90,29 @@ public class SparqlSearchComponent extends SearchComponent {
 				response.add(Names.QUERY_RESULT, execution.execAsk());				
 				break;
 			case Query.QueryTypeSelect: {
-				final ResultSet resultSet = execution.execSelect();
-				
-				// We need to find a way to (alt)
-				// - don't parse the resultset
-				// - reuse in the RW the parse results
-				// We could set something in the triple match to avoid Triple creation in the (DeepPaging)Iterator
-				final Iterator<Triple> iterator = resultSet.getResourceModel().getGraph().find(Node.ANY, Node.ANY, Node.ANY);
-				while (iterator.hasNext()) { iterator.next(); }
-
-		    	final DocListAndSet results = new DocListAndSet();
-		    	results.docSet = new HashDocSet(docs.buffer, 0, docs.elementsCount);
-		    	responseBuilder.setResults(results);
-
-				response.add(Names.QUERY_RESULT, resultSet);
+				if (wrapper.isHybrid()) {
+					
+					final ResultSetRewindable resultSet = new PagedResultSet(execution.execSelect(), rows, start);
+					while (resultSet.hasNext()) { 
+						resultSet.next(); 
+					}
+			    	
+					resultSet.reset();
+			    	
+			    	responseBuilder.setResults(results);
+			    	
+					response.add(Names.QUERY_RESULT, resultSet);					
+					response.add(Names.NUM_FOUND, results.docSet.size());					
+				} else {
+					response.add(Names.QUERY_RESULT, execution.execSelect());					
+				}
 				break;
 			}
 			case Query.QueryTypeDescribe: {
 				final Model result = execution.execDescribe();
-				// See above
 				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
 				while (iterator.hasNext()) { iterator.next(); }
 
-		    	final DocListAndSet results = new DocListAndSet();
-		    	results.docSet = new HashDocSet(docs.buffer, 0, docs.elementsCount);
 		    	responseBuilder.setResults(results);
 
 				response.add(Names.QUERY_RESULT, result);
@@ -103,12 +120,9 @@ public class SparqlSearchComponent extends SearchComponent {
 			}
 			case Query.QueryTypeConstruct: {				
 				final Model result = execution.execConstruct();
-				// See above
 				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
 				while (iterator.hasNext()) { iterator.next(); }
 
-		    	final DocListAndSet results = new DocListAndSet();
-		    	results.docSet = new HashDocSet(docs.buffer, 0, docs.elementsCount);
 		    	responseBuilder.setResults(results);
 
 				response.add(Names.QUERY_RESULT, result);

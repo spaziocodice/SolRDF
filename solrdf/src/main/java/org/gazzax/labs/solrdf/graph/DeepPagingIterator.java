@@ -15,6 +15,7 @@ import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
 
 import com.google.common.collect.UnmodifiableIterator;
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 
 /**
@@ -35,30 +36,36 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		TRIPLE_FIELDS.add(Field.O);
 	}
 
+	protected static final Triple DUMMY_TRIPLE = new Triple(Node.ANY, Node.ANY, Node.ANY);
+	
 	private final SolrIndexSearcher searcher;
 	final SolrIndexSearcher.QueryCommand queryCommand;
-	final GraphEventListener listener;
+	final GraphEventConsumer consumer;
 	private DocList page;
 	
 	private CursorMark nextCursorMark;
 	private CursorMark sentCursorMark;
-	
+
 	/**
 	 * Iteration state: we need to (re)execute a query. 
 	 * This could be needed the very first time we start iteration and each time the current result
 	 * page has been consumed.
 	 */
-	private final Iterator<Triple> executeQuery = new UnmodifiableIterator<Triple>() {
+	private final Iterator<Triple> firstQueryExecution = new UnmodifiableIterator<Triple>() {
 		@Override
 		public boolean hasNext() {
 			try {
 			    final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 			    searcher.search(result, queryCommand);
+			  			
+			    consumer.onDocSet(result.getDocListAndSet().docSet);
+			    queryCommand.clearFlags(SolrIndexSearcher.GET_DOCSET);
 			    
 				sentCursorMark = queryCommand.getCursorMark();
 				nextCursorMark = result.getNextCursorMark();
 				
 				page = result.getDocListAndSet().docList;
+
 				return page.size() > 0;
 			} catch (final Exception exception) {
 				throw new RuntimeException(exception);
@@ -70,6 +77,44 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			currentState = iterateOverCurrentPage;
 			return currentState.next();
 		}
+		
+		public String toString() {
+			return "firstQueryExecution";
+		};
+	};
+
+	/**
+	 * Iteration state: we need to (re)execute a query. 
+	 * This could be needed the very first time we start iteration and each time the current result
+	 * page has been consumed.
+	 */
+	private final Iterator<Triple> executeQuery = new UnmodifiableIterator<Triple>() {
+		@Override
+		public boolean hasNext() {
+			try {
+				final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
+			    searcher.search(result, queryCommand);
+			    
+				sentCursorMark = queryCommand.getCursorMark();
+				nextCursorMark = result.getNextCursorMark();
+				
+				page = result.getDocListAndSet().docList;
+
+				return page.size() > 0;
+			} catch (final Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+
+		@Override
+		public Triple next() {
+			currentState = iterateOverCurrentPage;
+			return currentState.next();
+		}
+		
+		public String toString() {
+			return "executeQuery";
+		};
 	};
 			
 	/**
@@ -93,12 +138,18 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		public Triple next() {
 			try {
 				final int nextDocId = iterator().nextDoc();
-				final Document document = searcher.doc(nextDocId, TRIPLE_FIELDS);
-				final Triple triple = Triple.create(
-						NTriples.asURIorBlankNode((String) document.get(Field.S)), 
-						NTriples.asURI((String) document.get(Field.P)),
-						NTriples.asNode((String) document.get(Field.O)));
-				listener.afterTripleHasBeenBuilt(triple, nextDocId);
+				
+				Triple triple = null;
+				if (consumer.requireTripleBuild()) { 
+					final Document document = searcher.doc(nextDocId, TRIPLE_FIELDS);
+					triple = Triple.create(
+							NTriples.asURIorBlankNode((String) document.get(Field.S)), 
+							NTriples.asURI((String) document.get(Field.P)),
+							NTriples.asNode((String) document.get(Field.O)));
+				} else {
+					triple = DUMMY_TRIPLE;
+				}
+				consumer.afterTripleHasBeenBuilt(triple, nextDocId);
 				return triple;
 			} catch (final IOException exception) {
 				throw new RuntimeException(exception);
@@ -109,9 +160,12 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			if (iterator == null) {
 				iterator = page.iterator();	
 			}
-			return iterator;
-			 
+			return iterator;	 
 		}
+		
+		public String toString() {
+			return "iterateOverCurrentPage";
+		};
 	};
 
 	/**
@@ -133,9 +187,13 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		public Triple next() {
 			return currentState.next();
 		}
+		
+		public String toString() {
+			return "checkForConsumptionCompleteness";
+		};
 	};
 	
-	private Iterator<Triple> currentState = executeQuery;
+	private Iterator<Triple> currentState = firstQueryExecution;
 	
 	/**
 	 * Builds a new iterator with the given data.
@@ -144,12 +202,13 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param queryCommand the query command that will be submitted.static 
 	 * @param sort the sort specs.
 	 */
-	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort, final GraphEventListener listener) {
+	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort, final GraphEventConsumer listener) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
+		sort.setOffset(0);
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
 		this.queryCommand.setCursorMark(sentCursorMark);
-		this.listener = listener;
+		this.consumer = listener;
 	}
 
 	@Override

@@ -94,21 +94,20 @@ public class HybridResponseWriter implements QueryResponseWriter {
 		final Query query = (Query)request.getContext().get(Names.QUERY);
 		final QueryExecution execution = (QueryExecution)response.getValues().get(Names.QUERY_EXECUTION);
 		try {
-			if (query == null || execution == null) {
-				LOGGER.error(MessageCatalog._00091_NULL_QUERY_OR_EXECUTION);
-				return;
-			}
-			
 			final boolean isHybridMode = Boolean.TRUE.equals(request.getContext().get(Names.HYBRID_MODE));
 			if (isHybridMode) {
 				response.add(Names.SOLR_REQUEST, request);
 				response.add(Names.SOLR_RESPONSE, response);
 				
 				final String contentType = contentTypeRewrites.get(getContentType(request));
-				compositeWriters.get(contentType).doWrite(values, writer, contentType);
-				
-				
+				WriterStrategy strategy = compositeWriters.get(contentType);
+				strategy = strategy != null ? strategy : compositeWriters.get("text/xml");
+				strategy.doWrite(values, writer, contentType);
 			} else {
+				if (query == null || execution == null) {
+					LOGGER.error(MessageCatalog._00091_NULL_QUERY_OR_EXECUTION);
+					return;
+				}
 				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request));
 			}
 		} finally {

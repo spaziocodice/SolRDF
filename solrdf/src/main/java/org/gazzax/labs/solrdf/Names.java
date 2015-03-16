@@ -15,4 +15,5 @@ public interface Names {
 	String SOLR_REQUEST = "solr.request";
 	String SOLR_RESPONSE = "solr.response";
 	String HYBRID_MODE = "hybrid.mode";
+	String NUM_FOUND = "num.found";
 }
