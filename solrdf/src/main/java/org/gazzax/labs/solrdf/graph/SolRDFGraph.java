@@ -4,8 +4,10 @@ import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -48,9 +50,9 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  */
 public final class SolRDFGraph extends GraphBase {
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
+	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
-	
 	final UpdateRequestProcessor updateProcessor;
 	final AddUpdateCommand updateCommand;
 	final SolrQueryRequest request;
@@ -63,7 +65,7 @@ public final class SolRDFGraph extends GraphBase {
 	
 	final int queryFetchSize;
 	
-	final GraphEventConsumer listener;
+	final GraphEventConsumer consumer;
 	
 	/**
 	 * Creates a Read / Write {@link Graph}.
@@ -72,6 +74,7 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param request the current Solr request.
 	 * @param response the current Solr response.
 	 * @param qParser the query parser associated with the current request.
+	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
 	public static SolRDFGraph readableAndWritableGraph(
@@ -79,8 +82,8 @@ public final class SolRDFGraph extends GraphBase {
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
 			final QParser qParser,
-			final GraphEventConsumer listener) {
-		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, listener);
+			final GraphEventConsumer consumer) {
+		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, consumer);
 	}
 
 	/**
@@ -91,6 +94,7 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param response the current Solr response.
 	 * @param qParser the query parser associated with the current request.
 	 * @param fetchSize the read fetch size.
+	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
 	public static SolRDFGraph readableAndWritableGraph(
@@ -99,8 +103,8 @@ public final class SolRDFGraph extends GraphBase {
 			final SolrQueryResponse response, 
 			final QParser qParser, 
 			final int fetchSize,
-			final GraphEventConsumer listener) {
-		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize, listener);
+			final GraphEventConsumer consumer) {
+		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize, consumer);
 	}
 
 	/**
@@ -111,6 +115,7 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param response the Solr query response.
 	 * @param qparser the query parser.
 	 * @param fetchSize the fetch size that will be used in reads.
+	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
 	private SolRDFGraph(
 		final Node graphNode, 
@@ -118,7 +123,7 @@ public final class SolRDFGraph extends GraphBase {
 		final SolrQueryResponse response, 
 		final QParser qparser, 
 		final int fetchSize, 
-		final GraphEventConsumer listener) {
+		final GraphEventConsumer consumer) {
 		this.graphNode = graphNode;
 		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
 		this.request = request;
@@ -128,7 +133,7 @@ public final class SolRDFGraph extends GraphBase {
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
 		this.queryFetchSize = fetchSize;
-		this.listener = listener;
+		this.consumer = consumer;
 	}
 	
 	@Override
@@ -259,7 +264,7 @@ public final class SolRDFGraph extends GraphBase {
 			if (o.isLiteral()) {
 				final String language = o.getLiteralLanguage();
 				if (Strings.isNotNullOrEmptyString(language)) {
-					filters.add(new TermQuery(new Term(Field.LANG, language)));
+					filters.add(languageTermQuery(language));
 				}
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
@@ -276,7 +281,7 @@ public final class SolRDFGraph extends GraphBase {
 		
 		cmd.setFilterList(filters);
 
-	    return new DeepPagingIterator(searcher, cmd, sortSpec, listener);
+	    return new DeepPagingIterator(searcher, cmd, sortSpec, consumer);
 	}	
 	
 	/**
@@ -329,4 +334,21 @@ public final class SolRDFGraph extends GraphBase {
 		
 		return builder.toString();
 	}	
+	
+	/**
+	 * Returns a language {@link TermQuery} from the cache.
+	 * If the cache doesn't contain a query for a specific language, it 
+	 * will be created, cached and returned.
+	 * 
+	 * @param language the language.
+	 * @return a language {@link TermQuery} from the cache.
+	 */
+	TermQuery languageTermQuery(final String language) {
+		TermQuery query = languageTermQueries.get(language);
+		if (query == null) {
+			query = new TermQuery(new Term(Field.LANG, language));
+			languageTermQueries.put(language, query);
+		}
+		return query;
+	}
 }
