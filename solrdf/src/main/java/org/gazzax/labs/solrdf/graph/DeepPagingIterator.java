@@ -201,14 +201,19 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param searcher the Solr index searcher.
 	 * @param queryCommand the query command that will be submitted.static 
 	 * @param sort the sort specs.
+	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
-	DeepPagingIterator(final SolrIndexSearcher searcher, final SolrIndexSearcher.QueryCommand queryCommand, final SortSpec sort, final GraphEventConsumer listener) {
+	DeepPagingIterator(
+			final SolrIndexSearcher searcher, 
+			final SolrIndexSearcher.QueryCommand queryCommand, 
+			final SortSpec sort, 
+			final GraphEventConsumer consumer) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
 		sort.setOffset(0);
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
 		this.queryCommand.setCursorMark(sentCursorMark);
-		this.consumer = listener;
+		this.consumer = consumer;
 	}
 
 	@Override
