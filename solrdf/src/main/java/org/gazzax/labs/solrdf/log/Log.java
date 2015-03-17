@@ -1,7 +1,7 @@
 package org.gazzax.labs.solrdf.log;
 
 import org.slf4j.Logger;
-
+import static org.gazzax.labs.solrdf.log.MessageFactory.*;
 /**
  * Logger wrapper.
  * A simple SLF4j wrapper that avoids "if" statements within the code.
@@ -11,7 +11,7 @@ import org.slf4j.Logger;
  */
 public class Log {
 	
-	private final Logger _logger;
+	private final Logger logger;
 
 	/**
 	 * Builds a new Log wrapper with a given logger.
@@ -19,7 +19,7 @@ public class Log {
 	 * @param logger the {@link Logger} implementation.
 	 */
 	public Log(final Logger logger) {
-		_logger = logger;
+		this.logger = logger;
 	}
 
 	/**
@@ -28,7 +28,7 @@ public class Log {
 	 * @param message the log message.
 	 */
 	public void info(final String message) {
-		_logger.info(message);
+		logger.info(message);
 	}
 
 	/**
@@ -38,7 +38,7 @@ public class Log {
 	 * @param values values that will replace the message placeholders.
 	 */
 	public void info(final String message, final Object ... values) {
-		_logger.info(String.format(message, values));
+		logger.info(createMessage(message, values));
 	}
 
 	/**
@@ -47,7 +47,7 @@ public class Log {
 	 * @param message the log message.
 	 */
 	public void debug(final String message) {
-		_logger.debug(message);
+		logger.debug(message);
 	}
 
 	/**
@@ -57,8 +57,8 @@ public class Log {
 	 * @param values values that will replace the message placeholders.
 	 */
 	public void debug(final String message, final Object ... values) {
-		if (_logger.isDebugEnabled()) {
-			_logger.debug(String.format(message, values));
+		if (isDebugEnabled()) {
+			logger.debug(createMessage(message, values));
 		}
 	}
 
@@ -69,7 +69,7 @@ public class Log {
 	 * @param values values that will replace the message placeholders.
 	 */
 	public void error(final String message, final Object ... values) {
-		_logger.error(String.format(message, values));
+		logger.error(createMessage(message, values));
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class Log {
 	 * @param values values that will replace the message placeholders.
 	 */
 	public void error(final String message, final Throwable cause, final Object ... values) {
-		_logger.error(String.format(message, values));
+		logger.error(createMessage(message, values), cause);
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class Log {
 	 * @param cause the underlying cause.
 	 */
 	public void error(final String message, final Throwable cause) {
-		_logger.error(message, cause);
+		logger.error(message, cause);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class Log {
 	 * @param message the log message.
 	 */
 	public void warning(final String message) {
-		_logger.warn(message);
+		logger.warn(message);
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class Log {
 	 * @param values values that will replace the message placeholders.
 	 */
 	public void warning(final String message, final Object ... values) {
-		_logger.warn(String.format(message, values));
+		logger.warn(createMessage(message, values));
 	}
 
 	/**
@@ -118,6 +118,6 @@ public class Log {
 	 * @return true if the DEBUG level has been enabled for this logger.
 	 */
 	public boolean isDebugEnabled() {
-		return _logger.isDebugEnabled();
+		return logger.isDebugEnabled();
 	}
 }
