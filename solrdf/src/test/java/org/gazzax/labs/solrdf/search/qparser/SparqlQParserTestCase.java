@@ -1,6 +1,7 @@
 package org.gazzax.labs.solrdf.search.qparser;
 
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import org.apache.solr.common.params.SolrParams;
@@ -36,7 +37,8 @@ public class SparqlQParserTestCase {
 		cut = new SparqlQParser(null, localParams, params, request);
 		
 		try {
-			cut.parse();
+			cut.parse(); 
+			fail();
 		} catch(final SyntaxError expected) {
 			// Nothing, as this is the expected behaviour
 		}

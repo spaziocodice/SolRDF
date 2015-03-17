@@ -33,7 +33,7 @@ public class SparqlQParser extends QParser {
 			final SolrQueryRequest req) {
 		super(qstr, localParams, params, req);
 	}
-
+ 
 	@Override 
 	public Query parse() throws SyntaxError {
 		try {
