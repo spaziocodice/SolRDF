@@ -60,17 +60,15 @@ public class PagedResultSetTestCase {
 	public void outOfAvailableRange() {
 		final ResultSetRewindable cut = new PagedResultSet(executeQuery(), 10, (int)(model.size() + 1));
 
-		try {
-			while (cut.hasNext()) {
-				cut.next();
-			}
-			fail();
-		} catch (IllegalStateException expected) {
-			// Nothing, this is the expected behaviour
-		}		
+		while (cut.hasNext()) {
+			cut.next();
+		}
 		
 		assertEquals(0, cut.size());
+
 		cut.reset();
+		
+		assertEquals(0, cut.size());
 	}
 	
 	/**

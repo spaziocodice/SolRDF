@@ -50,12 +50,8 @@ public final class PagedResultSet implements ResultSetRewindable {
 		}
 
 		@Override
-		public QuerySolution next() {
-			while (getRowNumber() < offset && resultSet.hasNext()) {
-				resultSet.nextBinding();
-			}
-			
-			if (resultSet.getRowNumber() >= offset && getRowNumber() < (offset + size) && resultSet.hasNext()){
+		public QuerySolution next() {			
+			if (resultSet.getRowNumber() >= offset && getRowNumber() < (offset + size)){
 				final QuerySolution solution = resultSet.nextSolution();
 				rows.add(solution);
 				return solution;
@@ -191,6 +187,18 @@ public final class PagedResultSet implements ResultSetRewindable {
 				// This is because we need to trigger a request to Solr in order to collect DocSet (e.g. for faceting) 
 				resultSet.next();
 				currentState = new CachedResultSet();
+			} else {
+				if (offset > 0) {
+					while (resultSet.hasNext() && resultSet.getRowNumber() < offset) {
+						resultSet.nextBinding();
+					}				
+					
+					// Sanity check: if offset is greater than the available 
+					// rows then the resulting ResultSet must be empty
+					if (!resultSet.hasNext()) {
+						currentState = new CachedResultSet();					
+					}
+				}
 			}
 		}		
 	}

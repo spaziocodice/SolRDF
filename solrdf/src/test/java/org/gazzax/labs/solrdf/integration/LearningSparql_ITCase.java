@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.riot.resultset.ResultSetLang;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -74,12 +72,6 @@ public class LearningSparql_ITCase {
 
 	static SolrServer solr;
 	static final List<MisteryGuest> DATA = new ArrayList<MisteryGuest>();
-	
-	public static void main(String[] args) {
-		ResultSetLang.init();
-		System.out.println(RDFLanguages.contentTypeToLang("application/sparql-results+json"));
-		System.out.println(RDFLanguages.contentTypeToLang("application/sparql-results+xml"));
-	}
 	
 	/**
 	 * Fills the data and queries map.
