@@ -16,4 +16,7 @@ public interface Names {
 	String SOLR_RESPONSE = "solr.response";
 	String HYBRID_MODE = "hybrid.mode";
 	String NUM_FOUND = "num.found";
+	String GRAPH_URI_PARAMETER_NAME = "graph";
+	String GRAPH_URI_ATTRIBUTE_NAME = "graph.uri";
+	String DEFAULT_GRAPH_PARAMETER_NAME = "default";
 }

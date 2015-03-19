@@ -23,9 +23,11 @@ import org.apache.solr.handler.loader.ContentStreamLoader;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
+import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
 
 import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
@@ -103,8 +105,12 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 					}
 				});
 				
+				final String graphUri = request.getParams().get(Names.GRAPH_URI_ATTRIBUTE_NAME);
+				
 				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response, null, null);
-				final Graph defaultGraph = dataset.getDefaultGraph();
+				final Graph defaultGraph = graphUri == null 
+						? dataset.getDefaultGraph() 
+						: dataset.getGraph(NodeFactory.createURI(graphUri));
 				while (iterator.hasNext()) {
 					defaultGraph.add(iterator.next());
 				}		
