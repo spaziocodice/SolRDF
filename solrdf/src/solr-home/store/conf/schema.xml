@@ -4,7 +4,8 @@
 		<fieldType name="string" class="solr.StrField" sortMissingLast="true" />	
 		<fieldType name="numeric" class="solr.TrieDoubleField" precisionStep="8" positionIncrementGap="0"/>	
     	<fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
-    	<fieldType name="datetime" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>		
+    	<fieldType name="datetime" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
+    	<fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
 	</types>
 	<fields>
 		<field name="id" type="string" indexed="true" stored="true" required="true" />
@@ -21,6 +22,8 @@
 		<field name="o_lang" type="string" indexed="true" stored="false" />
 		
 		<field name="c" type="string" indexed="true" stored="true" />
+		
+		<field name="_version_" type="long" indexed="true" stored="true"/>
 	</fields>
 	<uniqueKey>id</uniqueKey>
 </schema>

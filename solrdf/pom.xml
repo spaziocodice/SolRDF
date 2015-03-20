@@ -16,6 +16,7 @@
 		<mockito.version>1.9.5-rc1</mockito.version>
 		<junit.version>4.11</junit.version>
 		<solr.version>4.8.0</solr.version>
+		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/${project.artifactId}</solr.home>
 	</properties>
 	<licenses>
 		<license>
@@ -134,9 +135,15 @@
 				<configuration>
 					<container>
 						<systemProperties>
-							<solr.solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/${project.artifactId}</solr.solr.home>
+							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file://${basedir}/src/test/resources/log4j.xml</log4j.configuration>
+							<!-- SOLRCLOUD BOOTSTRAP PROPERTIES -->
+							<!-- 
+							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
+ 							<collection.configName>solrdf</collection.configName>
+ 							<zkHost>localhost:2181</zkHost>
+ 							-->
 						</systemProperties>
 						<containerId>jetty7x</containerId>
 						<type>embedded</type>
