@@ -99,7 +99,7 @@ public class HybridResponseWriter implements QueryResponseWriter {
 				response.add(Names.SOLR_REQUEST, request);
 				response.add(Names.SOLR_RESPONSE, response);
 				
-				final String contentType = contentTypeRewrites.get(getContentType(request));
+				final String contentType = contentTypeRewrites.get(getContentType(request, false));
 				WriterStrategy strategy = compositeWriters.get(contentType);
 				strategy = strategy != null ? strategy : compositeWriters.get("text/xml");
 				strategy.doWrite(values, writer, contentType);
@@ -108,7 +108,7 @@ public class HybridResponseWriter implements QueryResponseWriter {
 					LOGGER.error(MessageCatalog._00091_NULL_QUERY_OR_EXECUTION);
 					return;
 				}
-				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request));
+				writers.get(query.getQueryType()).doWrite(values, writer, getContentType(request, false));
 			}
 		} finally {
 			if (execution != null) {
@@ -122,7 +122,7 @@ public class HybridResponseWriter implements QueryResponseWriter {
 	@Override
 	public String getContentType(final SolrQueryRequest request, final SolrQueryResponse response) {
 		final boolean isHybridMode = Boolean.TRUE.equals(request.getContext().get(Names.HYBRID_MODE));
-		return isHybridMode ? contentTypeRewrites.get(getContentType(request)) : getContentType(request);
+		return isHybridMode ? contentTypeRewrites.get(getContentType(request, true)) : getContentType(request, true);
 	}
 
 	private List<String> selectContentTypes = new ArrayList<String>();
@@ -244,7 +244,7 @@ public class HybridResponseWriter implements QueryResponseWriter {
 	 * @param request the current Solr request.
 	 * @return the content type associated with this response writer.
 	 */
-	String getContentType(final SolrQueryRequest request) {
+	String getContentType(final SolrQueryRequest request, final boolean log) {
 		final Query query = (Query)request.getContext().get(Names.QUERY);
 		if (query == null) {
 			return null;
@@ -264,8 +264,9 @@ public class HybridResponseWriter implements QueryResponseWriter {
 		
 		final String contentType = contentTypeChoiceStrategies.get(query.getQueryType()).getContentType(requestedMediaTypes);
 
-		LOGGER.debug(MessageCatalog._00092_NEGOTIATED_CONTENT_TYPE, query.getQueryType(), accept, contentType);
-		
+		if (log) {
+			LOGGER.debug(MessageCatalog._00092_NEGOTIATED_CONTENT_TYPE, query.getQueryType(), accept, contentType);
+		}
 		return contentType;
 	}
 	
