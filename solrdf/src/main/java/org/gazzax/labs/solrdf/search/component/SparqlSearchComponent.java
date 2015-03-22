@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.solr.common.SolrException;
+import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.handler.component.ResponseBuilder;
@@ -131,6 +132,8 @@ public class SparqlSearchComponent extends SearchComponent {
 			default:
 				throw new IllegalArgumentException("Unknown query type: " + query.getQueryType());
 			}
+	    } catch (final SyntaxError exception) {
+	    	throw new SolrException(ErrorCode.BAD_REQUEST, exception);
 		} catch (final Exception exception) {
 			throw new IOException(exception);
 		}
