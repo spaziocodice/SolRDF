@@ -182,7 +182,7 @@ public class ResponseContentTypeChoiceTestCase {
 	 */
 	private void assertSupportedMediaType(final String mediaType) {
 		when(httpRequest.getHeader(HttpHeaders.ACCEPT)).thenReturn(mediaType);
-		String contentType = cut.getContentType(request);
+		String contentType = cut.getContentType(request, false);
 		assertNotNull(contentType);
 		assertEquals(cut.cleanMediaType(mediaType), contentType);
 
@@ -201,13 +201,13 @@ public class ResponseContentTypeChoiceTestCase {
 	private void assertIncomingRequestWithoutMediaType(final Query query) {
 		requestContext.put(Names.QUERY, query);
 		when(httpRequest.getHeader(HttpHeaders.ACCEPT)).thenReturn(null);
-		String contentType = cut.getContentType(request);
+		String contentType = cut.getContentType(request, false);
 		assertNotNull(contentType);
 		assertEquals(
 				cut.contentTypeChoiceStrategies.get(query.getQueryType()).getContentType(null), 
 				contentType);
 
-		contentType = cut.getContentType(request);
+		contentType = cut.getContentType(request, false);
 		assertNotNull(contentType);
 		assertEquals(
 				cut.contentTypeChoiceStrategies.get(query.getQueryType()).getContentType(null), 
@@ -227,7 +227,7 @@ public class ResponseContentTypeChoiceTestCase {
 		final String invalidMediaType = randomString();
 		when(httpRequest.getHeader(HttpHeaders.ACCEPT)).thenReturn(invalidMediaType);
 
-		String contentType = cut.getContentType(request);
+		String contentType = cut.getContentType(request, false);
 		assertNotNull(contentType);
 		assertEquals(
 				cut.contentTypeChoiceStrategies.get(query.getQueryType()).getContentType(
