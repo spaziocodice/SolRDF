@@ -37,7 +37,7 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 		}
 		
 		@Override
-		public void onDocSet(DocSet docSet) {
+		public void onDocSet(final DocSet docSet) {
 			// Nothing to be done here.
 		}
 		
@@ -50,7 +50,6 @@ public class SolRDFDatasetGraph extends DatasetGraphCaching {
 	final SolrQueryRequest request;
 	final SolrQueryResponse response;
 	final QParser qParser;
-	
 	final GraphEventConsumer listener;
 	
 	/**

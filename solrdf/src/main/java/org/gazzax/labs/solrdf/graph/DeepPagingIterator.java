@@ -77,10 +77,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			currentState = iterateOverCurrentPage;
 			return currentState.next();
 		}
-		
-		public String toString() {
-			return "firstQueryExecution";
-		};
 	};
 
 	/**
@@ -111,10 +107,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			currentState = iterateOverCurrentPage;
 			return currentState.next();
 		}
-		
-		public String toString() {
-			return "executeQuery";
-		};
 	};
 			
 	/**
@@ -162,10 +154,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			}
 			return iterator;	 
 		}
-		
-		public String toString() {
-			return "iterateOverCurrentPage";
-		};
 	};
 
 	/**
@@ -187,10 +175,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		public Triple next() {
 			return currentState.next();
 		}
-		
-		public String toString() {
-			return "checkForConsumptionCompleteness";
-		};
 	};
 	
 	private Iterator<Triple> currentState = firstQueryExecution;

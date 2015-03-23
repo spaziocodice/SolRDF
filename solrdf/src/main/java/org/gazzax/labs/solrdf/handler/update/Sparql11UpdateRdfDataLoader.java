@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.handler.update;
 
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.util.ContentStream;
 import org.apache.solr.handler.loader.ContentStreamLoader;
 import org.apache.solr.request.SolrQueryRequest;
@@ -29,19 +30,9 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 			final ContentStream stream, 
 			final UpdateRequestProcessor processor) throws Exception {
 		
-//		final StringWriter writer = new StringWriter(
-//				stream.getSize() != null 
-//					? stream.getSize().intValue() 
-//					: READ_BUFFER_DEFAULT_SIZE);
-//		
-//		IOUtils.copy(stream.getStream(), writer, "UTF-8");
-//		UpdateAction.execute(
-//				UpdateFactory.create(writer.toString()), 
-//				new SolRDFDatasetGraph(request, response));
-		
 		UpdateAction.execute(
 				UpdateFactory.create(
-						request.getParams().get("q")),
+						request.getParams().get(CommonParams.Q)),
 						new SolRDFDatasetGraph(request, response));
 		
 	}
