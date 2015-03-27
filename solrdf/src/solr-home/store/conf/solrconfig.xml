@@ -135,6 +135,7 @@
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
+	<searchComponent name="facet" class="org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent"/>
 	<queryResponseWriter name="hybrid" class="org.gazzax.labs.solrdf.response.HybridResponseWriter">
 		<lst name="content-types">
 			<!-- SELECT -->
