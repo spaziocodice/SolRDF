@@ -15,7 +15,7 @@
 		<junit.version>4.11</junit.version>
 		<mockito.version>1.9.5-rc1</mockito.version>
 		<junit.version>4.11</junit.version>
-		<solr.version>4.8.0</solr.version>
+		<solr.version>4.10.3</solr.version>
 		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/${project.artifactId}</solr.home>
 	</properties>
 	<licenses>
