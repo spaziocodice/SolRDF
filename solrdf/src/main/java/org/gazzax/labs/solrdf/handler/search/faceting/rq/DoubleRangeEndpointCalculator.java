@@ -2,9 +2,15 @@ package org.gazzax.labs.solrdf.handler.search.faceting.rq;
 
 import org.apache.solr.schema.SchemaField;
 
+/**
+ * A {@link RangeEndpointCalculator} for {@link Double} datatype.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 public class DoubleRangeEndpointCalculator extends RangeEndpointCalculator<Double> {
 	/**
-	 * Builds a new {@link RangeEndpointCalculator} associated with the given field.
+	 * Builds a new {@link DoubleRangeEndpointCalculator} associated with the given field.
 	 * 
 	 * @param f the (schema) field.
 	 */
