@@ -22,14 +22,9 @@ public class RDFacetComponent extends FacetComponent {
 	public static Logger log = LoggerFactory.getLogger(RDFacetComponent.class);
 	public static final String COMPONENT_NAME = "facet";
 	private static final String PIVOT_KEY = "facet_pivot";
-
-	public static void main(String[] args) {
-		System.out.println(5007 >> 6);
-	}
 	
 	@Override
 	public void process(ResponseBuilder rb) throws IOException {
-
 		// SolrParams params = rb.req.getParams();
 		if (rb.doFacets) {
 			final ModifiableSolrParams params = new ModifiableSolrParams();
