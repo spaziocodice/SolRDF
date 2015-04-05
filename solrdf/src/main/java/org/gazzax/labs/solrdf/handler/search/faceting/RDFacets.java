@@ -9,10 +9,12 @@ import java.util.Set;
 import org.apache.lucene.search.Query;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.FacetParams.FacetRangeInclude;
 import org.apache.solr.common.params.FacetParams.FacetRangeOther;
 import org.apache.solr.common.params.GroupParams;
+import org.apache.solr.common.params.RequiredSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -32,8 +34,6 @@ import org.gazzax.labs.solrdf.handler.search.faceting.rq.DoubleRangeEndpointCalc
 import org.gazzax.labs.solrdf.handler.search.faceting.rq.FacetRangeQuery;
 import org.gazzax.labs.solrdf.handler.search.faceting.rq.RangeEndpointCalculator;
 
-import com.google.common.base.Strings;
-
 /**
  * A class that generates facet information for a given request.
  * Note that it extends the already existing {@link SimpleFacets} in order to reuse 
@@ -43,10 +43,6 @@ import com.google.common.base.Strings;
  * @since 1.0
  */
 public class RDFacets extends SimpleFacets {
-	static String FACET_RANGE_QUERY = FacetParams.FACET_RANGE + ".q";
-	static String FACET_RANGE_QUERY_HINT = FACET_RANGE_QUERY + ".hint";
-	static String FACET_RANGE_QUERY_ALIAS = FACET_RANGE_QUERY + ".alias";
-	
 	/**
 	 * Builds a new {@link RDFacets} with the given data.
 	 * 
@@ -59,56 +55,63 @@ public class RDFacets extends SimpleFacets {
 	}
 	
 	@Override
+	public NamedList<Object> getFacetCounts() {
+		final NamedList<Object> result = super.getFacetCounts();
+		result.remove("facet_dates");
+		result.add("facet_object_ranges_queries", result.remove("facet_ranges"));
+		return result;
+	}
+	
+	@Override
+	public NamedList<Object> getFacetDateCounts() {
+		return null;
+	}
+	
+	@Override
 	public NamedList<Object> getFacetRangeCounts() throws IOException, SyntaxError {
 	    final NamedList<Object> result = new SimpleOrderedMap<>();
 
 	    final List<FacetRangeQuery> facetRangeQueries = new ArrayList<FacetRangeQuery>();
-		final String[] anonymousQueries = params.getParams(FACET_RANGE_QUERY);
+		final String[] anonymousQueries = params.getParams(FacetRangeQuery.QUERY);
+
 		int index = 0;
+		final SolrParams requiredParams = new RequiredSolrParams(params);
 		if (anonymousQueries != null && anonymousQueries.length > 0) {
 			for (final String query : anonymousQueries) {
 				facetRangeQueries.add(
-						new FacetRangeQuery(
+						FacetRangeQuery.newAnonymousQuery(
 							query, 
-							index++ == 0 ? params.get(FACET_RANGE_QUERY_ALIAS) : null, 
-							params.get(FACET_RANGE_QUERY_HINT), 
-							required.get(FacetParams.FACET_RANGE_START), 
-							required.get(FacetParams.FACET_RANGE_END), 
-							required.get(FacetParams.FACET_RANGE_GAP),
-							required.getBool(FacetParams.FACET_DATE_HARD_END, false),
-							params.getParams(FacetParams.FACET_DATE_INCLUDE),
-							params.getParams(FacetParams.FACET_DATE_OTHER),
-							params.getInt(FacetParams.FACET_MINCOUNT, 0)));
-			}
+							index++ == 0 ? params.get(FacetRangeQuery.QUERY_ALIAS) : null, 
+							params,
+							requiredParams));
+			} 
 		} 
 		
 		index = 0;
-		String facetRangeQuery = null;
-		while ((facetRangeQuery = params.get(FACET_RANGE_QUERY + "." + index)) != null) {
-			final String suffix = "." + index++;
+		String query = null;
+		while ((query = params.get(FacetRangeQuery.QUERY + "." + (++index))) != null) {
 			facetRangeQueries.add(
-					new FacetRangeQuery(
-							facetRangeQuery, 
-							params.get(FACET_RANGE_QUERY_ALIAS + suffix), 
-							params.get(FACET_RANGE_QUERY_HINT + suffix), 
-							scopedOrUnscopedStringParameter(params, required, FacetParams.FACET_RANGE_START, suffix),
-							scopedOrUnscopedStringParameter(params, required, FacetParams.FACET_RANGE_END, suffix),
-							scopedOrUnscopedStringParameter(params, required, FacetParams.FACET_RANGE_GAP, suffix),
-							scopedOrUnscopedOptionalBooleanParameter(params, FacetParams.FACET_DATE_HARD_END, suffix, false),
-							scopedOrUnscopedOptionalArrayParameter(params, FacetParams.FACET_DATE_INCLUDE, suffix),
-							scopedOrUnscopedOptionalArrayParameter(params, FacetParams.FACET_DATE_OTHER, suffix),
-							scopedOrUnscopedOptionalIntParameter(params, FacetParams.FACET_MINCOUNT, suffix, 0)));
+					FacetRangeQuery.newQuery(
+							query,
+							index, 
+							params,
+							requiredParams));							
 		}
 
 		if (facetRangeQueries.isEmpty()) {
 			return result;
 		}
+		
+	    String threadStr = params.get(CommonParams.THREADS);
+	    if (threadStr != null) {
+	      threads = Integer.parseInt(threadStr);
+	    }
 
 		for (final FacetRangeQuery frq : facetRangeQueries) {
 			final DocSetCollector collector = new DocSetCollector(docs.size() >> 6, docs.size());
 			
 			req.getSearcher().search(
-					QParser.getParser(frq.q, null, req).getQuery(), 
+					QParser.getParser(frq.query(), null, req).getQuery(), 
 					docs.getTopFilter(), 
 					collector);						
 			
@@ -133,20 +136,15 @@ public class RDFacets extends SimpleFacets {
 			final NamedList<Object> result,
 			final DocSet filteredDocSet) throws IOException, SyntaxError {
 		final IndexSchema schema = searcher.getSchema();
-		
-		// TODO: Get a better point about this method, because I think something needs to be changed 
-		// (i.e. rewritten because it cannot be overriden)
-		parseParams(FacetParams.FACET_RANGE, query.fieldName);
-
-		final SchemaField schemaField = schema.getField(query.fieldName);
+		final SchemaField schemaField = schema.getField(query.fieldName());
 		final RangeEndpointCalculator<T> strategy = rangeEndpointCalculator(schemaField);
 
 		final NamedList<Object> facetRange = new SimpleOrderedMap<>();
 		final NamedList<Integer> counts = new NamedList<>();
 		facetRange.add("counts", counts);
 
-		final T start = strategy.getValue(query.start);
-		T end = strategy.getValue(query.end);
+		final T start = strategy.getValue(query.requiredString(FacetParams.FACET_RANGE_START));
+		T end = strategy.getValue(query.requiredString(FacetParams.FACET_RANGE_END));
 
 		if (end.compareTo(start) < 0) {
 			throw new SolrException(
@@ -154,19 +152,21 @@ public class RDFacets extends SimpleFacets {
 					"range facet 'end' comes before 'start': " + end + " < " + start);
 		}
 
-		final String gap = query.gap;
+		final String gap = query.requiredString(FacetParams.FACET_RANGE_GAP);
 		facetRange.add("gap", gap);
 
-		final int minCount = query.minCount;
+		final int minCount = query.requiredInt(FacetParams.FACET_MINCOUNT);
 
-		final EnumSet<FacetRangeInclude> include = FacetRangeInclude.parseParam(query.include);
+		final EnumSet<FacetRangeInclude> include = FacetRangeInclude.parseParam(
+				query.optionalStrings(
+						FacetParams.FACET_RANGE_INCLUDE));
 
 		T low = start;
 
 		while (low.compareTo(end) < 0) {
 			T high = strategy.addGap(low, gap);
 			if (end.compareTo(high) < 0) {
-				if (query.hardend) {
+				if (query.optionalBoolean(FacetParams.FACET_RANGE_HARD_END)) {
 					high = end;
 				} else {
 					end = high;
@@ -211,10 +211,11 @@ public class RDFacets extends SimpleFacets {
 		facetRange.add("start", strategy.format(start));
 		facetRange.add("end", strategy.format(end));
 		
-		if (query.other != null && query.other.length > 0) {
+		final String [] otherParameter = query.optionalStrings(FacetParams.FACET_RANGE_OTHER);
+		if (otherParameter != null && otherParameter.length > 0) {
 			final Set<FacetRangeOther> others = EnumSet.noneOf(FacetRangeOther.class);
 
-			for (final String other : query.other) {
+			for (final String other : otherParameter) {
 				others.add(FacetRangeOther.get(other));
 			}
 
@@ -280,7 +281,9 @@ public class RDFacets extends SimpleFacets {
 			return new DateRangeEndpointCalculator(field);			
 		}
 		
-		throw new SolrException(ErrorCode.BAD_REQUEST, "Unable to range facet on field " + field + " (not a Trie(Double|Date)Field).");			
+		throw new SolrException(
+				ErrorCode.BAD_REQUEST, 
+				"Unable to range facet on field " + field + " (not a Trie(Double|Date)Field).");			
 	}
 	
 	/**
@@ -315,76 +318,4 @@ public class RDFacets extends SimpleFacets {
 			return searcher.numDocs(rangeQ, domain);
 		}
 	}
-	
-	/**
-	 * Returns the (query) scoped or unscoped parameter associated with a given name.
-	 * 
-	 * @param optionalParameters the optional parameters set.
-	 * @param requiredParameters the required parameters set.
-	 * @param parameterName the (unscoped) parameter name.
-	 * @param scopeSuffix the parameter name suffix (which scopes the parameter).
-	 * @param isRequired indicates if a value for this parameter is required.
-	 * @return the (query) scoped or unscoped parameter associated with a given name.
-	 */
-	String scopedOrUnscopedStringParameter(
-			final SolrParams optionalParameters, 
-			final SolrParams requiredParameters, 
-			final String parameterName, 
-			final String scopeSuffix) {
-		final String result = optionalParameters.get(parameterName + scopeSuffix);
-		return (Strings.isNullOrEmpty(result)) ? requiredParameters.get(parameterName) : result;
-	}
-	
-	/**
-	 * Returns the (query) scoped or unscoped parameter associated with a given name.
-	 * 
-	 * @param parameters the request parameters.
-	 * @param parameterName the parameter name.
-	 * @param scopeSuffix the parameter name suffix (which scopes the parameter).
-	 * @param defaultValue the default value in case the parameter is null (i.e. absent).
-	 * @return the (query) scoped or unscoped parameter associated with a given name.
-	 */
-	boolean scopedOrUnscopedOptionalBooleanParameter(
-			final SolrParams parameters, 
-			final String parameterName, 
-			final String scopeSuffix,
-			final boolean defaultValue) {
-		final Boolean result = parameters.getBool(parameterName + scopeSuffix);
-		return (result != null) ? result : parameters.getBool(parameterName, defaultValue);
-	}
-	
-	/**
-	 * Returns the (query) scoped or unscoped parameter associated with a given name.
-	 * 
-	 * @param parameters the request parameters.
-	 * @param parameterName the parameter name.
-	 * @param scopeSuffix the parameter name suffix (which scopes the parameter).
-	 * @param defaultValue the default value in case the parameter is null (i.e. absent).
-	 * @return the (query) scoped or unscoped parameter associated with a given name.
-	 */
-	int scopedOrUnscopedOptionalIntParameter(
-			final SolrParams parameters, 
-			final String parameterName, 
-			final String scopeSuffix,
-			final int defaultValue) {
-		final Integer result = parameters.getInt(parameterName + scopeSuffix);
-		return (result != null) ? result : parameters.getInt(parameterName, defaultValue);
-	}	
-	
-	/**
-	 * Returns the (query) scoped or unscoped parameter associated with a given name.
-	 * 
-	 * @param parameters the request parameters.
-	 * @param parameterName the parameter name.
-	 * @param scopeSuffix the parameter name suffix (which scopes the parameter).
-	 * @param defaultValue the default value in case the parameter is null (i.e. absent).
-	 * @return the (query) scoped or unscoped parameter associated with a given name.
-	 */
-	String [] scopedOrUnscopedOptionalArrayParameter(
-			final SolrParams parameters, 
-			final String parameterName, 
-			final String scopeSuffix) {
-		final String [] result = parameters.getParams(parameterName + scopeSuffix);
-		return (result != null) ? result : parameters.getParams(parameterName);
-	}		
 }

@@ -1,6 +1,6 @@
 package org.gazzax.labs.solrdf.handler.update;
 
-import static org.gazzax.labs.solrdf.Strings.isNullOrEmptyString;
+import static org.gazzax.labs.solrdf.Strings.isNullOrEmpty;
 
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
@@ -35,7 +35,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 			final UpdateRequestProcessor processor) throws Exception {
 		
 		final String q = request.getParams().get(CommonParams.Q);
-		if (isNullOrEmptyString(q)) {
+		if (isNullOrEmpty(q)) {
 			throw new SolrException(ErrorCode.BAD_REQUEST, "Invalid query : " + q);
 		}
 		

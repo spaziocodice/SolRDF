@@ -1,11 +1,16 @@
 package org.gazzax.labs.solrdf.handler.search.faceting.rq;
 
+import static org.gazzax.labs.solrdf.Strings.isNullOrEmpty;
+
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.params.FacetParams;
+import org.apache.solr.common.params.SolrParams;
 import org.gazzax.labs.solrdf.Field;
 
 /**
  * A stupid value object for encapsulating a facet query with all related parameters.
  * 
- * Apart from some parameter like alias, all other parameters are described in the Solr Wiki or
+ * Apart from some parameter like alias, hint, all other parameters are described in the Solr Wiki or
  * Reference Guide.
  * 
  * @author Andrea Gazzarini
@@ -14,53 +19,183 @@ import org.gazzax.labs.solrdf.Field;
  * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting
  */
 public class FacetRangeQuery {
-	public final String q;
-	public final String fieldName;
-	public final String alias;
-	public final String start;
-	public final String end;
-	public final String gap;
-	public final boolean hardend;
-	public final String [] include;
-	public final String [] other;
-	public final int minCount;
+	public static String QUERY = FacetParams.FACET_RANGE + ".q";
+	public static String QUERY_HINT = QUERY + ".hint";
+	public static String QUERY_ALIAS = QUERY + ".alias";
+	
+	private final int index;
+	
+	private final SolrParams optionals;
+	private final SolrParams requireds;
+	
+	String fieldName;
+	private final String q;
+	private final String alias;
 	
 	/**
 	 * Builds a new {@link FacetRangeQuery}.
 	 * 
 	 * @param q the query.
+	 * @param index the query index.
 	 * @param alias the query alias.
-	 * @param hint the facet range type hint.
-	 * @param start the start bound.
-	 * @param end the end bound.
-	 * @param gap the gap expression.
-	 * @param hardend specifies how Solr should handle cases where the gap expression does not divide evenly between start and end bounds. 
-	 * @param include bounds included or excluded?
-	 * @param other it indicates if counts should also be computed for ranges that fall outside start and end.
-	 * @param minCount the minimum number of occurrences required for a facet to be included in the response.
-	 * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting
+	 * @param optionals the incoming parameters.
+	 * @param requireds the incoming required parameters.
 	 */
-	public FacetRangeQuery(
+	private FacetRangeQuery(
 			final String q, 
+			final int index,
 			final String alias,
-			final String hint,
-			final String start,
-			final String end,
-			final String gap,
-			final boolean hardend,
-			final String [] include,
-			final String [] other,
-			final int minCount) {
+			final SolrParams optionals,
+			final SolrParams required) {
 		this.q = q;
-		this.alias = alias;
-		this.fieldName = "date".equals(hint) ? Field.DATE_OBJECT : Field.NUMERIC_OBJECT;
-		this.start = start;
-		this.end = end;
-		this.gap = gap;
-		this.hardend = hardend;
-		this.include = include;
-		this.other = other;
-		this.minCount = minCount;
+		this.index = index;
+		this.requireds = required;
+		this.optionals = optionals;		
+		this.alias = alias != null ? alias : optionals.get(fdqn(QUERY_ALIAS));
+	}
+	
+	/**
+	 * Factory method for creating a new anonymous (not indexed) query.
+	 * 
+	 * @param q the query string.
+	 * @param alias the query alias.
+	 * @param optionals the incoming parameters.
+	 * @param requireds the incoming required parameters.
+	 * @return a new anonymous (not indexed) query.
+	 */
+	public static FacetRangeQuery newAnonymousQuery(
+			final String q,
+			final String alias, 
+			final SolrParams optionals,
+			final SolrParams required) {
+		return new FacetRangeQuery(q, 0, alias, optionals, required);
+	}
+
+	/**
+	 * Factory method for creating a new indexed query.
+	 * 
+	 * @param q the query string.
+	 * @param index the index.
+	 * @param optionals the incoming parameters.
+	 * @param requireds the incoming required parameters.
+	 * @return a new anonymous (not indexed) query.
+	 */
+	public static FacetRangeQuery newQuery(
+			final String q,
+			final int index,
+			final SolrParams optionals,
+			final SolrParams required) {
+		return new FacetRangeQuery(q, index, null, optionals, required);
+	}
+
+	/**
+	 * Returns the query string associated with this query object.
+	 * 
+	 * @return the query string associated with this query object.
+	 */
+	public String query() {
+		return q;
+	}
+
+	/**
+	 * Returns the alias associated with this query object.
+	 * 
+	 * @return the alias associated with this query object.
+	 */
+	public String alias() {
+		return alias;
+	}
+
+	/**
+	 * Returns the target field of this facet query.
+	 * 
+	 * @return the target field of this facet query.
+	 */
+	public String fieldName() {
+		if (fieldName != null) {
+			return fieldName;
+		}
+		
+		return fieldName = 
+				"date".equals(optionalString(QUERY_HINT)) 
+					? Field.DATE_OBJECT 
+					: Field.NUMERIC_OBJECT;		
+	}
+
+	/**
+	 * Returns a required int parameter value.
+	 * 
+	 * @param name the parameter name.
+	 * @return the value for the requested parameter.
+	 * @throws SolrException in case a valid value cannot be found.
+	 */
+	public int requiredInt(final String name) {
+		return Integer.parseInt(requiredString(name));
+	}
+	
+	/**
+	 * Returns a required string parameter value.
+	 * 
+	 * @param name the parameter name.
+	 * @return the value for the requested parameter.
+	 * @throws SolrException in case a valid value cannot be found.
+	 */
+	public String requiredString(final String name) {		
+		final String result = optionals.get(fdqn(name));
+		return isNullOrEmpty(result) ? requireds.get(name) : result;
+	}
+	
+	/**
+	 * Returns an optional boolean parameter value.
+	 * 
+	 * @param name the parameter name.
+	 * @return the value for the requested parameter.
+	 */
+	public boolean optionalBoolean(final String name) {
+		return Boolean.parseBoolean(optionalString(name));
+	}
+	
+	/**
+	 * Returns the value of the parameter associated with a given name.
+	 * 
+	 * @param name the parameter name.
+	 * @return the value of the parameter associated with a given name, null if it doesn't exist.
+	 */
+	public String optionalString(final String name) {
+		final String result = optionals.get(fdqn(name));
+		return isNullOrEmpty(result) ? optionals.get(name) : result;		
+	}
+
+	/**
+	 * Returns the value of the parameter associated with a given name.
+	 * 
+	 * @param name the parameter name.
+	 * @return the value of the parameter associated with a given name, null if it doesn't exist.
+	 */
+	public String [] optionalStrings(final String name) {
+		final String [] result = optionals.getParams(fdqn(name));
+		return result == null || result.length == 0 ? optionals.getParams(name) : result;		
+	}
+
+	/**
+	 * Returns the scope suffix for this query.
+	 * 
+	 * @return the scope suffix for this query.
+	 */
+	String suffix() {
+		return isAnonymous() ? "" : "." + index;
+	}
+	
+	/**
+	 * Returns the fully qualified name of the given attribute.
+	 * In case the query object is anonymous then the result is equal to the input parameter.
+	 * Otherwise, a suffix is appended to the attribute name.
+	 * 
+	 * @param unscopedName the plain attribute name, without any scope.
+	 * @return the fully qualified name of the given attribute.
+	 */
+	String fdqn(final String unscopedName) {
+		return new StringBuilder(unscopedName).append(suffix()).toString();
 	}
 	
 	/**
@@ -70,5 +205,14 @@ public class FacetRangeQuery {
 	 */
 	public String key() {
 		return alias != null ? alias : q;
+	}
+	
+	/**
+	 * Returns true if this {@link FacetRangeQuery} is anonymous.
+	 * 
+	 * @return true if this {@link FacetRangeQuery} is anonymous.
+	 */
+	public boolean isAnonymous() {
+		return index == 0;
 	}
 }

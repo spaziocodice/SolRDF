@@ -33,9 +33,10 @@ import org.slf4j.LoggerFactory;
  */
 public class RDFacetComponent extends FacetComponent {
 	public static Logger log = LoggerFactory.getLogger(RDFacetComponent.class);
+	
 	public static final String COMPONENT_NAME = "facet";
 	private static final String PIVOT_KEY = "facet_pivot";
-	
+		
 	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
 		if (responseBuilder.doFacets) {
