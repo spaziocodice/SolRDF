@@ -23,7 +23,7 @@ public abstract class Strings {
 	 * @param value the string to check.
 	 * @return true if the string is not null and is not empty string
 	 */
-	public static boolean isNullOrEmptyString(final String value) {
+	public static boolean isNullOrEmpty(final String value) {
 		return value == null || value.trim().length() == 0;
 	}	
 }

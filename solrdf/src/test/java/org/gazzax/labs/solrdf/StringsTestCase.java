@@ -19,7 +19,7 @@ public class StringsTestCase {
 	public void isNullOrEmptyString() {
 		final String [] emptyValues = {"", "    ", "\n\t", null};
 		for (final String emptyValue : emptyValues) {
-			assertTrue(Strings.isNullOrEmptyString(emptyValue));
+			assertTrue(Strings.isNullOrEmpty(emptyValue));
 			assertFalse(Strings.isNotNullOrEmptyString(emptyValue));
 		}
 	}
@@ -31,7 +31,7 @@ public class StringsTestCase {
 	public void isNotNullOrEmptyString() {
 		final String [] emptyValues = {"a", " b   ", "\n\tcde"};
 		for (final String emptyValue : emptyValues) {
-			assertFalse(Strings.isNullOrEmptyString(emptyValue));
+			assertFalse(Strings.isNullOrEmpty(emptyValue));
 			assertTrue(Strings.isNotNullOrEmptyString(emptyValue));
 		}
 	}	
