@@ -137,7 +137,7 @@
 						<systemProperties>
 							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
-							<log4j.configuration>file://${basedir}/src/test/resources/log4j.xml</log4j.configuration>
+							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
 							<!-- SOLRCLOUD BOOTSTRAP PROPERTIES -->
 							<!-- 
 							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
