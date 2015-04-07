@@ -3,7 +3,11 @@ SolRDF
 
 SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data
 
-This page will guide you through the SolRDF quick installation. I assume you already have Java (7), Maven (3.x) and git on your system.
+This page will guide you through the SolRDF quick installation. 
+
+> If you already have Solr (4.8.x - 4.10.x) installed, please refer to [this section](https://github.com/agazzarini/SolRDF/wiki/User%20Guide#if-you-already-have-solr-installed) for detailed instruction.    
+
+I assume you already have Java (7), Maven (3.x) and git on your system.
 
 Checkout the project Open a new shell and type the following:
 
