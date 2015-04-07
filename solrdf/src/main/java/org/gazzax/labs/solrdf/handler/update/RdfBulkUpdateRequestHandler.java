@@ -1,6 +1,8 @@
 package org.gazzax.labs.solrdf.handler.update;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -16,6 +18,7 @@ import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.params.UpdateParams;
 import org.apache.solr.common.util.ContentStream;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.UpdateRequestHandler;
@@ -124,9 +127,15 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 				final ContentStream stream, 
 				final UpdateRequestProcessor processor) throws Exception {
 			
-			final Lang lang = RDFLanguages.contentTypeToLang(stream.getContentType());
+			final String contentType = stream.getContentType() != null 
+					&& !"application/xml".equals(stream.getContentType())
+					&& !"application/xml".equals(stream.getContentType()) 
+						? stream.getContentType() 
+						: request.getParams().get(UpdateParams.ASSUME_CONTENT_TYPE);
+			
+			final Lang lang = RDFLanguages.contentTypeToLang(contentType);
 			if (lang == null) {
-				throw new SolrException(ErrorCode.BAD_REQUEST, "Unknown Content-type");
+				throw new SolrException(ErrorCode.BAD_REQUEST, "Unknown Content-type: " + contentType);
 			}
 			
 			final ContentStreamLoader delegate = 
@@ -134,7 +143,41 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 						? quadsLoader
 						: triplesLoader;
 			
-			delegate.load(request, response, stream, processor);
+			delegate.load(
+					request, 
+					response, 
+					new ContentStream() {	
+						@Override
+						public InputStream getStream() throws IOException {
+							return stream.getStream();
+						}
+						
+						@Override
+						public String getSourceInfo() {
+							return stream.getSourceInfo();
+						}
+						
+						@Override
+						public Long getSize() {
+							return stream.getSize();
+						}
+						
+						@Override
+						public Reader getReader() throws IOException {
+							return stream.getReader();
+						}
+						
+						@Override
+						public String getName() {
+							return stream.getName();
+						}
+						
+						@Override
+						public String getContentType() {
+							return contentType;
+						}
+					}, 
+				processor);
 		}
 	}
 	
