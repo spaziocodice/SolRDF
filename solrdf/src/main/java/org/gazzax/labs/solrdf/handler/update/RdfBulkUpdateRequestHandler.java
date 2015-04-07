@@ -129,7 +129,7 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 			
 			final String contentType = stream.getContentType() != null 
 					&& !"application/xml".equals(stream.getContentType())
-					&& !"application/xml".equals(stream.getContentType()) 
+					&& !"application/json".equals(stream.getContentType()) 
 						? stream.getContentType() 
 						: request.getParams().get(UpdateParams.ASSUME_CONTENT_TYPE);
 			
