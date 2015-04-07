@@ -19,7 +19,14 @@
 	<dependencySets>
 		<dependencySet>
 			<useProjectArtifact>true</useProjectArtifact>
-			<outputDirectory>/solrdf/lib</outputDirectory>
+			<outputDirectory>/solrdf/store/lib</outputDirectory>
+			<excludes>
+				<exclude>*:lucene*</exclude>
+				<exclude>*:jetty*</exclude>
+				<exclude>*:hadoop*</exclude>
+				<exclude>*:javax.servlet*</exclude>
+				<exclude>*:solr-*:*</exclude>
+			</excludes>
 		</dependencySet>
 	</dependencySets>
 </assembly>
