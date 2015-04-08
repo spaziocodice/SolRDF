@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!-- 
-	This is a solr configuration that is supposed to act as a template for deploying jena-nosql + SOLR.
+	This is a solr configuration that is supposed to act as a template for deploying SolRDF.
 	As consequence of that, some settings are not supposed to be universally valid and should be tuned / configured 
 	according with your specific deployment contextx.
 	
