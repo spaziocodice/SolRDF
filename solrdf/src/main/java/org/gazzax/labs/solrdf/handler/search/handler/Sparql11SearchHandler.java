@@ -7,7 +7,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 
 /**
- * A RequestHandler that dispatches Query and Update requests across dedicated handlers.
+ * A RequestHandler that dispatches SPARQL 1.1 Query and Update requests across dedicated handlers.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
