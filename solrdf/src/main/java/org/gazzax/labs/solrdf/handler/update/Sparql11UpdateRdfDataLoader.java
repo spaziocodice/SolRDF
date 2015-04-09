@@ -11,6 +11,9 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.update.UpdateAction;
 import com.hp.hpl.jena.update.UpdateFactory;
@@ -25,7 +28,7 @@ import com.hp.hpl.jena.update.UpdateFactory;
  * @since 1.0
  */
 class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
-	static final int READ_BUFFER_DEFAULT_SIZE = 512;
+	private final static Log LOGGER = new Log(LoggerFactory.getLogger(Sparql11UpdateRdfDataLoader.class));
 
 	@Override
 	public void load(
@@ -36,12 +39,12 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 		
 		final String q = request.getParams().get(CommonParams.Q);
 		if (isNullOrEmpty(q)) {
-			throw new SolrException(ErrorCode.BAD_REQUEST, "Invalid query : " + q);
+			LOGGER.error(MessageCatalog._00099_INVALID_UPDATE_QUERY);
+			throw new SolrException(ErrorCode.BAD_REQUEST, MessageCatalog._00099_INVALID_UPDATE_QUERY);
 		}
 		
 		UpdateAction.execute(
-				UpdateFactory.create(
-						request.getParams().get(CommonParams.Q)),
-						new SolRDFDatasetGraph(request, response));
+				UpdateFactory.create(q), 
+				new SolRDFDatasetGraph(request, response));
 	}
 }	

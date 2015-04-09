@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,6 +29,8 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.gazzax.labs.solrdf.log.MessageFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.NodeFactory;
@@ -36,7 +39,7 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 
 /**
- * A subclass of {@link UpdateRequestHandler} for handlong RDF bulk loadings.
+ * A subclass of {@link UpdateRequestHandler} for handling RDF bulk loadings.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
@@ -81,6 +84,11 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 					dataset.add(iterator.next());
 				}									
 			}
+			
+			@Override
+			public String toString() {
+				return "Quads Loader";
+			};
 		};
 		
 		final ContentStreamLoader triplesLoader = new ContentStreamLoader() {
@@ -107,7 +115,10 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 						}					
 					}
 				});
-				
+		
+				// Graph Store Protocol indicates the target graph URI separately.
+				// So the incoming Content-type here is one that maps "Triples Loader" but
+				// the indexed tuple could be a Quad.
 				final String graphUri = request.getParams().get(Names.GRAPH_URI_ATTRIBUTE_NAME);
 				
 				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response, null, null);
@@ -118,6 +129,11 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 					defaultGraph.add(iterator.next());
 				}		
 			}
+			
+			@Override
+			public String toString() {
+				return "Triples Loader";
+			};
 		};	
 		
 		@Override
@@ -127,21 +143,32 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 				final ContentStream stream, 
 				final UpdateRequestProcessor processor) throws Exception {
 			
+			// Default ContentStream implementation starts reading the stream and
+			// if it starts with '<' then it assumes a content type of "application/xml", 
+			// if it starts with '{' then it assumes a content type of "application/json" 			
+			// This behaviour is wrong is SolRDF and maybe we need a custom ContentStream here
+			// At the moment this is just a workaround:
 			final String contentType = stream.getContentType() != null 
 					&& !"application/xml".equals(stream.getContentType())
 					&& !"application/json".equals(stream.getContentType()) 
 						? stream.getContentType() 
 						: request.getParams().get(UpdateParams.ASSUME_CONTENT_TYPE);
 			
+			log.debug(MessageCatalog._00094_BULK_LOADER_CT, contentType);			
+						
 			final Lang lang = RDFLanguages.contentTypeToLang(contentType);
 			if (lang == null) {
-				throw new SolrException(ErrorCode.BAD_REQUEST, "Unknown Content-type: " + contentType);
+				final String message = MessageFactory.createMessage(MessageCatalog._00095_INVALID_CT, contentType);
+				log.error(message);							
+				throw new SolrException(ErrorCode.BAD_REQUEST, message);
 			}
 			
 			final ContentStreamLoader delegate = 
 					(lang == Lang.NQ || lang == Lang.NQUADS || lang == Lang.TRIG)
 						? quadsLoader
 						: triplesLoader;
+			
+			log.debug(MessageCatalog._00096_SELECTED_BULK_LOADER, contentType, delegate);
 			
 			delegate.load(
 					request, 
@@ -191,6 +218,10 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 		}
 		registry.put(WebContent.contentTypeSPARQLUpdate, new Sparql11UpdateRdfDataLoader());
 
+		if (log.isDebugEnabled()) {
+			prettyPrint(registry);
+		}
+		
 		return registry;
 	}
 	
@@ -202,5 +233,14 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 	@Override
 	public String getSource() {
 		return "$https://github.com/agazzarini/SolRDF/blob/master/solrdf/src/main/java/org/gazzax/labs/solrdf/handler/update/RdfBulkUpdateRequestHandler.java $";
+	}
+	
+	/**
+	 * Debugs the registry content.
+	 */
+	void prettyPrint(final Map<String, ContentStreamLoader> registry) {
+		for (final Entry<String, ContentStreamLoader> entry : registry.entrySet()) {
+			log.debug(MessageCatalog._00097_BULK_LOADER_REGISTRY_ENTRY, entry.getKey(), entry.getValue());
+		}		
 	}
 }
