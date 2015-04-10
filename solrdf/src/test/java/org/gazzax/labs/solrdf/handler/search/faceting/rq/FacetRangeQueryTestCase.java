@@ -107,23 +107,6 @@ public class FacetRangeQueryTestCase {
 			assertEquals(minCount, query.requiredInt(FacetParams.FACET_MINCOUNT));
 		}
 	}			
-		
-	/**
-	 * Fieldname is computed once within FacetRangeQuery and then cached.
-	 */
-	@Test
-	public void fieldNameCaching() {
-		final String q = randomString();
-		
-		final SolrParams optionals = new ModifiableSolrParams().add(FacetRangeQuery.QUERY, q);
-		final SolrParams requireds = new RequiredSolrParams(optionals);
-		
-		final FacetRangeQuery query = FacetRangeQuery.newAnonymousQuery(q, null, optionals, requireds);
-		assertNull(query.fieldName);
-		assertEquals(Field.NUMERIC_OBJECT, query.fieldName());
-		assertEquals(Field.NUMERIC_OBJECT, query.fieldName);
-		assertEquals(Field.NUMERIC_OBJECT, query.fieldName());
-	}	
 	
 	/**
 	 * Field name is computed from query hint.

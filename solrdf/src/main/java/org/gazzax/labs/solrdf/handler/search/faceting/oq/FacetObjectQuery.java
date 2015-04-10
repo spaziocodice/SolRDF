@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.handler.search.faceting.rq;
+package org.gazzax.labs.solrdf.handler.search.faceting.oq;
 
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.SolrParams;
@@ -6,7 +6,7 @@ import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
 
 /**
- * A value object for encapsulating a facet range query with all related parameters.
+ * A value object for encapsulating a facet object query with all related parameters.
  * 
  * Apart from some parameter like alias, hint, all other parameters are described in the Solr Wiki or
  * Reference Guide.
@@ -16,13 +16,13 @@ import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
  * @see https://cwiki.apache.org/confluence/display/solr/Faceting
  * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting
  */
-public class FacetRangeQuery extends FacetQuery {
-	public static String QUERY = FacetParams.FACET_RANGE + ".q";
+public class FacetObjectQuery extends FacetQuery {
+	public static String QUERY = FacetParams.FACET + ".obj.q";
 	public static String QUERY_HINT = QUERY + ".hint";
 	public static String QUERY_ALIAS = QUERY + ".alias";
 	
 	/**
-	 * Builds a new {@link FacetRangeQuery}.
+	 * Builds a new {@link FacetObjectQuery}.
 	 * 
 	 * @param q the query.
 	 * @param index the query index.
@@ -30,7 +30,7 @@ public class FacetRangeQuery extends FacetQuery {
 	 * @param optionals the incoming parameters.
 	 * @param requireds the incoming required parameters.
 	 */
-	private FacetRangeQuery(
+	private FacetObjectQuery(
 			final String q, 
 			final int index,
 			final String alias,
@@ -48,12 +48,12 @@ public class FacetRangeQuery extends FacetQuery {
 	 * @param requireds the incoming required parameters.
 	 * @return a new anonymous (not indexed) query.
 	 */
-	public static FacetRangeQuery newAnonymousQuery(
+	public static FacetObjectQuery newAnonymousQuery(
 			final String q,
 			final String alias, 
 			final SolrParams optionals,
 			final SolrParams required) {
-		return new FacetRangeQuery(q, 0, alias, optionals, required);
+		return new FacetObjectQuery(q, 0, alias, optionals, required);
 	}
 
 	/**
@@ -65,12 +65,12 @@ public class FacetRangeQuery extends FacetQuery {
 	 * @param requireds the incoming required parameters.
 	 * @return a new anonymous (not indexed) query.
 	 */
-	public static FacetRangeQuery newQuery(
+	public static FacetObjectQuery newQuery(
 			final String q,
 			final int index,
 			final SolrParams optionals,
 			final SolrParams required) {
-		return new FacetRangeQuery(q, index, null, optionals, required);
+		return new FacetObjectQuery(q, index, null, optionals, required);
 	}
 
 	/**
@@ -83,14 +83,24 @@ public class FacetRangeQuery extends FacetQuery {
 			return fieldName;
 		}
 		
-		return fieldName = 
-				"date".equals(optionalString(QUERY_HINT)) 
-					? Field.DATE_OBJECT 
-					: Field.NUMERIC_OBJECT;		
+		final String hint = optionalString(QUERY_HINT);
+		if ("date".equals(hint)) {
+			return fieldName = Field.DATE_OBJECT; 
+		} 
+		
+		if ("num".equals(hint)) {
+			return fieldName = Field.NUMERIC_OBJECT;
+		}
+		
+		if ("bool".equals(hint)) {
+			return fieldName = Field.BOOLEAN_OBJECT;
+		}
+		
+		return fieldName = Field.TEXT_OBJECT;		
 	}
 
 	@Override
 	protected String aliasParameterName() {
 		return QUERY_ALIAS;
-	}
+	}	
 }

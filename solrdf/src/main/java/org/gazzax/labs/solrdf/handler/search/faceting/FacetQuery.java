@@ -1,14 +1,13 @@
-package org.gazzax.labs.solrdf.handler.search.faceting.rq;
+package org.gazzax.labs.solrdf.handler.search.faceting;
 
 import static org.gazzax.labs.solrdf.Strings.isNullOrEmpty;
 
 import org.apache.solr.common.SolrException;
-import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.SolrParams;
-import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.handler.search.faceting.rq.FacetRangeQuery;
 
 /**
- * A stupid value object for encapsulating a facet query with all related parameters.
+ * A simple value object encapsulating a facet query.
  * 
  * Apart from some parameter like alias, hint, all other parameters are described in the Solr Wiki or
  * Reference Guide.
@@ -16,24 +15,21 @@ import org.gazzax.labs.solrdf.Field;
  * @author Andrea Gazzarini
  * @since 1.0
  * @see https://cwiki.apache.org/confluence/display/solr/Faceting
- * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting
+ * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting 
  */
-public class FacetObjectQuery {
-	public static String QUERY = FacetParams.FACET + ".object.q";
-	public static String QUERY_HINT = QUERY + ".hint";
-	public static String QUERY_ALIAS = QUERY + ".alias";
+public abstract class FacetQuery {
 	
-	private final int index;
+	protected final int index;
 	
-	private final SolrParams optionals;
-	private final SolrParams requireds;
+	protected final SolrParams optionals;
+	protected final SolrParams requireds;
 	
-	String fieldName;
-	private final String q;
-	private final String alias;
+	protected String fieldName;
+	protected final String q;
+	protected final String alias;
 	
 	/**
-	 * Builds a new {@link FacetObjectQuery}.
+	 * Builds a new {@link FacetRangeQuery}.
 	 * 
 	 * @param q the query.
 	 * @param index the query index.
@@ -41,7 +37,7 @@ public class FacetObjectQuery {
 	 * @param optionals the incoming parameters.
 	 * @param requireds the incoming required parameters.
 	 */
-	private FacetObjectQuery(
+	protected FacetQuery(
 			final String q, 
 			final int index,
 			final String alias,
@@ -51,43 +47,9 @@ public class FacetObjectQuery {
 		this.index = index;
 		this.requireds = required;
 		this.optionals = optionals;		
-		this.alias = alias != null ? alias : optionals.get(fdqn(QUERY_ALIAS));
+		this.alias = alias != null ? alias : optionals.get(fdqn(aliasParameterName()));
 	}
 	
-	/**
-	 * Factory method for creating a new anonymous (not indexed) query.
-	 * 
-	 * @param q the query string.
-	 * @param alias the query alias.
-	 * @param optionals the incoming parameters.
-	 * @param requireds the incoming required parameters.
-	 * @return a new anonymous (not indexed) query.
-	 */
-	public static FacetObjectQuery newAnonymousQuery(
-			final String q,
-			final String alias, 
-			final SolrParams optionals,
-			final SolrParams required) {
-		return new FacetObjectQuery(q, 0, alias, optionals, required);
-	}
-
-	/**
-	 * Factory method for creating a new indexed query.
-	 * 
-	 * @param q the query string.
-	 * @param index the index.
-	 * @param optionals the incoming parameters.
-	 * @param requireds the incoming required parameters.
-	 * @return a new anonymous (not indexed) query.
-	 */
-	public static FacetObjectQuery newQuery(
-			final String q,
-			final int index,
-			final SolrParams optionals,
-			final SolrParams required) {
-		return new FacetObjectQuery(q, index, null, optionals, required);
-	}
-
 	/**
 	 * Returns the query string associated with this query object.
 	 * 
@@ -104,24 +66,8 @@ public class FacetObjectQuery {
 	 */
 	public String alias() {
 		return alias;
-	}
-
-	/**
-	 * Returns the target field of this facet query.
-	 * 
-	 * @return the target field of this facet query.
-	 */
-	public String fieldName() {
-		if (fieldName != null) {
-			return fieldName;
-		}
-		
-		return fieldName = 
-				"date".equals(optionalString(QUERY_HINT)) 
-					? Field.DATE_OBJECT 
-					: Field.NUMERIC_OBJECT;		
-	}
-
+	}	
+	
 	/**
 	 * Returns a required int parameter value.
 	 * 
@@ -132,6 +78,18 @@ public class FacetObjectQuery {
 	public int requiredInt(final String name) {
 		return Integer.parseInt(requiredString(name));
 	}
+	
+	/**
+	 * Returns an optional int parameter value.
+	 * 
+	 * @param name the parameter name.
+	 * @param defaultValue the default value that is applied in case the parameter is missing.
+	 * @return the value for the requested parameter.
+	 */
+	public int optionalInt(final String name, final int defaultValue) {
+		final Integer result = optionals.getInt(fdqn(name));
+		return result != null ? result : optionals.getInt(name, defaultValue);
+	}	
 	
 	/**
 	 * Returns a required string parameter value.
@@ -164,6 +122,18 @@ public class FacetObjectQuery {
 	public String optionalString(final String name) {
 		final String result = optionals.get(fdqn(name));
 		return isNullOrEmpty(result) ? optionals.get(name) : result;		
+	}
+	
+	/**
+	 * Returns the value of the parameter associated with a given name.
+	 * 
+	 * @param name the parameter name.
+	 * @param defaultValue the default value.
+	 * @return the value of the parameter associated with a given name, null if it doesn't exist.
+	 */
+	public String optionalStringWithDefault(final String name, final String defaultValue) {
+		final String result = optionals.get(fdqn(name));
+		return isNullOrEmpty(result) ? optionals.get(name, defaultValue) : result;		
 	}
 
 	/**
@@ -208,11 +178,25 @@ public class FacetObjectQuery {
 	}
 	
 	/**
-	 * Returns true if this {@link FacetObjectQuery} is anonymous.
+	 * Returns true if this {@link FacetRangeQuery} is anonymous.
 	 * 
-	 * @return true if this {@link FacetObjectQuery} is anonymous.
+	 * @return true if this {@link FacetRangeQuery} is anonymous.
 	 */
 	public boolean isAnonymous() {
 		return index == 0;
-	}
+	}	
+	
+	/**
+	 * Returns the unscoped name of the alias parameter, for this query.
+	 * 
+	 * @return the unscoped name of the alias parameter, for this query.
+	 */
+	protected abstract String aliasParameterName();
+	
+	/**
+	 * Returns the target field of this facet query.
+	 * 
+	 * @return the target field of this facet query.
+	 */
+	public abstract String fieldName();
 }
