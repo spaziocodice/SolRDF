@@ -18,6 +18,10 @@ import org.gazzax.labs.solrdf.handler.search.faceting.rq.FacetRangeQuery;
  * @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-RangeFaceting 
  */
 public abstract class FacetQuery {
+	public final static String STRING_HINT = "str";
+	public final static String BOOLEAN_HINT = "bool";
+	public final static String NUMERIC_HINT = "num";
+	public final static String DATE_HINT = "date";
 	
 	protected final int index;
 	

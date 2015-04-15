@@ -1,7 +1,13 @@
 package org.gazzax.labs.solrdf.handler.search.faceting;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 
 import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.SortedDocValues;
@@ -12,11 +18,9 @@ import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.CharsRef;
 import org.apache.lucene.util.CharsRefBuilder;
 import org.apache.lucene.util.PriorityQueue;
 import org.apache.lucene.util.UnicodeUtil;
-import org.apache.lucene.util.packed.PackedInts;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.util.NamedList;
@@ -26,6 +30,14 @@ import org.apache.solr.search.DocSet;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.util.BoundedTreeSet;
 
+/**
+ * A class that generates facet information for a given request. Note that it
+ * extends the already existing {@link SimpleFacets} in order to reuse that
+ * logic as much as possible.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 // FIXME this depends on SimpleFacets (several static method calls)
 public class PerSegmentSingleValuedFaceting {
 

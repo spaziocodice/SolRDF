@@ -175,14 +175,14 @@ public class RDFacets extends SimpleFacets {
 							final NamedList<Object> result = new SimpleOrderedMap<>();
 							if (termList != null) {
 								result.add(
-										foq.alias(), 
+										foq.key(), 
 										getListedTermCounts(
 												workerFacetValue, 
 												collector.getDocSet(), 
 												StrUtils.splitSmart(termList, ",", true)));
 							} else {
 								result.add(
-										foq.alias(), 
+										foq.key(), 
 										getTermCounts(foq, collector.getDocSet()));
 							}
 							return result;
@@ -446,7 +446,7 @@ public class RDFacets extends SimpleFacets {
 	 * @param base the values constraint for this specific count computation.
 	 */
 	public NamedList<Integer> getTermCounts(final FacetObjectQuery query, final DocSet base) throws IOException {
-		final int mincount = query.optionalInt(FacetParams.FACET_MINCOUNT, 0);
+		final int mincount = Math.max(query.optionalInt(FacetParams.FACET_MINCOUNT, 1), 1);
 		return getTermCounts(query, mincount, base);
 	}
 	

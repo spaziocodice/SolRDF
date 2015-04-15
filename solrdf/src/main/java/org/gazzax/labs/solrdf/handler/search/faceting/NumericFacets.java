@@ -1,16 +1,14 @@
 package org.gazzax.labs.solrdf.handler.search.faceting;
 
+import static org.gazzax.labs.solrdf.Strings.round;
+
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import static org.gazzax.labs.solrdf.Strings.*;
+
 import org.apache.lucene.document.FieldType.NumericType;
 import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.ReaderUtil;
@@ -44,9 +42,6 @@ import org.apache.solr.search.SolrIndexSearcher;
  * @since 1.0
  */
 final class NumericFacets {
-
-	NumericFacets() {
-	}
 
 	static class HashTable {
 
@@ -132,11 +127,8 @@ final class NumericFacets {
 			final int mincount, 
 			final boolean missing, 
 			final String sort) throws IOException {
-		final boolean zeros = mincount <= 0;
-//		mincount = Math.max(mincount, 1);
-	
-		final SchemaField sf = searcher.getSchema().getField(fieldName);
-		final FieldType ft = sf.getType();
+		final SchemaField schemaField = searcher.getSchema().getField(fieldName);
+		final FieldType ft = schemaField.getType();
 		final NumericType numericType = ft.getNumericType();
 		if (numericType == null) {
 			throw new IllegalStateException();
@@ -161,24 +153,6 @@ final class NumericFacets {
 				switch (numericType) {
 				case LONG:
 					longs = FieldCache.DEFAULT.getLongs(ctx.reader(), fieldName, true);
-					break;
-				case INT:
-					final FieldCache.Ints ints = FieldCache.DEFAULT.getInts(ctx.reader(), fieldName, true);
-					longs = new FieldCache.Longs() {
-						@Override
-						public long get(int docID) {
-							return ints.get(docID);
-						}
-					};
-					break;
-				case FLOAT:
-					final FieldCache.Floats floats = FieldCache.DEFAULT.getFloats(ctx.reader(), fieldName, true);
-					longs = new FieldCache.Longs() {
-						@Override
-						public long get(int docID) {
-							return NumericUtils.floatToSortableInt(floats.get(docID));
-						}
-					};
 					break;
 				case DOUBLE:
 					final FieldCache.Doubles doubles = FieldCache.DEFAULT.getDoubles(ctx.reader(), fieldName, true);
@@ -238,136 +212,48 @@ final class NumericFacets {
 		}
 
 		// 4. build the NamedList
-		final ValueSource vs = ft.getValueSource(sf, null);
+		final ValueSource vs = ft.getValueSource(schemaField, null);
 		final NamedList<Integer> result = new NamedList<>();
-
-		// This stuff is complicated because if facet.mincount=0, the counts
-		// needs
-		// to be merged with terms from the terms dict
-		if (!zeros || FacetParams.FACET_SORT_COUNT.equals(sort) || FacetParams.FACET_SORT_COUNT_LEGACY.equals(sort)) {
-			// Only keep items we're interested in
-			final Deque<Entry> counts = new ArrayDeque<>();
-			while (pq.size() > offset) {
-				counts.addFirst(pq.pop());
+		final Map<String, Integer> counts = new HashMap<>();
+		
+		while (pq.size() > 0) {
+			final Entry entry = pq.pop();
+			final int readerIdx = ReaderUtil.subIndex(entry.docID, leaves);
+			final FunctionValues values = vs.getValues(Collections.emptyMap(), leaves.get(readerIdx));
+			counts.put(values.strVal(entry.docID - leaves.get(readerIdx).docBase), entry.count);
+		}
+		
+		final Terms terms = searcher.getAtomicReader().terms(fieldName);
+		if (terms != null) {
+			final String prefixStr = TrieField.getMainValuePrefix(ft);
+			final BytesRef prefix;
+			if (prefixStr != null) {
+				prefix = new BytesRef(prefixStr);
+			} else {
+				prefix = new BytesRef();
 			}
-
-			// Entries from the PQ first, then using the terms dictionary
-			for (Entry entry : counts) {
-				final int readerIdx = ReaderUtil.subIndex(entry.docID, leaves);
-				final FunctionValues values = vs.getValues(Collections.emptyMap(), leaves.get(readerIdx));
-				result.add(round(values.strVal(entry.docID - leaves.get(readerIdx).docBase)), entry.count);
+			final TermsEnum termsEnum = terms.iterator(null);
+			BytesRef term;
+			switch (termsEnum.seekCeil(prefix)) {
+			case FOUND:
+			case NOT_FOUND:
+				term = termsEnum.term();
+				break;
+			case END:
+				term = null;
+				break;
+			default:
+				throw new AssertionError();
 			}
-
-			if (zeros && (limit < 0 || result.size() < limit)) { // need to merge with the term dict
-				if (!sf.indexed()) {
-					throw new IllegalStateException("Cannot use " + FacetParams.FACET_MINCOUNT + "=0 on field "
-							+ sf.getName() + " which is not indexed");
-				}
-				// Add zeros until there are limit results
-				final Set<String> alreadySeen = new HashSet<>();
-				while (pq.size() > 0) {
-					Entry entry = pq.pop();
-					final int readerIdx = ReaderUtil.subIndex(entry.docID, leaves);
-					final FunctionValues values = vs.getValues(Collections.emptyMap(), leaves.get(readerIdx));
-					alreadySeen.add(values.strVal(entry.docID - leaves.get(readerIdx).docBase));
-				}
-				
-				for (int i = 0; i < result.size(); ++i) {
-					alreadySeen.add(result.getName(i));
-				}
-				
-				final Terms terms = searcher.getAtomicReader().terms(fieldName);
-				if (terms != null) {
-					final String prefixStr = TrieField.getMainValuePrefix(ft);
-					final BytesRef prefix;
-					if (prefixStr != null) {
-						prefix = new BytesRef(prefixStr);
-					} else {
-						prefix = new BytesRef();
-					}
-					final TermsEnum termsEnum = terms.iterator(null);
-					BytesRef term;
-					switch (termsEnum.seekCeil(prefix)) {
-					case FOUND:
-					case NOT_FOUND:
-						term = termsEnum.term();
-						break;
-					case END:
-						term = null;
-						break;
-					default:
-						throw new AssertionError();
-					}
-					
-					final CharsRef spare = new CharsRef();
-					for (int skipped = hashTable.size; skipped < offset && term != null
-							&& StringHelper.startsWith(term, prefix);) {
-						ft.indexedToReadable(term, spare);
-						final String termStr = spare.toString();
-						if (!alreadySeen.contains(termStr)) {
-							++skipped;
-						}
-						term = termsEnum.next();
-					}
-					for (; term != null && StringHelper.startsWith(term, prefix)
-							&& (limit < 0 || result.size() < limit); term = termsEnum.next()) {
-						ft.indexedToReadable(term, spare);
-						final String termStr = round(spare.toString());
-						if (!alreadySeen.contains(termStr)) {
-							
-							result.add(termStr, 0);
-						}
-					}
-				}
+			final CharsRef spare = new CharsRef();
+			for (int i = 0; i < offset && term != null && StringHelper.startsWith(term, prefix); ++i) {
+				term = termsEnum.next();
 			}
-		} else {
-			// sort=index, mincount=0 and we have less than limit items
-			// => Merge the PQ and the terms dictionary on the fly
-			if (!sf.indexed()) {
-				throw new IllegalStateException("Cannot use " + FacetParams.FACET_SORT + "="
-						+ FacetParams.FACET_SORT_INDEX + " on a field which is not indexed");
-			}
-			final Map<String, Integer> counts = new HashMap<>();
-			while (pq.size() > 0) {
-				final Entry entry = pq.pop();
-				final int readerIdx = ReaderUtil.subIndex(entry.docID, leaves);
-				final FunctionValues values = vs.getValues(Collections.emptyMap(), leaves.get(readerIdx));
-				counts.put(values.strVal(entry.docID - leaves.get(readerIdx).docBase), entry.count);
-			}
-			final Terms terms = searcher.getAtomicReader().terms(fieldName);
-			if (terms != null) {
-				final String prefixStr = TrieField.getMainValuePrefix(ft);
-				final BytesRef prefix;
-				if (prefixStr != null) {
-					prefix = new BytesRef(prefixStr);
-				} else {
-					prefix = new BytesRef();
-				}
-				final TermsEnum termsEnum = terms.iterator(null);
-				BytesRef term;
-				switch (termsEnum.seekCeil(prefix)) {
-				case FOUND:
-				case NOT_FOUND:
-					term = termsEnum.term();
-					break;
-				case END:
-					term = null;
-					break;
-				default:
-					throw new AssertionError();
-				}
-				final CharsRef spare = new CharsRef();
-				for (int i = 0; i < offset && term != null && StringHelper.startsWith(term, prefix); ++i) {
-					term = termsEnum.next();
-				}
-				for (; term != null && StringHelper.startsWith(term, prefix) && (limit < 0 || result.size() < limit); term = termsEnum
-						.next()) {
-					ft.indexedToReadable(term, spare);
-					final String termStr = spare.toString();
-					Integer count = counts.get(termStr);
-					if (count == null) {
-						count = 0;
-					}
+			for (; term != null && StringHelper.startsWith(term, prefix) && (limit < 0 || result.size() < limit); term = termsEnum.next()) {
+				ft.indexedToReadable(term, spare);
+				final String termStr = spare.toString();
+				final Integer count = counts.get(termStr);
+				if (count != null && count > 0) {
 					result.add(round(termStr), count);
 				}
 			}

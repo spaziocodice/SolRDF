@@ -12,7 +12,7 @@
  * We warmly appreciate and thank the author and O'Reilly for such permission.
  * 
  */
-package org.gazzax.labs.solrdf.integration;
+package org.gazzax.labs.solrdf.integration.sparql;
 
 import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
@@ -28,16 +28,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.gazzax.labs.solrdf.MisteryGuest;
-import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetAccessor;
@@ -52,25 +48,17 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.sparql.resultset.ResultSetCompare;
 
 /**
- * SPARQL integration test.
+ * Facet Object Queries integration test.
  *  
  * @author Andrea Gazzarini
  * @since 1.0
  */  
-public class LearningSparql_ITCase {
+public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
+	protected final static String LEARNING_SPARQL_EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
 	
-	protected static final String SOLR_URI = "http://127.0.0.1:8080/solr/store";
-	protected static final String SPARQL_ENDPOINT = SOLR_URI + "/sparql";
-	protected static final String GRAPH_STORE_ENDPOINT = SOLR_URI + "/rdf-graph-store";
-
-	protected final static String EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
-	
-	protected final Log log = new Log(LoggerFactory.getLogger(LearningSparql_ITCase.class));
-
 	protected Dataset memoryDataset;
 	protected DatasetAccessor dataset;
-
-	static SolrServer solr;
+	
 	static final List<MisteryGuest> DATA = new ArrayList<MisteryGuest>();
 	
 	/**
@@ -78,8 +66,6 @@ public class LearningSparql_ITCase {
 	 */
 	@BeforeClass
 	public static void init() {
-		solr = new HttpSolrServer(SOLR_URI);
-		
 		DATA.add(misteryGuest("ex003.rq", "Query with prefixes", "ex002.ttl"));
 		DATA.add(misteryGuest("ex006.rq", "Query without prefixes", "ex002.ttl"));
 		DATA.add(misteryGuest("ex007.rq", "FROM keyword", "ex002.ttl"));
@@ -120,17 +106,16 @@ public class LearningSparql_ITCase {
 	@Before
 	public final void setUp() {
 		memoryDataset = DatasetFactory.createMem();
-		dataset = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT);
+		dataset = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
 	}
 	 
-	/**
+	/** 
 	 * Shutdown procedure for this test.
 	 * 
-	 * @throws SolrServerException in case of a Solr failure.
-	 * @throws IOException in case of I/O failure.
+	 * @throws Exception hopefully never.
 	 */
 	@After
-	public void tearDown() throws SolrServerException, IOException {
+	public void tearDown() throws Exception {
 		clearDatasets();
 	}
 	
@@ -149,13 +134,13 @@ public class LearningSparql_ITCase {
 				assertTrue(
 						Arrays.toString(data.datasets) + ", " + data.query,
 						ResultSetCompare.isomorphic(
-								(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT, query)).execSelect(),
+								(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
 								(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
 			} catch (final Exception error) {
 				error.printStackTrace();
 				QueryExecution debugExecution = null;
 				log.debug("JNS\n" + ResultSetFormatter.asText(
-						(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT, query)).execSelect()));
+						(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
 				
 				debugExecution.close();
 				log.debug("MEM\n" + ResultSetFormatter.asText(
@@ -224,28 +209,16 @@ public class LearningSparql_ITCase {
 	 * @return the URI (as string) of a given filename.
 	 */ 
 	URI source(final String filename) {
-		return new File(EXAMPLES_DIR, filename).toURI();
+		return new File(LEARNING_SPARQL_EXAMPLES_DIR, filename).toURI();
 	}	
 	
 	/**
 	 * Removes all data created by this test.
 	 * 
-	 * @throws SolrServerException in case of a Solr failure.
-	 * @throws IOException in case of I/O failure.
+	 * @throws Exception hopefully never.
 	 */
-	private void clearDatasets() throws SolrServerException, IOException {
-		solr.deleteByQuery("*:*");
-		commitChanges();
+	private void clearDatasets() throws Exception {
+		clearData();
 		memoryDataset.getDefaultModel().removeAll();
-	}
-	
-	/**
-	 * Commits changes on Solr.
-	 * 
-	 * @throws SolrServerException in case of a Solr failure.
-	 * @throws IOException in case of I/O failure.
-	 */
-	private void commitChanges() throws SolrServerException, IOException {
-		solr.commit();		
 	}
 }
