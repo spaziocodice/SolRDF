@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.integration.oq;
 
+import static java.util.Arrays.asList;
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
 import static org.junit.Assert.assertEquals;
@@ -11,12 +12,14 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.util.NamedList;
 import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
@@ -173,7 +176,7 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 	 */
 	@Test
 	public void atLeastTwoOccurrences() throws Exception {
-		query.set("facet.mincount", 2);
+		query.set(FacetParams.FACET_MINCOUNT, 2);
 		assertOneFacetQuery(
 				publisherQuery, 
 				FacetQuery.STRING_HINT, 
@@ -324,6 +327,143 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 	}			
 	
 	/**
+	 * Five facets without aliases.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
+	@Test
+	public void fiveFacetsWithoutAlias() throws Exception {
+		assertFacetQueries(
+				asList(
+						publisherQuery, 
+						reviewedQuery, 
+						downloadsQuery, 
+						priceQuery, 
+						dateQuery), 
+				asList(
+						FacetQuery.STRING_HINT, 
+						FacetQuery.BOOLEAN_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.DATE_HINT), 
+				asList(
+						(String)null,
+						(String)null,
+						(String)null,
+						(String)null,
+						(String)null),
+				asList(
+						expectedPublishersOccurrences, 
+						expectedReviewedOccurrences, 
+						expectedDownloadsOccurrences, 
+						expectedPricesOccurrences, 
+						expectedDatesOccurrences));
+	}		
+	
+	/**
+	 * Five facets aliased.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
+	@Test
+	public void fiveFacetsWithAlias() throws Exception {
+		assertFacetQueries(
+				asList(
+						publisherQuery, 
+						reviewedQuery, 
+						downloadsQuery, 
+						priceQuery, 
+						dateQuery), 
+				asList(
+						FacetQuery.STRING_HINT, 
+						FacetQuery.BOOLEAN_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.DATE_HINT), 
+				asList(
+						randomString(),
+						randomString(),
+						randomString(),
+						randomString(),
+						randomString()),
+				asList(
+						expectedPublishersOccurrences, 
+						expectedReviewedOccurrences, 
+						expectedDownloadsOccurrences, 
+						expectedPricesOccurrences, 
+						expectedDatesOccurrences));
+	}			
+	
+	/**
+	 * Five facets aliased and not aliased.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
+	@Test
+	public void fiveFacetsWithAndWithoutAlias() throws Exception {
+		assertFacetQueries(
+				asList(
+						publisherQuery, 
+						reviewedQuery, 
+						downloadsQuery, 
+						priceQuery, 
+						dateQuery), 
+				asList(
+						FacetQuery.STRING_HINT, 
+						FacetQuery.BOOLEAN_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.DATE_HINT), 
+				asList(
+						randomString(),
+						null,
+						null,
+						randomString(),
+						null),
+				asList(
+						expectedPublishersOccurrences, 
+						expectedReviewedOccurrences, 
+						expectedDownloadsOccurrences, 
+						expectedPricesOccurrences, 
+						expectedDatesOccurrences));
+	}		
+	
+	/**
+	 * Five facets with a scoped parameter for one of them.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
+	@Test
+	public void scopedParameters() throws Exception {
+		query.set(FacetParams.FACET_MINCOUNT + ".1", "2");
+		assertFacetQueries(
+				asList(
+						publisherQuery, 
+						reviewedQuery, 
+						downloadsQuery, 
+						priceQuery, 
+						dateQuery), 
+				asList(
+						FacetQuery.STRING_HINT, 
+						FacetQuery.BOOLEAN_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.NUMERIC_HINT, 
+						FacetQuery.DATE_HINT), 
+				asList(
+						randomString(),
+						null,
+						null,
+						randomString(),
+						null),
+				asList(
+						expectedPublishersWithAtLeastTwoOccurrences, 
+						expectedReviewedOccurrences, 
+						expectedDownloadsOccurrences, 
+						expectedPricesOccurrences, 
+						expectedDatesOccurrences));
+	}			
+	
+	/**
 	 * Executes the current {@link SolrQuery} and returns back the {@link NamedList} containing the collected facet object queries.
 	 * 
 	 * @return the collected facet object queries.
@@ -391,6 +531,55 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 			assertFacetResults(expectedResults, (NamedList<?>) facetObjectQueries.get(facetQuery));
 		}
 	}
+	
+	
+	
+	/**
+	 * A compose method for avoid duplication in "nFacet" test methods.
+	 * 
+	 * @param facetQuery the facet query.
+	 * @param hint the facet query hint.
+	 * @param alias the facet query alias.
+	 * @param expectedResults the expected results.
+	 * 
+	 * @throws Exception hopefully never otherwise the corresponding test fails.
+	 */
+	private void assertFacetQueries(
+			final List<String> facetQueries, 
+			final List<String> hints, 
+			final List<String> aliases,
+			final List<Map<String, Integer>> expectedResults) throws Exception {
+	
+		for (int i = 0; i < facetQueries.size(); i++) {
+			final String queryId = "." + (i + 1);
+			final String alias = aliases.get(i);
+			final String hint = hints.get(i);
+			final String facetQuery = facetQueries.get(i);
+			
+			if (alias != null) {
+				query.set("facet.obj.q.alias" + queryId, alias);		
+			}
+			
+			query.set("facet.obj.q.hint" + queryId, hint);		
+			query.set("facet.obj.q" + queryId, facetQuery);
+		}
+		
+		final NamedList<?> facetObjectQueries = executeQueryAndGetFacetObjectQueries();
+		assertEquals(facetQueries.size(), facetObjectQueries.size());
+		
+		for (int i = 0; i < facetQueries.size(); i++) {
+			final String alias = aliases.get(i);
+			final String facetQuery = facetQueries.get(i);
+			final Map<String, Integer> expectation = expectedResults.get(i);
+			if (alias != null) {
+				assertNull(facetObjectQueries.get(facetQuery));
+				assertFacetResults(expectation, (NamedList<?>) facetObjectQueries.get(alias));
+			} else {
+				assertNull(facetObjectQueries.get(alias));
+				assertFacetResults(expectation, (NamedList<?>) facetObjectQueries.get(facetQuery));
+			}
+		}
+	}	
 
 	@Override
 	protected String examplesDirectory() {
