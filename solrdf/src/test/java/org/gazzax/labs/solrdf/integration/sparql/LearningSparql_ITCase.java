@@ -15,36 +15,10 @@
 package org.gazzax.labs.solrdf.integration.sparql;
 
 import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
-import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.gazzax.labs.solrdf.MisteryGuest;
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSetFormatter;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.sparql.resultset.ResultSetCompare;
 
 /**
  * Facet Object Queries integration test.
@@ -54,23 +28,7 @@ import com.hp.hpl.jena.sparql.resultset.ResultSetCompare;
  */  
 public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	protected final static String LEARNING_SPARQL_EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
-	
-	protected Dataset memoryDataset;
-	protected DatasetAccessor dataset;
-	protected QueryExecution execution;
-	protected QueryExecution inMemoryExecution;
-	
-	static final List<MisteryGuest> DATA = new ArrayList<MisteryGuest>();
-	
-	/**
-	 * Setup fixture for this test.
-	 */
-	@Before
-	public final void setUp() {
-		memoryDataset = DatasetFactory.createMem();
-		dataset = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
-	}
-	 
+
 	/** 
 	 * Shutdown procedure for this test.
 	 * 
@@ -79,10 +37,8 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	@After
 	public void tearDown() throws Exception {
 		clearDatasets();
-		execution.close();
-		inMemoryExecution.close();
-	}	
-
+	}
+	
 	@Test
 	public void queryWithPrefixes_I() throws Exception {
 		execute(misteryGuest("ex003.rq", "ex002.ttl"));		
@@ -197,94 +153,9 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	public void bindEither_I() throws Exception {
 		execute(misteryGuest("ex075.rq", "ex074.ttl"));		
 	}	
-
-	private void execute(final MisteryGuest data) throws Exception {
-		load(data);
-		
-		final Query query = QueryFactory.create(queryString(data.query));
-		try {
-			assertTrue(
-					Arrays.toString(data.datasets) + ", " + data.query,
-					ResultSetCompare.isomorphic(
-							(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
-							(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
-		} catch (final Exception error) {
-			QueryExecution debugExecution = null;
-			log.debug("JNS\n" + ResultSetFormatter.asText(
-					(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
-			
-			debugExecution.close();
-			log.debug("MEM\n" + ResultSetFormatter.asText(
-					(debugExecution = (QueryExecutionFactory.create(query, memoryDataset))).execSelect()));
-			
-			debugExecution.close();
-			throw error;
-		} 
-	}
 	
-	/**
-	 * Reads a query from the file associated with this test and builds a query string.
-	 * 
-	 * @param filename the filename.
-	 * @return the query string associated with this test.
-	 * @throws IOException in case of I/O failure while reading the file.
-	 */
-	protected String queryString(final String filename) throws IOException {
-		return readFile(filename);
-	}
-	
-	/**
-	 * Builds a string from a given file.
-	 * 
-	 * @param filename the filename (without path).
-	 * @return a string with the file content.
-	 * @throws IOException in case of I/O failure while reading the file.
-	 */
-	protected String readFile(final String filename) throws IOException {
-		return new String(Files.readAllBytes(Paths.get(source(filename))));
-	}	
-	
-	/**
-	 * Loads all triples found in the datafile associated with the given name.
-	 * 
-	 * @param datafileName the name of the datafile.
-	 * @throws Exception hopefully never, otherwise the test fails.
-	 */
-	protected void load(final MisteryGuest data) throws Exception {
-		final Model memoryModel = memoryDataset.getDefaultModel();
-				 
-		for (final String datafileName : data.datasets) {
-			final String dataURL = source(datafileName).toString();
-			final String lang = datafileName.endsWith("ttl") ? "TTL" : null;
-			memoryModel.read(dataURL, DUMMY_BASE_URI, lang);
-		}  
-  
-		dataset.add(memoryModel);
-		commitChanges();
-		
-		final Model model = dataset.getModel();
-		  
-		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
-		assertTrue(Arrays.toString(data.datasets) + ", " + data.query, model.isIsomorphicWith(memoryModel));
-	} 
- 
-	/**
-	 * Returns the URI of a given filename.
-	 * 
-	 * @param filename the filename.
-	 * @return the URI (as string) of a given filename.
-	 */ 
-	URI source(final String filename) {
-		return new File(LEARNING_SPARQL_EXAMPLES_DIR, filename).toURI();
-	}	
-	
-	/**
-	 * Removes all data created by this test.
-	 * 
-	 * @throws Exception hopefully never.
-	 */
-	private void clearDatasets() throws Exception {
-		clearData();
-		memoryDataset.getDefaultModel().removeAll();
+	@Override
+	protected String examplesDirectory() {
+		return LEARNING_SPARQL_EXAMPLES_DIR;
 	}
 }

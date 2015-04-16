@@ -24,8 +24,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -42,7 +40,6 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 	private final static String TEST_DATA_URI = new File("src/test/resources/sample_data/faceting_test_dataset.nt").toURI().toString();
 	
-	private static DatasetAccessor DATASET;
 	private SolrQuery query;
 
 	private final String publisherQuery = "p:<http\\://purl.org/dc/elements/1.1/publisher>";
@@ -111,7 +108,6 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 		final Model memoryModel = ModelFactory.createDefaultModel();
 		memoryModel.read(TEST_DATA_URI, DUMMY_BASE_URI, "N-TRIPLES");
   
-		DATASET = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
 		DATASET.add(memoryModel);
 		
 		commitChanges();
@@ -128,7 +124,7 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 	 * @throws Exception hopefully never, otherwise the test fails.
 	 */
 	@Before
-	public final void setUp() throws Exception {
+	public void init() throws Exception {
 		query = new SolrQuery("SELECT * WHERE { ?s ?p ?o }");
 		query.setRows(0);
 		query.setFacet(true);
@@ -394,5 +390,10 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 			assertNull(facetObjectQueries.get(alias));
 			assertFacetResults(expectedResults, (NamedList<?>) facetObjectQueries.get(facetQuery));
 		}
+	}
+
+	@Override
+	protected String examplesDirectory() {
+		throw new IllegalStateException();
 	}	
 }

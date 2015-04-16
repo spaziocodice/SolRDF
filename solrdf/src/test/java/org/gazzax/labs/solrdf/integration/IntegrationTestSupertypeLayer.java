@@ -1,6 +1,15 @@
 package org.gazzax.labs.solrdf.integration;
 
+import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -12,10 +21,25 @@ import org.apache.solr.client.solrj.impl.XMLResponseParser;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
+import org.gazzax.labs.solrdf.MisteryGuest;
 import org.gazzax.labs.solrdf.log.Log;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
+
+import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetAccessor;
+import com.hp.hpl.jena.query.DatasetAccessorFactory;
+import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.sparql.resultset.ResultSetCompare;
 
 /**
  * Supertype layer for all integration tests.
@@ -23,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class IntegrationTestSupertypeLayer {
+public abstract class IntegrationTestSupertypeLayer {
 	protected static final String SOLR_URI = "http://127.0.0.1:8080/solr/store";
 	protected static final String SPARQL_ENDPOINT_URI = SOLR_URI + "/sparql";
 	protected static final String GRAPH_STORE_ENDPOINT_URI = SOLR_URI + "/rdf-graph-store";
@@ -31,6 +55,10 @@ public class IntegrationTestSupertypeLayer {
 	protected final Log log = new Log(LoggerFactory.getLogger(getClass()));
 	
 	protected static HttpSolrServer solr;
+	protected QueryExecution execution;
+	protected QueryExecution inMemoryExecution;
+	protected Dataset memoryDataset;
+	protected static DatasetAccessor DATASET;
 	
 	/**
 	 * Initilisation procedure for this test case.
@@ -41,6 +69,7 @@ public class IntegrationTestSupertypeLayer {
 	public static void initClient() {
 		solr = new HttpSolrServer(SOLR_URI);
 		resetSolRDFXmlResponseParser();
+		DATASET = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
 	}
 	
 	/**
@@ -52,6 +81,42 @@ public class IntegrationTestSupertypeLayer {
 	public static void shutdownClient() throws Exception {
 		clearData();
 		solr.shutdown();		
+	}
+	
+	/**
+	 * Setup fixture for this test.
+	 */
+	@Before
+	public void setUp() throws Exception {
+		memoryDataset = DatasetFactory.createMem();
+	}
+	 
+	/** 
+	 * Shutdown procedure for this test.
+	 * 
+	 * @throws Exception hopefully never.
+	 */
+	@After
+	public void tearDown() throws Exception {
+		if (execution != null) {
+			execution.close();
+		}
+		
+		if (inMemoryExecution != null) {
+			inMemoryExecution.close();
+		}
+	}		
+	
+	/**
+	 * Removes all data created by this test.
+	 * 
+	 * @throws Exception hopefully never.
+	 */
+	protected void clearDatasets() throws Exception {
+		clearData();
+		if (memoryDataset != null) {
+			memoryDataset.getDefaultModel().removeAll();
+		}
 	}
 	
 	/**
@@ -143,4 +208,93 @@ public class IntegrationTestSupertypeLayer {
 			  }			  
 		});		
 	}
+	
+	/**
+	 * Reads a query from the file associated with this test and builds a query string.
+	 * 
+	 * @param filename the filename.
+	 * @return the query string associated with this test.
+	 * @throws IOException in case of I/O failure while reading the file.
+	 */
+	protected String queryString(final String filename) throws IOException {
+		return readFile(filename);
+	}
+	
+	/**
+	 * Builds a string from a given file.
+	 * 
+	 * @param filename the filename (without path).
+	 * @return a string with the file content.
+	 * @throws IOException in case of I/O failure while reading the file.
+	 */
+	protected String readFile(final String filename) throws IOException {
+		return new String(Files.readAllBytes(Paths.get(source(filename))));
+	}	
+	
+	/**
+	 * Returns the URI of a given filename.
+	 * 
+	 * @param filename the filename.
+	 * @return the URI (as string) of a given filename.
+	 */ 
+	protected URI source(final String filename) {
+		return new File(examplesDirectory(), filename).toURI();
+	}	
+	
+	/**
+	 * Executes a given query against a given dataset.
+	 * 
+	 * @param data the mistery guest containing test data (query and dataset)
+	 * @throws Exception never, otherwise the test fails.
+	 */
+	protected void execute(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final Query query = QueryFactory.create(queryString(data.query));
+		try {
+			assertTrue(
+					Arrays.toString(data.datasets) + ", " + data.query,
+					ResultSetCompare.isomorphic(
+							(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
+							(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
+		} catch (final Exception error) {
+			QueryExecution debugExecution = null;
+			log.debug("JNS\n" + ResultSetFormatter.asText(
+					(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
+			
+			debugExecution.close();
+			log.debug("MEM\n" + ResultSetFormatter.asText(
+					(debugExecution = (QueryExecutionFactory.create(query, memoryDataset))).execSelect()));
+			
+			debugExecution.close();
+			throw error;
+		} 
+	}
+	
+	/**
+	 * Loads all triples found in the datafile associated with the given name.
+	 * 
+	 * @param datafileName the name of the datafile.
+	 * @throws Exception hopefully never, otherwise the test fails.
+	 */
+	protected void load(final MisteryGuest data) throws Exception {
+		final Model memoryModel = memoryDataset.getDefaultModel();
+				 
+		for (final String datafileName : data.datasets) {
+			final String dataURL = source(datafileName).toString();
+			final String lang = datafileName.endsWith("ttl") ? "TTL" : null;
+			memoryModel.read(dataURL, DUMMY_BASE_URI, lang);
+		}  
+  
+		DATASET.add(memoryModel);
+		commitChanges();
+		
+		final Model model = DATASET.getModel();
+		  
+		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
+		assertTrue(Arrays.toString(data.datasets) + ", " + data.query, model.isIsomorphicWith(memoryModel));
+	} 
+	
+	
+	protected abstract String examplesDirectory();
 }
