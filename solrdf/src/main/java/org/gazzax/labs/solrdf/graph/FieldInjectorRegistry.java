@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.SolrInputDocument;
@@ -112,7 +113,9 @@ class FieldInjectorRegistry {
 
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
-			filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, value)));
+			final PhraseQuery query = new PhraseQuery();
+			query.add(new Term(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(value)));
+			filters.add(query);
 		}		
 		
 		@Override
