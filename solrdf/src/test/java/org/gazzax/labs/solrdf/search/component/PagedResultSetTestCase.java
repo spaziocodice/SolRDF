@@ -35,7 +35,7 @@ public class PagedResultSetTestCase {
 	@Before
 	public void setUp() throws Exception {
 		model = ModelFactory.createDefaultModel();
-		model.read(getClass().getResourceAsStream("/sample-data/bsbm-generated-dataset.nt"), DUMMY_BASE_URI, Lang.NTRIPLES.getLabel());
+		model.read(getClass().getResourceAsStream("/sample_data/bsbm-generated-dataset.nt"), DUMMY_BASE_URI, Lang.NTRIPLES.getLabel());
 	}
 	
 	/**
