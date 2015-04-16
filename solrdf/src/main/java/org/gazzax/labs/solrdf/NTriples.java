@@ -7,7 +7,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.rdf.model.AnonId;
 
 /**
- * Booch utility for parsing RDF resources.
+ * Booch utility for parsing NTriples.
  * 
  * @author Andrea Gazzarini
  * @since 1.0

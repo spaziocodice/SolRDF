@@ -1,5 +1,7 @@
 package org.gazzax.labs.solrdf.handler.search.faceting;
 
+import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -54,8 +56,6 @@ import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.gazzax.labs.solrdf.log.MessageFactory;
 import org.slf4j.LoggerFactory;
-
-import static org.gazzax.labs.solrdf.Strings.*;
 
 /**
  * A class that generates facet information for a given request. Note that it
@@ -118,11 +118,11 @@ public class RDFacets extends SimpleFacets {
 	}
 
 	/**
-	 * &facet.object.q=
+	 * Returns the facet object queries counts. 
 	 * 
-	 * @return
-	 * @throws IOException
-	 * @throws SyntaxError
+	 * @return the facet object queries counts.
+	 * @throws IOException in case of I/O failure.
+	 * @throws SyntaxError in case of query syntax errors.
 	 */
 	public NamedList<Object> getFacetObjectQueriesCounts() throws IOException, SyntaxError {
 		final NamedList<Object> result = new SimpleOrderedMap<>();
@@ -159,7 +159,7 @@ public class RDFacets extends SimpleFacets {
 
 		try {
 			for (final FacetObjectQuery foq : facetObjectQueries) {
-				// parseParams(FacetParams.FACET_FIELD, f);
+//				parseParams(FacetParams.FACET_FIELD, f);
 				final String termList = localParams == null ? null : localParams.get(CommonParams.TERMS);
 				final String workerFacetValue = facetValue;
 				final Callable<NamedList<Object>> callable = new Callable<NamedList<Object>>() {

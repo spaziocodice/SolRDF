@@ -29,4 +29,5 @@ public interface MessageCatalog {
 	String _00100_INVALID_FACET_METHOD = PREFIX + "-00100> : Invalid facet method %s for facet object query %s";
 	String _00101_PREFIX_AND_NUMERIC_FIELD = PREFIX + "-00101> : " + FacetParams.FACET_PREFIX + " is not supported on numeric types.";
 	String _00102_UNABLE_TO_COMPUTE_FOQ = PREFIX + "-00102> : Unable to compute facets for object query %s on field %s.";
+	String _00103_UNABLE_PARSE_DATEMATH_EXPRESSION = PREFIX + "-00103> : Unable to parse date expression %s";
 }
