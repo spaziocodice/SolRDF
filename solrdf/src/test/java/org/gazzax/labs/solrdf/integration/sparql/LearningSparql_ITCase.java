@@ -32,7 +32,6 @@ import org.gazzax.labs.solrdf.MisteryGuest;
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -58,47 +57,10 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	
 	protected Dataset memoryDataset;
 	protected DatasetAccessor dataset;
+	protected QueryExecution execution;
+	protected QueryExecution inMemoryExecution;
 	
 	static final List<MisteryGuest> DATA = new ArrayList<MisteryGuest>();
-	
-	/**
-	 * Fills the data and queries map.
-	 */
-	@BeforeClass
-	public static void init() {
-		DATA.add(misteryGuest("ex003.rq", "Query with prefixes", "ex002.ttl"));
-		DATA.add(misteryGuest("ex006.rq", "Query without prefixes", "ex002.ttl"));
-		DATA.add(misteryGuest("ex007.rq", "FROM keyword", "ex002.ttl"));
-		DATA.add(misteryGuest("ex008.rq", "Query with one variable", "ex002.ttl"));
-		DATA.add(misteryGuest("ex010.rq", "Query with two variables", "ex002.ttl"));
-
-		DATA.add(misteryGuest("ex013.rq", "Multiple triple patterns I", "ex012.ttl"));
-		DATA.add(misteryGuest("ex015.rq", "Multiple triple patterns II", "ex012.ttl"));
-		DATA.add(misteryGuest("ex017.rq", "Human-readable answer with labels", "ex012.ttl"));
-		DATA.add(misteryGuest("ex019.rq", "Entity description query", "ex012.ttl"));
-		DATA.add(misteryGuest("ex021.rq", "Regular expression (regex)", "ex012.ttl"));
-		DATA.add(misteryGuest("ex047.rq", "Select first and last name", "ex012.ttl"));
-		DATA.add(misteryGuest("ex052.rq", "Querying FOAF labels", "ex050.ttl", "foaf.rdf"));
-		DATA.add(misteryGuest("ex055.rq", "Data that might not be there", "ex054.ttl"));
-		DATA.add(misteryGuest("ex057.rq", "OPTIONAL keyword", "ex054.ttl"));
-		DATA.add(misteryGuest("ex059.rq", "OPTIONAL graph pattern", "ex054.ttl"));
-		DATA.add(misteryGuest("ex061.rq", "OPTIONAL graph patterns", "ex054.ttl"));
-		DATA.add(misteryGuest("ex063.rq", "Order of OPTIONAL patterns", "ex054.ttl"));
-		DATA.add(misteryGuest("ex065.rq", "!BOUND", "ex054.ttl"));
-		DATA.add(misteryGuest("ex067.rq", "FILTER NOT EXISTS", "ex054.ttl"));
-		DATA.add(misteryGuest("ex068.rq", "MINUS", "ex054.ttl"));
-		DATA.add(misteryGuest("ex070.rq", "Multiple tables", "ex069.ttl"));
-		DATA.add(misteryGuest("ex070.rq", "Multiple tables with split datasets", "ex072.ttl", "ex073.ttl", "ex368.ttl"));
-		DATA.add(misteryGuest("ex075.rq", "Bind either I", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex077.rq", "Bind either II", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex078.rq", "Property paths I", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex080.rq", "Property paths II", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex082.rq", "Property paths III", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex083.rq", "Property paths IV", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex084.rq", "Property paths V", "ex074.ttl"));
-//		DATA.add(misteryGuest("ex086.rq", "Querying blank nodes I", "ex041.ttl"));
-//		DATA.add(misteryGuest("ex088.rq", "Querying blank nodes II", "ex041.ttl"));
-	}
 	
 	/**
 	 * Setup fixture for this test.
@@ -117,43 +79,147 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	@After
 	public void tearDown() throws Exception {
 		clearDatasets();
+		execution.close();
+		inMemoryExecution.close();
+	}	
+
+	@Test
+	public void queryWithPrefixes_I() throws Exception {
+		execute(misteryGuest("ex003.rq", "ex002.ttl"));		
 	}
 	
 	@Test
-	public void select() throws Exception {
-		for (final MisteryGuest data : DATA) {
-			log.info("Running " + data.description + " test...");
+	public void queryWithPrefixes_II() throws Exception {
+		execute(misteryGuest("ex006.rq", "ex002.ttl"));		
+	}
+
+	@Test
+	public void fromKeyword() throws Exception {
+		execute(misteryGuest("ex007.rq", "ex002.ttl"));		
+	}
+
+	@Test
+	public void queryWithOneVariable() throws Exception {
+		execute(misteryGuest("ex008.rq", "ex002.ttl"));		
+	}
+
+	@Test
+	public void queryWithTwoVariables() throws Exception {
+		execute(misteryGuest("ex010.rq", "ex002.ttl"));		
+	}
+
+	@Test
+	public void multipleTriplePatterns_I() throws Exception {
+		execute(misteryGuest("ex013.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void multipleTriplePatterns_II() throws Exception {
+		execute(misteryGuest("ex015.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void humanReadableAnswersWithLabels() throws Exception {
+		execute(misteryGuest("ex017.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void entityDescriptionQuery() throws Exception {
+		execute(misteryGuest("ex019.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void regularExpression() throws Exception {
+		execute(misteryGuest("ex021.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void selectFirstAndLastName() throws Exception {
+		execute(misteryGuest("ex047.rq", "ex012.ttl"));		
+	}
+
+	@Test
+	public void queryingFOAFLabels() throws Exception {
+		execute(misteryGuest("ex052.rq", "ex050.ttl", "foaf.rdf"));		
+	}
+	
+	@Test
+	public void dataThatMightBeNotThere() throws Exception {
+		execute(misteryGuest("ex055.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void optionalKeyword() throws Exception {
+		execute(misteryGuest("ex057.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void optionalGraphPattern() throws Exception {
+		execute(misteryGuest("ex059.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void optionalGraphPatterns() throws Exception {
+		execute(misteryGuest("ex061.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void orderOfOptionalGraphPatterns() throws Exception {
+		execute(misteryGuest("ex063.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void boundKeyword() throws Exception {
+		execute(misteryGuest("ex065.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void filterNotExists() throws Exception {
+		execute(misteryGuest("ex067.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void minusKeyword() throws Exception {
+		execute(misteryGuest("ex068.rq", "ex054.ttl"));		
+	}	
+
+	@Test
+	public void multipleTables() throws Exception {
+		execute(misteryGuest("ex070.rq", "ex069.ttl"));		
+	}	
+
+	@Test
+	public void multipleTablesWithSplitDatasets() throws Exception {
+		execute(misteryGuest("ex070.rq", "ex072.ttl", "ex073.ttl", "ex368.ttl"));		
+	}	
+
+	@Test
+	public void bindEither_I() throws Exception {
+		execute(misteryGuest("ex075.rq", "ex074.ttl"));		
+	}	
+
+	private void execute(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final Query query = QueryFactory.create(queryString(data.query));
+		try {
+			assertTrue(
+					Arrays.toString(data.datasets) + ", " + data.query,
+					ResultSetCompare.isomorphic(
+							(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
+							(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
+		} catch (final Exception error) {
+			QueryExecution debugExecution = null;
+			log.debug("JNS\n" + ResultSetFormatter.asText(
+					(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
 			
-			load(data);
+			debugExecution.close();
+			log.debug("MEM\n" + ResultSetFormatter.asText(
+					(debugExecution = (QueryExecutionFactory.create(query, memoryDataset))).execSelect()));
 			
-			final Query query = QueryFactory.create(queryString(data.query));
-			QueryExecution execution = null;
-			QueryExecution inMemoryExecution = null;
-			 
-			try {
-				assertTrue(
-						Arrays.toString(data.datasets) + ", " + data.query,
-						ResultSetCompare.isomorphic(
-								(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
-								(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
-			} catch (final Exception error) {
-				error.printStackTrace();
-				QueryExecution debugExecution = null;
-				log.debug("JNS\n" + ResultSetFormatter.asText(
-						(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
-				
-				debugExecution.close();
-				log.debug("MEM\n" + ResultSetFormatter.asText(
-						(debugExecution = (QueryExecutionFactory.create(query, memoryDataset))).execSelect()));
-				
-				debugExecution.close();
-				throw error;
-			} finally {
-				clearDatasets();
-				execution.close();
-				inMemoryExecution.close();
-			}	
-		}
+			debugExecution.close();
+			throw error;
+		} 
 	}
 	
 	/**
