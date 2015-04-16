@@ -1,0 +1,4 @@
+SELECT * WHERE 
+{ 
+	?s <http://d-nb.info/standards/elementset/gnd#preferredNameForTheSubjectHeading> 'Konfiguration <Informatik>' 
+}

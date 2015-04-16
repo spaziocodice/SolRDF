@@ -26,4 +26,19 @@ public abstract class Strings {
 	public static boolean isNullOrEmpty(final String value) {
 		return value == null || value.trim().length() == 0;
 	}	
+	
+	public static String round(final String numericStringValue) {
+		final int indexOfDot = numericStringValue.indexOf(".");
+		if (indexOfDot == -1) {
+			return numericStringValue;
+		}
+		
+		final String d = numericStringValue.substring(indexOfDot + 1);
+		for (int index = 0; index < d.length(); index++) {
+			if (d.charAt(index) != '0') {
+				return numericStringValue;
+			}
+		}
+		return numericStringValue.substring(0, indexOfDot);			
+	}
 }

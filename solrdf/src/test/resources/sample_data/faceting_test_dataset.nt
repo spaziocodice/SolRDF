@@ -1,0 +1,45 @@
+<http://example.org/book1> <http://purl.org/dc/elements/1.1/title> "Bla bla bla" .
+<http://example.org/book1> <http://purl.org/dc/elements/1.1/creator> "Edmund Wells" .
+<http://example.org/book1> <http://purl.org/dc/elements/1.1/date> "2000-12-31"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book1> <http://purl.org/dc/elements/1.1/publisher> "ABCD Publishing" .
+<http://example.org/book1> <http://example.org/ns#price> "22.10"^^<http://www.w3.org/2001/XMLSchema#double> .
+<http://example.org/book1> <http://example.org/ns#downloads> "192"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.org/book1> <http://example.org/ns#reviewed> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+<http://example.org/book2> <http://purl.org/dc/elements/1.1/creator> "Andrea Gazzarini" .
+<http://example.org/book2> <http://purl.org/dc/elements/1.1/title> "Apache Solr Essentials" .
+<http://example.org/book2> <http://purl.org/dc/elements/1.1/date> "2015-08-23"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book2> <http://purl.org/dc/elements/1.1/publisher> "Packt Publishing" .
+<http://example.org/book2> <http://example.org/ns#price> "23.95"^^<http://www.w3.org/2001/XMLSchema#double> .
+<http://example.org/book2> <http://example.org/ns#downloads> "442"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.org/book2> <http://example.org/ns#reviewed> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+<http://example.org/book3> <http://purl.org/dc/elements/1.1/creator> "John Aber" .
+<http://example.org/book3> <http://purl.org/dc/elements/1.1/title> "This is a title" .
+<http://example.org/book3> <http://purl.org/dc/elements/1.1/date> "2010-06-23"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book3> <http://purl.org/dc/elements/1.1/publisher> "CDEF Publishing" .
+<http://example.org/book3> <http://example.org/ns#price> "22.40"^^<http://www.w3.org/2001/XMLSchema#double> .
+<http://example.org/book3> <http://example.org/ns#downloads> "192"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.org/book3> <http://example.org/ns#reviewed> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+<http://example.org/book4> <http://purl.org/dc/elements/1.1/creator> "Malcolm Louise" .
+<http://example.org/book4> <http://purl.org/dc/elements/1.1/contributor> "J.F. Loiny" .
+<http://example.org/book4> <http://purl.org/dc/elements/1.1/title> "This is a title" .
+<http://example.org/book4> <http://purl.org/dc/elements/1.1/date> "2010-10-10"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book4> <http://purl.org/dc/elements/1.1/publisher> "ABCD Publishing" .
+<http://example.org/book4> <http://example.org/ns#price> "20.00"^^<http://www.w3.org/2001/XMLSchema#double> .
+<http://example.org/book4> <http://example.org/ns#downloads> "99"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.org/book4> <http://example.org/ns#reviewed> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+<http://example.org/book5> <http://purl.org/dc/elements/1.1/creator> "Marie Yumm" .
+<http://example.org/book5> <http://purl.org/dc/elements/1.1/title> "Yet another title" .
+<http://example.org/book5> <http://purl.org/dc/elements/1.1/date> "2011-01-01"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book5> <http://purl.org/dc/elements/1.1/publisher> "Acme Publishing" .
+<http://example.org/book5> <http://example.org/ns#price> "11.00"^^<http://www.w3.org/2001/XMLSchema#double> .
+<http://example.org/book5> <http://example.org/ns#downloads> "199"^^<http://www.w3.org/2001/XMLSchema#integer> .
+ 
+<http://example.org/book6> <http://purl.org/dc/elements/1.1/creator> "Yphos Cathe" .
+<http://example.org/book6> <http://purl.org/dc/elements/1.1/title> "Lady Kalea" .
+<http://example.org/book6> <http://purl.org/dc/elements/1.1/date> "2011-09-07"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.org/book6> <http://purl.org/dc/elements/1.1/publisher> "Acme Publishing" .
+<http://example.org/book6> <http://example.org/ns#price> "22.00"^^<http://www.w3.org/2001/XMLSchema#double> .
