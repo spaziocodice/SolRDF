@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+	<lst name="responseHeader">
+		<int name="status">0</int>
+		<int name="QTime">542</int>
+		<str name="query">
+			SELECT ?o
+			WHERE
+			{ ?s ?p ?o}
+		</str>
+	</lst>
+<!-- This section contains the (first page) of SPARQL results -->
+	<result name="response" numFound="7379188" start="0" rows="4" maxScore="1.0">
+		<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+			<head>
+				<variable name="o" />
+			</head>
+			<results>
+				<result>
+					<binding name="o">
+						<bnode>b0</bnode>
+					</binding>
+				</result>
+				<result>
+					<binding name="o">
+						<literal datatype="http://www.w3.org/2001/XMLSchema#dateTime">2002-11-21T00:00:00</literal>
+					</binding>
+				</result>
+				<result>
+					<binding name="o">
+						<uri>http://id.loc.gov/authorities/subjects</uri>
+					</binding>
+				</result>
+				<result>
+					<binding name="o">
+						<bnode>b0</bnode>
+					</binding>
+				</result>
+			</results>
+		</sparql>
+	</result>
+<!-- Facets -->
+	<lst name="facet_counts">
+		<lst name="facet_fields">
+<!-- Classic faceting on a given field (predicate, in this case) -->
+			<lst name="p">
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#member>">980923</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#altLabel>">601112</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#notation>">511933</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#prefLabel>">414729</int>
+				<int name="&lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type>">414717</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#note>">414705</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#example>">414514</int>
+				<int name="&lt;http://www.w3.org/2004/02/skos/core#editorialNote>">414363</int>
+				<int name="&lt;http://purl.org/dc/terms/created>">414355</int>
+				<int name="&lt;http://purl.org/dc/terms/modified>">414355</int>
+			</lst>
+		</lst>
+<!-- 
+Range Object Query Faceting 
+			
+see https://github.com/agazzarini/SolRDF/wiki/Faceted%20search#facet-objects-ranges-queries
+see http://andreagazzarini.blogspot.it/2015/04/rdf-faceting-query-facets-range-facets.html
+-->
+		<lst name="facet_object_ranges_queries">
+<!-- 
+Facet range on all objects belonging to a triple having 
+a predicate equal to <http://purl.org/dc/terms/created>
+-->
+			<lst name="p:&lt;http\://purl.org/dc/terms/created>">
+				<lst name="counts">
+					<int name="1986-01-10T17:00:00Z">138805</int>
+					<int name="1987-01-10T17:00:00Z">7497</int>
+					<int name="1988-01-10T17:00:00Z">9189</int>
+					<int name="1989-01-10T17:00:00Z">6162</int>
+					<int name="1990-01-10T17:00:00Z">5396</int>
+					<int name="1991-01-10T17:00:00Z">5584</int>
+					<int name="1992-01-10T17:00:00Z">6103</int>
+					<int name="1993-01-10T17:00:00Z">8292</int>
+					<int name="1994-01-10T17:00:00Z">8156</int>
+					<int name="1995-01-10T17:00:00Z">8443</int>
+					<int name="1996-01-10T17:00:00Z">9587</int>
+					<int name="1997-01-10T17:00:00Z">6952</int>
+					<int name="1998-01-10T17:00:00Z">6254</int>
+					<int name="1999-01-10T17:00:00Z">6976</int>
+					<int name="2000-01-10T17:00:00Z">9647</int>
+					<int name="2001-01-10T17:00:00Z">8956</int>
+					<int name="2002-01-10T17:00:00Z">10179</int>
+					<int name="2003-01-10T17:00:00Z">10503</int>
+					<int name="2004-01-10T17:00:00Z">8132</int>
+					<int name="2005-01-10T17:00:00Z">8923</int>
+					<int name="2006-01-10T17:00:00Z">9148</int>
+					<int name="2007-01-10T17:00:00Z">11068</int>
+					<int name="2008-01-10T17:00:00Z">32236</int>
+					<int name="2009-01-10T17:00:00Z">28360</int>
+					<int name="2010-01-10T17:00:00Z">32652</int>
+					<int name="2011-01-10T17:00:00Z">4669</int>
+					<int name="2012-01-10T17:00:00Z">4203</int>
+					<int name="2013-01-10T17:00:00Z">2278</int>
+					<int name="2014-01-10T17:00:00Z">5</int>
+				</lst>
+				<str name="gap">+1YEAR</str>
+				<str name="start">1970-01-10T17:00:00Z</str>
+				<str name="end">2015-01-10T17:00:00Z</str>
+			</lst>
+		</lst>
+<!-- 
+Object Query Faceting 
+			
+see https://github.com/agazzarini/SolRDF/wiki/Faceted%20search#facet-objects-queries 
+-->
+		<lst name="facet_object_queries">
+<!-- 
+Facet on all objects belonging to a triple having 
+a predicate equal to <http://purl.org/dc/terms/created>
+-->		
+			<lst name="p:&lt;http\://purl.org/dc/terms/created>">
+				<int name="1986-02-10T23:00:00Z">131727</int>
+				<int name="2007-09-25T22:00:00Z">1438</int>
+				<int name="2008-02-05T23:00:00Z">2037</int>
+				<int name="2008-02-10T23:00:00Z">2834</int>
+				<int name="2008-03-03T23:00:00Z">1036</int>
+				<int name="2008-03-04T23:00:00Z">2125</int>
+				<int name="2008-03-10T23:00:00Z">2980</int>
+				<int name="2008-04-22T22:00:00Z">1098</int>
+				<int name="2008-04-23T22:00:00Z">2882</int>
+				<int name="2008-04-24T22:00:00Z">2958</int>
+			</lst>
+<!-- 
+Facet on all objects having a language qualifier equals to "en" and belonging to a triple having 
+a predicate equal to <http://www.w3.org/2004/02/skos/core#prefLabel> 
+				
+Simply: facet on all english preferred labels 
+-->				
+			<lst
+				name="+p:&lt;http\://www.w3.org/2004/02/skos/core#prefLabel> +o_lang:en">
+				<int name="Kyklades (Greece)">22</int>
+				<int name="D&amp;#333;dekan&amp;#275;sos (Greece)">18</int>
+				<int name="Orkney (Scotland)">13</int>
+				<int name="Ryukyu Islands">12</int>
+				<int name="Ionian Islands (Greece)">10</int>
+				<int name="Bka&amp;#702;-rgyud-pa (Sect)">9</int>
+				<int
+					name="Netherlands--History--Wars of Independence, 1556-1648--Campaigns">8</int>
+				<int name="Shetland (Scotland)">8</int>
+				<int name="Vava&amp;#699;u (Tonga)">7</int>
+				<int name="Bka&amp;#702;-rgyud-pa lamas">6</int>
+			</lst>
+		</lst>
+<!-- Not yet implemented -->
+		<lst name="facet_intervals" />
+<!-- Not yet implemented -->
+		<lst name="facet_queries" />
+	</lst>
+</response>
