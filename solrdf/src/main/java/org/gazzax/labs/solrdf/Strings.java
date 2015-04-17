@@ -27,6 +27,13 @@ public abstract class Strings {
 		return value == null || value.trim().length() == 0;
 	}	
 	
+	/**
+	 * Removes unnecessary decimal zeros from a numeric string.
+	 * As an extreme case, where all decimals are 0, it ends with an integer string (e.g 10.000 = 10)
+	 * 
+	 * @param numericStringValue the numeric string.
+	 * @return a new string with unnecessary decimal zeros removed.
+	 */
 	public static String round(final String numericStringValue) {
 		final int indexOfDot = numericStringValue.indexOf(".");
 		if (indexOfDot == -1) {
