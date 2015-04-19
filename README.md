@@ -3,7 +3,7 @@ SolRDF
 
 SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data
 
-[![Continuous Integration status](https://secure.travis-ci.org/dakrone/clojure-opennlp.png)](https://travis-ci.org/agazzarini/SolRDF.svg?branch=master)
+[![Continuous Integration status](https://travis-ci.org/agazzarini/SolRDF.svg?branch=master)](https://travis-ci.org/agazzarini/SolRDF)
 
 This page will guide you through the SolRDF quick installation. 
 
