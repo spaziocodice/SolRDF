@@ -22,7 +22,7 @@ Build and run SolrRDF
 The very first time you run this command a lot of things will be downloaded, Solr included. At the end you should see sheomething like this:
 
 [INFO] Jetty 7.6.15.v20140411 Embedded started on port [8080]
-[INFO] Press Ctrl-C to stop the container...
+[INFO] Press Ctrl-C to stop the container... 
 
 SolRDF is up and running! Now let's add some data. Open a new shell and type the following
 
