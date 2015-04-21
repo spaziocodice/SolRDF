@@ -141,9 +141,9 @@
 			<!-- SELECT -->
 			<str name="111">application/sparql-results+xml,application/sparql-results+json,text/csv,text/plain,text/tab-separated-values</str>
 			<!-- CONSTRUCT -->
-			<str name="222">application/rdf+xml,application/n-triples,text/turtles</str>
+			<str name="222">application/rdf+xml,application/n-triples,text/turtle</str>
 			<!-- DESCRIBE -->
-			<str name="333">application/rdf+xml,application/n-triples,text/turtles</str>
+			<str name="333">application/rdf+xml,application/n-triples,text/turtle</str>
 			<!-- ASK -->
 			<str name="444">text/csv,text/plain,text/tab-separated-values,application/sparql-results+xml,application/sparql-results+json</str>
 		</lst>		
