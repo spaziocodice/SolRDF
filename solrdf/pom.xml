@@ -138,6 +138,7 @@
 							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
+							<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
 							<!-- SOLRCLOUD BOOTSTRAP PROPERTIES -->
 							<!-- 
 							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
