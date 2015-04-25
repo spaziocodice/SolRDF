@@ -143,9 +143,11 @@
 			<str name="signatureField">id</str> 
 			<bool name="overwriteDupes">false</bool> 
 			<str name="fields">s,p,o,c</str>
-			<str name="signatureClass">solr.processor.Lookup3Signature</str> </processor> 
-			<processor class="solr.LogUpdateProcessorFactory" /> 
-			<processor class="solr.RunUpdateProcessorFactory" /> 
+			<str name="signatureClass">solr.processor.Lookup3Signature</str> 
+		</processor> 
+		 <processor class="org.apache.solr.update.processor.DistributedUpdateProcessorFactory" />
+		<processor class="solr.LogUpdateProcessorFactory" /> 
+		<processor class="solr.RunUpdateProcessorFactory" /> 
 	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>

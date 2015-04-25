@@ -133,12 +133,29 @@
 				<artifactId>cargo-maven2-plugin</artifactId>
 				<version>1.4.9</version>
 				<configuration>
+					<configuration>
+						<properties>
+							<cargo.servlet.port>8983</cargo.servlet.port>
+						</properties>	
+					</configuration>
 					<container>
 						<systemProperties>
 							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
 							<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
+							
+							<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
+							<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only> 
+							<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
+							<com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
+							<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
+							<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
+							<zkClientTimeout>15000</zkClientTimeout> 
+							<zkHost>localhost:2181</zkHost>
+<!-- 							<bootstrap_confdir=/work/workspaces/rdf/SolRDF/solrdf/target/solrdf-1.0-dev/solrdf/store/conf \ -->
+							<collection.configName>solrdf-conf</collection.configName>
+							<numShards>2</numShards>						
 							<!-- SOLRCLOUD BOOTSTRAP PROPERTIES -->
 							<!-- 
 							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
