@@ -30,7 +30,7 @@ SolRDF is up and running! Now let's add some data. Open a new shell and type the
 
 > curl -v http://localhost:8080/solr/store/update/bulk?commit=true \  
   -H "Content-Type: application/n-triples" \  
-  --data-binary @/tmp/solrdf-download/solrdf/src/test/resources/sample-data/bsbm-generated-dataset.nt  
+  --data-binary @/tmp/solrdf-download/solrdf/src/test/resources/sample_data/bsbm-generated-dataset.nt  
 
 Ok, you just added about 5000 triples. Now, it's time to execute some query:
 
