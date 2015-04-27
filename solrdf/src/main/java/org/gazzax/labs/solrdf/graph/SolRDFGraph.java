@@ -141,7 +141,8 @@ public final class SolRDFGraph extends GraphBase {
 	public void performAdd(final Triple triple) {
 		resetUpdateCommand();
 		
-		final SolrInputDocument document = updateCommand.solrDoc;		
+		final SolrInputDocument document = new SolrInputDocument();
+		this.updateCommand.solrDoc = document;
 		document.setField(Field.C, graphNodeStringified);
 		document.setField(Field.S, asNt(triple.getSubject()));
 		document.setField(Field.P, asNtURI(triple.getPredicate()));
