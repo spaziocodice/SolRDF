@@ -50,6 +50,12 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public final class SolRDFGraph extends GraphBase {
+	private final static ThreadLocal<SolrInputDocument> DOCUMENTS = new ThreadLocal<SolrInputDocument>() {
+		protected SolrInputDocument initialValue() {
+			return new SolrInputDocument();
+		};
+	};
+	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
 	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
 	
@@ -138,15 +144,21 @@ public final class SolRDFGraph extends GraphBase {
 	
 	@Override
 	public void performAdd(final Triple triple) {
-		resetUpdateCommand();
+		updateCommand.clear();
 		
-		final SolrInputDocument document = new SolrInputDocument();
+		final SolrInputDocument document = DOCUMENTS.get();
+		document.clear();
 		this.updateCommand.solrDoc = document;
 		document.setField(Field.C, graphNodeStringified);
 		document.setField(Field.S, asNt(triple.getSubject()));
 		document.setField(Field.P, asNtURI(triple.getPredicate()));
-		
-		document.setField("id", UUID.nameUUIDFromBytes((graphNodeStringified + triple.getSubject() + triple.getPredicate() + triple.getObject()).getBytes()).toString());
+		document.setField(Field.ID, UUID.nameUUIDFromBytes(
+				new StringBuilder()
+					.append(graphNodeStringified)
+					.append(triple.getSubject())
+					.append(triple.getPredicate())
+					.append(triple.getObject())
+					.toString().getBytes()).toString());
 		
 		final String o = asNt(triple.getObject());
 		document.setField(Field.O, o);
@@ -221,13 +233,6 @@ public final class SolRDFGraph extends GraphBase {
 			LoggerFactory.getLogger(SolRDFGraph.class).error("", error);
 			return new NullIterator<Triple>();
 		}
-	}
-	
-	/**
-	 * Resets the {@link AddUpdateCommand} used for updates.
-	 */
-	void resetUpdateCommand() {
-		updateCommand.clear();
 	}
 	
 	/**
