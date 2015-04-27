@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.integration.faceting.oq;
+package org.gazzax.labs.solrdf.integration.faceting;
 
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
 import static org.junit.Assert.assertEquals;

@@ -18,6 +18,7 @@ import org.apache.solr.common.util.NamedList;
 import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
 import org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent;
 import org.gazzax.labs.solrdf.handler.search.faceting.oq.FacetObjectQuery;
+import org.gazzax.labs.solrdf.integration.faceting.FacetTestSupertypeLayer;
 import org.junit.Test;
 
 /**
