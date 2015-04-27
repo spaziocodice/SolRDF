@@ -1,2 +1,1 @@
-cd solrdf
 install: mvn clean install
