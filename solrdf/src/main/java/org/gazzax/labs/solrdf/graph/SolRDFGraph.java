@@ -86,7 +86,7 @@ public final class SolRDFGraph extends GraphBase {
 			final QParser qParser,
 			final GraphEventConsumer consumer) {
 		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, consumer);
-	}
+	} 
 
 	/**
 	 * Creates a Read / Write {@link Graph}.
