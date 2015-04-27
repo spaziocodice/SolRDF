@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -144,6 +145,8 @@ public final class SolRDFGraph extends GraphBase {
 		document.setField(Field.C, graphNodeStringified);
 		document.setField(Field.S, asNt(triple.getSubject()));
 		document.setField(Field.P, asNtURI(triple.getPredicate()));
+		
+		document.setField("id", UUID.nameUUIDFromBytes((graphNodeStringified + triple.getSubject() + triple.getPredicate() + triple.getObject()).getBytes()).toString());
 		
 		final String o = asNt(triple.getObject());
 		document.setField(Field.O, o);
