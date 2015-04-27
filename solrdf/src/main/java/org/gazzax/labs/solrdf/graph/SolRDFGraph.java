@@ -130,7 +130,7 @@ public final class SolRDFGraph extends GraphBase {
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateCommand.solrDoc = new SolrInputDocument();
-		this.updateProcessor = request.getCore().getUpdateProcessingChain("dedupe").createProcessor(request, response);
+		this.updateProcessor = request.getCore().getUpdateProcessingChain(null).createProcessor(request, response);
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
 		this.queryFetchSize = fetchSize;
