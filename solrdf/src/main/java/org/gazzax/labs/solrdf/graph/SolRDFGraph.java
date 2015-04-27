@@ -129,7 +129,6 @@ public final class SolRDFGraph extends GraphBase {
 		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
-		this.updateCommand.solrDoc = new SolrInputDocument();
 		this.updateProcessor = request.getCore().getUpdateProcessingChain(null).createProcessor(request, response);
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
@@ -228,11 +227,7 @@ public final class SolRDFGraph extends GraphBase {
 	 * Resets the {@link AddUpdateCommand} used for updates.
 	 */
 	void resetUpdateCommand() {
-		final SolrInputDocument tripleDocument = updateCommand.solrDoc;
-		tripleDocument.clear();
-		
 		updateCommand.clear();
-		updateCommand.solrDoc = tripleDocument;
 	}
 	
 	/**
