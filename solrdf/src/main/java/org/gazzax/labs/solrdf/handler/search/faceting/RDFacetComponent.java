@@ -35,8 +35,11 @@ public class RDFacetComponent extends FacetComponent {
 	public static Logger log = LoggerFactory.getLogger(RDFacetComponent.class);
 	
 	public static final String COMPONENT_NAME = "facet";
-	private static final String PIVOT_KEY = "facet_pivot";
+	public static final String RANGE_QUERIES = "facet_object_range_queries";
+	public static final String OBJECT_QUERIES = "facet_object_queries";
 		
+	private static final String PIVOT_KEY = "facet_pivot";
+	
 	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
 		if (responseBuilder.doFacets) {
