@@ -1,16 +1,11 @@
-package org.gazzax.labs.solrdf.integration.orq;
+package org.gazzax.labs.solrdf.integration.faceting.orq;
 
 import static java.util.Arrays.asList;
-import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,13 +18,10 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.util.NamedList;
 import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
-import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent;
+import org.gazzax.labs.solrdf.handler.search.faceting.rq.FacetRangeQuery;
+import org.gazzax.labs.solrdf.integration.faceting.oq.FacetTestSupertypeLayer;
 import org.junit.Test;
-
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  * Facet Object Range Queries integration test.
@@ -41,15 +33,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
  * @author Andrea Gazzarini
  * @since 1.0
  */  
-public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLayer {
-	private final static String TEST_DATA_URI = new File("src/test/resources/sample_data/faceting_test_dataset.nt").toURI().toString();
-	
-	private SolrQuery query;
-
-	private final String downloadsQuery = "p:<http\\://example.org/ns#downloads>";
-	private final String priceQuery = "p:<http\\://example.org/ns#price>";
-	private final String dateQuery = "p:<http\\://purl.org/dc/elements/1.1/date>";
-
+public class FacetObjectRangeQueries_ITCase extends FacetTestSupertypeLayer {
 	private final String _0 = "0";
 	private final String _10 = "10";	
 	private final String _100 = "100";
@@ -61,102 +45,61 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 	private final String anEndDate = "2020-12-30T00:00:00Z";
 	private final String gapExpression ="+1YEAR";
 	
-	private Map<String, Integer> expectedDownloadsOccurrencesWithAtLeastOneOccurrence = new HashMap<String, Integer>();
+	private Map<String, Integer> expectedDownloadsRangesWithAtLeastOneOccurrence = new HashMap<String, Integer>();
 	{
-		expectedDownloadsOccurrencesWithAtLeastOneOccurrence.put("0", 1);
-		expectedDownloadsOccurrencesWithAtLeastOneOccurrence.put("100", 3);
-		expectedDownloadsOccurrencesWithAtLeastOneOccurrence.put("400", 1);
+		expectedDownloadsRangesWithAtLeastOneOccurrence.put("0", 1);
+		expectedDownloadsRangesWithAtLeastOneOccurrence.put("100", 3);
+		expectedDownloadsRangesWithAtLeastOneOccurrence.put("400", 1);
 	}	
 
-	private Map<String, Integer> expectedDownloadsOccurrencesWithNoMincount = new HashMap<String, Integer>();
+	private Map<String, Integer> expectedDownloadsRangesWithNoMincount = new HashMap<String, Integer>();
 	{
-		expectedDownloadsOccurrencesWithNoMincount.put("0", 1);
-		expectedDownloadsOccurrencesWithNoMincount.put("100", 3);
-		expectedDownloadsOccurrencesWithNoMincount.put("200", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("300", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("400", 1);
-		expectedDownloadsOccurrencesWithNoMincount.put("500", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("600", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("700", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("800", 0);
-		expectedDownloadsOccurrencesWithNoMincount.put("900", 0);
+		expectedDownloadsRangesWithNoMincount.put("0", 1);
+		expectedDownloadsRangesWithNoMincount.put("100", 3);
+		expectedDownloadsRangesWithNoMincount.put("200", 0);
+		expectedDownloadsRangesWithNoMincount.put("300", 0);
+		expectedDownloadsRangesWithNoMincount.put("400", 1);
+		expectedDownloadsRangesWithNoMincount.put("500", 0);
+		expectedDownloadsRangesWithNoMincount.put("600", 0);
+		expectedDownloadsRangesWithNoMincount.put("700", 0);
+		expectedDownloadsRangesWithNoMincount.put("800", 0);
+		expectedDownloadsRangesWithNoMincount.put("900", 0);
 	}	
 	
-	private Map<String, Integer> expectedReviewedOccurrences = new HashMap<String, Integer>();
+	private Map<String, Integer> expectedPriceRanges = new HashMap<String, Integer>();
 	{
-		expectedReviewedOccurrences.put("true", 3);
-		expectedReviewedOccurrences.put("false", 1);
-	}	
-	
-	private Map<String, Integer> expectedPricesOccurrences = new HashMap<String, Integer>();
-	{
-		expectedPricesOccurrences.put("1.15", 1);
-		expectedPricesOccurrences.put("11.15", 1);
-		expectedPricesOccurrences.put("21.15", 4);
+		expectedPriceRanges.put("1.15", 1);
+		expectedPriceRanges.put("11.15", 1);
+		expectedPriceRanges.put("21.15", 4);
 	}		
 	
-	private Map<String, Integer> expectedDatesOccurrences = new HashMap<String, Integer>();
+	private Map<String, Integer> expectedDateRanges = new HashMap<String, Integer>();
 	{
-		expectedDatesOccurrences.put("2000-01-01T00:00:00Z", 1);
-		expectedDatesOccurrences.put("2001-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2002-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2003-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2004-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2005-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2006-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2007-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2008-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2009-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2010-01-01T00:00:00Z", 3);
-		expectedDatesOccurrences.put("2011-01-01T00:00:00Z", 1);
-		expectedDatesOccurrences.put("2012-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2013-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2014-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2015-01-01T00:00:00Z", 1);
-		expectedDatesOccurrences.put("2016-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2017-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2018-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2019-01-01T00:00:00Z", 0);
-		expectedDatesOccurrences.put("2020-01-01T00:00:00Z", 0);		
+		expectedDateRanges.put("2000-01-01T00:00:00Z", 1);
+		expectedDateRanges.put("2001-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2002-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2003-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2004-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2005-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2006-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2007-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2008-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2009-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2010-01-01T00:00:00Z", 3);
+		expectedDateRanges.put("2011-01-01T00:00:00Z", 1);
+		expectedDateRanges.put("2012-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2013-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2014-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2015-01-01T00:00:00Z", 1);
+		expectedDateRanges.put("2016-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2017-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2018-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2019-01-01T00:00:00Z", 0);
+		expectedDateRanges.put("2020-01-01T00:00:00Z", 0);		
 	}			
 	
 	/**
-	 * Loads all triples found in the datafile associated with the given name.
-	 * @throws IOException 
-	 * @throws SolrServerException 
-	 * 
-	 * @throws Exception hopefully never, otherwise the test fails.
-	 */
-	@BeforeClass
-	public final static void loadSampleData() throws SolrServerException, IOException {
-		final Model memoryModel = ModelFactory.createDefaultModel();
-		memoryModel.read(TEST_DATA_URI, DUMMY_BASE_URI, "N-TRIPLES");
-  
-		DATASET.add(memoryModel);
-		
-		commitChanges();
-		
-		final Model model = DATASET.getModel();
-		  
-		assertFalse(model.isEmpty());
-		assertTrue(model.isIsomorphicWith(memoryModel));
-	}
-	
-	/**
-	 * Setup fixture for this test.
-	 * 
-	 * @throws Exception hopefully never, otherwise the test fails.
-	 */
-	@Before
-	public void init() throws Exception {
-		query = new SolrQuery("SELECT * WHERE { ?s ?p ?o }");
-		query.setRows(0);
-		query.setFacet(true);
-		query.setRequestHandler("/sparql");
-	}
-	
-	/**
-	 * In case a given hint is unknown, then "num" will be used.
+	 * In case a given hint is unknown on an anonymous query, then "num" will be used.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -169,9 +112,14 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				randomString(), 
 				null, 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}
 	
+	/**
+	 * In case a given hint is unknown on an aliases query, then "num" will be used.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
 	@Test
 	public void numHintAsDefaultWithAliasedQuery() throws Exception {	
 		assertOneFacetRangeQuery(
@@ -181,9 +129,14 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				randomString(), 
 				randomString(), 
-				expectedDownloadsOccurrencesWithNoMincount);		
+				expectedDownloadsRangesWithNoMincount);		
 	}
 
+	/**
+	 * In case the hint is null on an aliases query, then "num" will be used.
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */
 	@Test
 	public void numHintAsDefaultWithAliasedQuery2() throws Exception {	
 		assertOneFacetRangeQuery(
@@ -193,11 +146,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				null, 
 				randomString(), 
-				expectedDownloadsOccurrencesWithNoMincount);		
+				expectedDownloadsRangesWithNoMincount);		
 	}
 
 	/**
-	 * In case a given hint is unknown, then "num" will be used.
+	 * In case the hint is null on an anonymous query, then "num" will be used.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -210,11 +163,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				null, 
 				null, 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}	
 	
 	/**
-	 * Facet mincount is default equal to 0.
+	 * Facet mincount is 0 by default.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -227,11 +180,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				randomString(), 
 				null, 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}
 	
 	/**
-	 * Facet mincount can be explicitly set.
+	 * Facet mincount can be explicitly set to 0.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -245,9 +198,14 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				randomString(), 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}
 	
+	/**
+	 * Facet mincount can be explicitly set to 1 (anonymous query).
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */	
 	@Test
 	public void explicitOneMinCountNotAliased() throws Exception {
 		query.set(FacetParams.FACET_MINCOUNT, 1);
@@ -258,9 +216,14 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				null, 
-				expectedDownloadsOccurrencesWithAtLeastOneOccurrence);
+				expectedDownloadsRangesWithAtLeastOneOccurrence);
 	}
 	
+	/**
+	 * Facet mincount can be explicitly set to 1 (aliased query).
+	 * 
+	 * @throws Exception hopefully never otherwise the test fails.
+	 */	
 	@Test
 	public void explicitOneMinCountWithAliasing() throws Exception {	
 		query.set(FacetParams.FACET_MINCOUNT, 1);
@@ -271,11 +234,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				randomString(), 
-				expectedDownloadsOccurrencesWithAtLeastOneOccurrence);		
+				expectedDownloadsRangesWithAtLeastOneOccurrence);		
 	}
 	
 	/**
-	 * A single string facet query without alias and a mincount equals to 2.
+	 * A single numeric range facet without alias and a mincount equals to 2.
 	 * The facet is keyed with its query.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
@@ -284,8 +247,8 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 	public void atLeastTwoOccurrences() throws Exception {
 		query.set(FacetParams.FACET_MINCOUNT, 2);
 		
-		expectedDownloadsOccurrencesWithAtLeastOneOccurrence.remove("0");
-		expectedDownloadsOccurrencesWithAtLeastOneOccurrence.remove("400");
+		expectedDownloadsRangesWithAtLeastOneOccurrence.remove("0");
+		expectedDownloadsRangesWithAtLeastOneOccurrence.remove("400");
 		assertOneFacetRangeQuery(
 				downloadsQuery, 
 				_0,
@@ -293,11 +256,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				null, 
-				expectedDownloadsOccurrencesWithAtLeastOneOccurrence);
+				expectedDownloadsRangesWithAtLeastOneOccurrence);
 	}
 	
 	/**
-	 * A single string facet range query without alias.
+	 * A single numeric range facet query without alias.
 	 * The facet is keyed with its query.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
@@ -311,11 +274,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				null, 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}
 	
 	/**
-	 * A single string facet object query with alias.
+	 * A single numeric range facet with alias.
 	 * The facet is keyed with the provided alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
@@ -329,11 +292,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				randomString(), 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}		
 	
 	/**
-	 * A single numeric (integer) facet object query without alias.
+	 * A single numeric (integer) range facet without alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -346,11 +309,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				null, 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}
 	
 	/**
-	 * A single numeric (integer) facet object query with alias.
+	 * A single numeric (integer) range facet with alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -363,11 +326,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_100,
 				"num", 
 				randomString(), 
-				expectedDownloadsOccurrencesWithNoMincount);
+				expectedDownloadsRangesWithNoMincount);
 	}	
 	
 	/**
-	 * A single numeric (decimal) facet object query without alias.
+	 * A single numeric (decimal) range facet without alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -380,12 +343,12 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_10,
 				FacetQuery.NUMERIC_HINT, 
 				null, 
-				expectedPricesOccurrences,
+				expectedPriceRanges,
 				"31.15");
 	}
 	
 	/**
-	 * A single numeric (integer) facet object query with alias.
+	 * A single numeric (integer) range facet with alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -398,12 +361,12 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				_10,
 				FacetQuery.NUMERIC_HINT, 
 				randomString(), 
-				expectedPricesOccurrences,
+				expectedPriceRanges,
 				"31.15");
 	}		
 	
 	/**
-	 * A single date facet object query without alias.
+	 * A single date range facet without alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -416,12 +379,12 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				gapExpression,
 				FacetQuery.DATE_HINT, 
 				null, 
-				expectedDatesOccurrences,
+				expectedDateRanges,
 				"2021-01-01T00:00:00Z");
 	}
 	
 	/**
-	 * A single date facet object query with alias.
+	 * A single date range facet with alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -434,18 +397,18 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				gapExpression,
 				FacetQuery.DATE_HINT, 
 				randomString(), 
-				expectedDatesOccurrences,
+				expectedDateRanges,
 				"2021-01-01T00:00:00Z");
 	}
 
 	/**
-	 * A single date facet object query with alias.
+	 * A single date range facet with alias.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
 	@Test
 	public void oneDateFacetWithMinOccurrences() throws Exception {
-		for(final Iterator<Entry<String,Integer>> iterator = expectedDatesOccurrences.entrySet().iterator(); iterator.hasNext();) {
+		for(final Iterator<Entry<String,Integer>> iterator = expectedDateRanges.entrySet().iterator(); iterator.hasNext();) {
 			final Entry<String, Integer> entry = iterator.next();
 			if (0 == entry.getValue()) {
 				iterator.remove();
@@ -460,12 +423,12 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				gapExpression,
 				FacetQuery.DATE_HINT, 
 				randomString(), 
-				expectedDatesOccurrences,
+				expectedDateRanges,
 				"2021-01-01T00:00:00Z");
 	}
 
 	/**
-	 * Five facets without aliases.
+	 * Several range facets (no aliases).
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -488,13 +451,13 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				asList(_1000,_30_50, anEndDate),
 				asList(_100, _10, gapExpression),
 				asList(
-						expectedDownloadsOccurrencesWithNoMincount, 
-						expectedPricesOccurrences, 
-						expectedDatesOccurrences));
+						expectedDownloadsRangesWithNoMincount, 
+						expectedPriceRanges, 
+						expectedDateRanges));
 	}		
 	
 	/**
-	 * Five facets aliased.
+	 * Several facets (with aliasing).
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -517,13 +480,13 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				asList(_1000,_30_50, anEndDate),
 				asList(_100, _10, gapExpression),						
 				asList(
-						expectedDownloadsOccurrencesWithNoMincount, 
-						expectedPricesOccurrences, 
-						expectedDatesOccurrences));
+						expectedDownloadsRangesWithNoMincount, 
+						expectedPriceRanges, 
+						expectedDateRanges));
 	}			
 	
 	/**
-	 * Five facets aliased and not aliased.
+	 * Several facets (aliased and not aliased).
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -546,13 +509,13 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				asList(_1000,_30_50, anEndDate),
 				asList(_100, _10, gapExpression),						
 				asList(
-						expectedDownloadsOccurrencesWithNoMincount, 
-						expectedPricesOccurrences, 
-						expectedDatesOccurrences));
+						expectedDownloadsRangesWithNoMincount, 
+						expectedPriceRanges, 
+						expectedDateRanges));
 	}		
 	
 	/**
-	 * Five facets with a scoped parameter for one of them.
+	 * Several facets with a scoped parameter for one of them.
 	 * 
 	 * @throws Exception hopefully never otherwise the test fails.
 	 */
@@ -576,9 +539,9 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				asList(_1000,_30_50, anEndDate),
 				asList(_100, _10, gapExpression),						
 				asList(
-						expectedDownloadsOccurrencesWithAtLeastOneOccurrence, 
-						expectedPricesOccurrences, 
-						expectedDatesOccurrences));
+						expectedDownloadsRangesWithAtLeastOneOccurrence, 
+						expectedPriceRanges, 
+						expectedDateRanges));
 	}			
 	
 	/**
@@ -594,25 +557,9 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 
 		final NamedList<?> facetCounts = (NamedList<?>) response.get("facet_counts");
 		assertNotNull(facetCounts);
-		final NamedList<?> facetObjectQueries = (NamedList<?>) facetCounts.get("facet_object_ranges_queries");
+		final NamedList<?> facetObjectQueries = (NamedList<?>) facetCounts.get(RDFacetComponent.RANGE_QUERIES);
 		assertNotNull(facetObjectQueries);
 		return facetObjectQueries;
-	}	
-	
-	/**
-	 * Asserts a given NamedList against an expected map of results.
-	 * 
-	 * @param expected the map containing expected (facet) results.
-	 * @param actual the actual {@link NamedList} returned from Solr.
-	 */
-	private void assertFacetResults(final Map<String, Integer> expected, final NamedList<?> actual) {
-		assertNotNull(actual);
-		assertEquals(expected.size(), actual.size());
-		
-		for (final Entry<String, Integer> expectedCount : expected.entrySet()) {
-			assertEquals(expectedCount.getValue(), actual.remove(expectedCount.getKey()));
-		}
-		assertEquals(0, actual.size());
 	}	
 	
 	/**
@@ -639,11 +586,11 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 			query.set("facet.range.q.alias", alias);		
 		}
 
-		query.set("facet.range.start", start);		
-		query.set("facet.range.end", end);		
-		query.set("facet.range.gap", gap);		
-		query.set("facet.range.q.hint", hint);		
-		query.set("facet.range.q", facetQuery);
+		query.set(FacetParams.FACET_RANGE_START, start);		
+		query.set(FacetParams.FACET_RANGE_END, end);		
+		query.set(FacetParams.FACET_RANGE_GAP, gap);		
+		query.set(FacetRangeQuery.QUERY_HINT, hint);		
+		query.set(FacetRangeQuery.QUERY, facetQuery);
 		
 		final NamedList<?> facets = executeQueryAndGetFacetObjectRangeQueries();
 		assertEquals(1, facets.size());
@@ -697,23 +644,23 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 			final String gap = gaps.get(i);
 			
 			if (alias != null) {
-				query.set("facet.range.q.alias" + queryId, alias);		
+				query.set(FacetRangeQuery.QUERY_ALIAS + queryId, alias);		
 			}
 			
 			if (start != null) {
-				query.set("facet.range.start" + queryId, start);						
+				query.set(FacetParams.FACET_RANGE_START + queryId, start);						
 			}
 
 			if (end != null) {
-				query.set("facet.range.end" + queryId, end);						
+				query.set(FacetParams.FACET_RANGE_END + queryId, end);						
 			}
 
 			if (gap != null) {
-				query.set("facet.range.gap" + queryId, gap);						
+				query.set(FacetParams.FACET_RANGE_GAP + queryId, gap);						
 			}
 
-			query.set("facet.range.q.hint" + queryId, hint);		
-			query.set("facet.range.q" + queryId, facetQuery);
+			query.set(FacetRangeQuery.QUERY_HINT + queryId, hint);		
+			query.set(FacetRangeQuery.QUERY + queryId, facetQuery);
 		}
 		
 		final NamedList<?> facetObjectRangeQueries = executeQueryAndGetFacetObjectRangeQueries();
@@ -734,10 +681,5 @@ public class FacetObjectRangeQueries_ITCase extends IntegrationTestSupertypeLaye
 				assertFacetResults(expectation, (NamedList<?>) facet.get("counts"));
 			}
 		}
-	}	
-
-	@Override
-	protected String examplesDirectory() {
-		throw new IllegalStateException();
 	}	
 }

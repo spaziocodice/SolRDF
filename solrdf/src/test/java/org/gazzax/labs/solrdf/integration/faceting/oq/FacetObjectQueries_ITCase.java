@@ -1,20 +1,14 @@
-package org.gazzax.labs.solrdf.integration.oq;
+package org.gazzax.labs.solrdf.integration.faceting.oq;
 
 import static java.util.Arrays.asList;
-import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -22,13 +16,9 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.util.NamedList;
 import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
-import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent;
+import org.gazzax.labs.solrdf.handler.search.faceting.oq.FacetObjectQuery;
 import org.junit.Test;
-
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  * Facet Object Queries integration test.
@@ -40,16 +30,9 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
  * @author Andrea Gazzarini
  * @since 1.0
  */  
-public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
-	private final static String TEST_DATA_URI = new File("src/test/resources/sample_data/faceting_test_dataset.nt").toURI().toString();
-	
-	private SolrQuery query;
-
+public class FacetObjectQueries_ITCase extends FacetTestSupertypeLayer {	
 	private final String publisherQuery = "p:<http\\://purl.org/dc/elements/1.1/publisher>";
 	private final String reviewedQuery = "p:<http\\://example.org/ns#reviewed>";
-	private final String downloadsQuery = "p:<http\\://example.org/ns#downloads>";
-	private final String priceQuery = "p:<http\\://example.org/ns#price>";
-	private final String dateQuery = "p:<http\\://purl.org/dc/elements/1.1/date>";
 	
 	private Map<String, Integer> expectedPublishersOccurrences = new HashMap<String, Integer>();
 	{
@@ -98,41 +81,6 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 		expectedDatesOccurrences.put("2011-09-06T22:00:00Z", 1);
 		expectedDatesOccurrences.put("2015-08-22T22:00:00Z", 1);
 	}			
-	
-	/**
-	 * Loads all triples found in the datafile associated with the given name.
-	 * @throws IOException 
-	 * @throws SolrServerException 
-	 * 
-	 * @throws Exception hopefully never, otherwise the test fails.
-	 */
-	@BeforeClass
-	public final static void loadSampleData() throws SolrServerException, IOException {
-		final Model memoryModel = ModelFactory.createDefaultModel();
-		memoryModel.read(TEST_DATA_URI, DUMMY_BASE_URI, "N-TRIPLES");
-  
-		DATASET.add(memoryModel);
-		
-		commitChanges();
-		
-		final Model model = DATASET.getModel();
-		  
-		assertFalse(model.isEmpty());
-		assertTrue(model.isIsomorphicWith(memoryModel));
-	}
-	
-	/**
-	 * Setup fixture for this test.
-	 * 
-	 * @throws Exception hopefully never, otherwise the test fails.
-	 */
-	@Before
-	public void init() throws Exception {
-		query = new SolrQuery("SELECT * WHERE { ?s ?p ?o }");
-		query.setRows(0);
-		query.setFacet(true);
-		query.setRequestHandler("/sparql");
-	}
 	
 	/**
 	 * In case the given hint is unknown, then "str" will be used.
@@ -476,25 +424,9 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 
 		final NamedList<?> facetCounts = (NamedList<?>) response.get("facet_counts");
 		assertNotNull(facetCounts);
-		final NamedList<?> facetObjectQueries = (NamedList<?>) facetCounts.get("facet_object_queries");
+		final NamedList<?> facetObjectQueries = (NamedList<?>) facetCounts.get(RDFacetComponent.OBJECT_QUERIES);
 		assertNotNull(facetObjectQueries);
 		return facetObjectQueries;
-	}	
-	
-	/**
-	 * Asserts a given NamedList against an expected map of results.
-	 * 
-	 * @param expected the map containing expected (facet) results.
-	 * @param actual the actual {@link NamedList} returned from Solr.
-	 */
-	private void assertFacetResults(final Map<String, Integer> expected, final NamedList<?> actual) {
-		assertNotNull(actual);
-		assertEquals(expected.size(), actual.size());
-		
-		for (final Entry<String, Integer> expectedCount : expected.entrySet()) {
-			assertEquals(expectedCount.getValue(), actual.remove(expectedCount.getKey()));
-		}
-		assertEquals(0, actual.size());
 	}	
 	
 	/**
@@ -514,11 +446,11 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 			final Map<String, Integer> expectedResults) throws Exception {
 		
 		if (alias != null) {
-			query.set("facet.obj.q.alias", alias);		
+			query.set(FacetObjectQuery.QUERY_ALIAS, alias);		
 		}
 		
-		query.set("facet.obj.q.hint", hint);		
-		query.set("facet.obj.q", facetQuery);
+		query.set(FacetObjectQuery.QUERY_HINT, hint);		
+		query.set(FacetObjectQuery.QUERY, facetQuery);
 		
 		final NamedList<?> facetObjectQueries = executeQueryAndGetFacetObjectQueries();
 		assertEquals(1, facetObjectQueries.size());
@@ -557,11 +489,11 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 			final String facetQuery = facetQueries.get(i);
 			
 			if (alias != null) {
-				query.set("facet.obj.q.alias" + queryId, alias);		
+				query.set(FacetObjectQuery.QUERY_ALIAS + queryId, alias);		
 			}
 			
-			query.set("facet.obj.q.hint" + queryId, hint);		
-			query.set("facet.obj.q" + queryId, facetQuery);
+			query.set(FacetObjectQuery.QUERY_HINT + queryId, hint);		
+			query.set(FacetObjectQuery.QUERY + queryId, facetQuery);
 		}
 		
 		final NamedList<?> facetObjectQueries = executeQueryAndGetFacetObjectQueries();
@@ -579,10 +511,5 @@ public class FacetObjectQueries_ITCase extends IntegrationTestSupertypeLayer {
 				assertFacetResults(expectation, (NamedList<?>) facetObjectQueries.get(facetQuery));
 			}
 		}
-	}	
-
-	@Override
-	protected String examplesDirectory() {
-		throw new IllegalStateException();
 	}	
 }

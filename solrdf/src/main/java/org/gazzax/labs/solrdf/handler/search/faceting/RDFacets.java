@@ -105,10 +105,10 @@ public class RDFacets extends SimpleFacets {
 	public NamedList<Object> getFacetCounts() {
 		final NamedList<Object> result = super.getFacetCounts();
 		result.remove("facet_dates");
-		result.add("facet_object_ranges_queries", result.remove("facet_ranges"));
+		result.add(RDFacetComponent.RANGE_QUERIES, result.remove("facet_ranges"));
 
 		try {
-			result.add("facet_object_queries", getFacetObjectQueriesCounts());
+			result.add(RDFacetComponent.OBJECT_QUERIES, getFacetObjectQueriesCounts());
 		} catch (final IOException exception) {
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		} catch (final SyntaxError exception) {
