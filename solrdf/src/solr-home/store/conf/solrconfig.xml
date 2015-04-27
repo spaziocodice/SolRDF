@@ -110,9 +110,9 @@
 
 	<!-- Bulk update REST handler -->
 	<requestHandler name="/update/bulk" class="org.gazzax.labs.solrdf.handler.update.RdfBulkUpdateRequestHandler">
-		<lst name="defaults">
-			<str name="update.chain">dedupe</str>
-		</lst>
+<!-- 		<lst name="defaults"> -->
+<!-- 			<str name="update.chain">dedupe</str> -->
+<!-- 		</lst> -->
 	</requestHandler>
 
 	<!-- Realtime handler -->
@@ -137,18 +137,18 @@
 			<str name="echoParams">all</str>
 		</lst>
 	</requestHandler>
-	<updateRequestProcessorChain name="dedupe"> 
-		<processor class="solr.processor.SignatureUpdateProcessorFactory"> 
-			<bool name="enabled">true</bool> 
-			<str name="signatureField">id</str> 
-			<bool name="overwriteDupes">false</bool> 
-			<str name="fields">s,p,o,c</str>
-			<str name="signatureClass">solr.processor.Lookup3Signature</str> 
-		</processor> 
-		 <processor class="org.apache.solr.update.processor.DistributedUpdateProcessorFactory" />
-		<processor class="solr.LogUpdateProcessorFactory" /> 
-		<processor class="solr.RunUpdateProcessorFactory" /> 
-	</updateRequestProcessorChain>
+<!-- 	<updateRequestProcessorChain name="dedupe">  -->
+<!-- 		<processor class="solr.processor.SignatureUpdateProcessorFactory">  -->
+<!-- 			<bool name="enabled">true</bool>  -->
+<!-- 			<str name="signatureField">id</str>  -->
+<!-- 			<bool name="overwriteDupes">false</bool>  -->
+<!-- 			<str name="fields">s,p,o,c</str> -->
+<!-- 			<str name="signatureClass">solr.processor.Lookup3Signature</str>  -->
+<!-- 		</processor>  -->
+<!-- 		 <processor class="org.apache.solr.update.processor.DistributedUpdateProcessorFactory" /> -->
+<!-- 		<processor class="solr.LogUpdateProcessorFactory" />  -->
+<!-- 		<processor class="solr.RunUpdateProcessorFactory" />  -->
+<!-- 	</updateRequestProcessorChain> -->
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
 	<searchComponent name="facet" class="org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent"/>
