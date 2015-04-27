@@ -1,3 +1,2 @@
-language: java
 cd solrdf
 install: mvn clean install
