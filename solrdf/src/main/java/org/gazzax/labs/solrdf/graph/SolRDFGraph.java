@@ -50,11 +50,6 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public final class SolRDFGraph extends GraphBase {
-	private final static ThreadLocal<SolrInputDocument> DOCUMENTS = new ThreadLocal<SolrInputDocument>() {
-		protected SolrInputDocument initialValue() {
-			return new SolrInputDocument();
-		};
-	};
 	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
 	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
@@ -146,8 +141,7 @@ public final class SolRDFGraph extends GraphBase {
 	public void performAdd(final Triple triple) {
 		updateCommand.clear();
 		
-		final SolrInputDocument document = DOCUMENTS.get();
-		document.clear();
+		final SolrInputDocument document = new SolrInputDocument();
 		this.updateCommand.solrDoc = document;
 		document.setField(Field.C, graphNodeStringified);
 		document.setField(Field.S, asNt(triple.getSubject()));
