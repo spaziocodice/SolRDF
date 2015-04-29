@@ -58,6 +58,7 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 			final GraphEventConsumer listener) {
 		super(request, response, qParser, listener != null ? listener : NULL_GRAPH_EVENT_CONSUMER);
 		this.cloud = new CloudSolrServer(request.getCore().getCoreDescriptor().getCoreContainer().getZkController().getZkServerAddress());
+		this.cloud.setDefaultCollection(request.getCore().getName());
 	}
 
 	@Override
