@@ -8,6 +8,7 @@ import java.util.Iterator;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
@@ -124,6 +125,7 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 	 */
 	Iterator<Triple> query(final TripleMatch pattern) throws SyntaxError {
 		final SolrQuery query = new SolrQuery("*:*");
+		query.setSort("id", ORDER.asc);
 		query.setRequestHandler("/solr-query");
 	    query.setRows(queryFetchSize);
 	    // ??
