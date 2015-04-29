@@ -16,6 +16,7 @@ import org.apache.solr.search.DocSet;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.graph.DatasetGraphFactory;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.graph.cloud.ReadOnlyCloudDatasetGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
@@ -29,6 +30,7 @@ import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSetRewindable;
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 
 /**
  * A {@link SearchComponent} implementation for executing SPARQL queries.
@@ -39,8 +41,14 @@ import com.hp.hpl.jena.rdf.model.Model;
 public class SparqlSearchComponent extends SearchComponent {
 	private static final String DEFAULT_DEF_TYPE = "sparql";
 			
+	DatasetGraph datasetGraph(final SolrQueryRequest request, final SolrQueryResponse response, final QParser parser, final GraphEventConsumer consumer) {
+		return request.getCore().getCoreDescriptor().getCoreContainer().isZooKeeperAware() 
+				? new ReadOnlyCloudDatasetGraph(request, response)
+				: new LocalDatasetGraph(request, response, parser, consumer);
+	}
+	
 	@Override
-	public int distributedProcess(ResponseBuilder responseBuilder) throws IOException {
+	public int distributedProcess(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
 
@@ -54,7 +62,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	    	
 	    	final Query query = wrapper.getQuery();
 	    	final DocListAndSet results = new DocListAndSet();
-
+	    	
 			final QueryExecution execution = QueryExecutionFactory.create(
 	    			query, 
 					DatasetFactory.create(
@@ -143,6 +151,40 @@ public class SparqlSearchComponent extends SearchComponent {
 	
 	@Override
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
+	    final SolrQueryRequest request = responseBuilder.req;
+	    final SolrQueryResponse response = responseBuilder.rsp;
+	    try {
+			final QParser parser = qParser(request);
+			final SparqlQuery wrapper = (SparqlQuery) parser.getQuery();
+			final GraphConsumer consumer = 
+					wrapper.isHybrid() 
+						? new GraphEventConsumer() {
+							int currentRow;
+							
+				    		@Override
+							public void afterTripleHasBeenBuilt(final Triple triple, final int docId) {
+								currentRow++;
+							}
+			
+							@Override
+							public boolean requireTripleBuild() {
+								return currentRow >= start && currentRow < start + rows;
+							}
+			
+							@Override
+							public void onDocSet(final DocSet docSet) {
+								results.docSet = results.docSet != null ? results.docSet.union(docSet) : docSet;
+							}
+						}
+						: null;
+			doProcess(responseBuilder);
+		} catch (final SyntaxError exception) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	protected void doProcess(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
 
@@ -239,9 +281,9 @@ public class SparqlSearchComponent extends SearchComponent {
 	    	throw new SolrException(ErrorCode.BAD_REQUEST, exception);
 		} catch (final Exception exception) {
 			throw new IOException(exception);
-		}
+		}		
 	}
-
+	
 	@Override
 	public String getDescription() {
 		return "sparql";
