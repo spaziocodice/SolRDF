@@ -28,7 +28,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Names;
-import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
+import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.gazzax.labs.solrdf.log.MessageFactory;
 
@@ -79,7 +79,7 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 					}
 				});
 				
-				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response);
+				final DatasetGraph dataset = new LocalDatasetGraph(request, response);
 				while (iterator.hasNext()) {
 					dataset.add(iterator.next());
 				}									
@@ -121,7 +121,7 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 				// the indexed tuple could be a Quad.
 				final String graphUri = request.getParams().get(Names.GRAPH_URI_ATTRIBUTE_NAME);
 				
-				final DatasetGraph dataset = new SolRDFDatasetGraph(request, response, null, null);
+				final DatasetGraph dataset = new LocalDatasetGraph(request, response, null, null);
 				final Graph defaultGraph = graphUri == null 
 						? dataset.getDefaultGraph() 
 						: dataset.getGraph(NodeFactory.createURI(graphUri));

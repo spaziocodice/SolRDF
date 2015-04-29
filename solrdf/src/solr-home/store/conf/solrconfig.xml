@@ -8,7 +8,7 @@
 	only on master, etc etc.   
  -->
 <config>
-	<luceneMatchVersion>LUCENE_48</luceneMatchVersion>
+	<luceneMatchVersion>LUCENE_4_10_3</luceneMatchVersion>
 	<dataDir>${solr.data.dir}/${solr.core.name}/data</dataDir>
 	<directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
 	<codecFactory class="solr.SchemaCodecFactory" />
@@ -17,6 +17,13 @@
 		<lockType>${solr.lock.type:native}</lockType>
 	</indexConfig>
 	<updateHandler class="solr.DirectUpdateHandler2">
+		<updateLog>
+			<str name="dir">${solr.ulog.dir:/tmp}</str>
+		</updateLog>	
+		<autoSoftCommit>
+			<maxTime>5000</maxTime>
+			<openSearcher>true</openSearcher>
+		</autoSoftCommit>			
 		<autoCommit>
 			<maxTime>15000</maxTime>
 			<openSearcher>false</openSearcher>
@@ -57,7 +64,7 @@
 	<!-- 
 		SOLR Query endpoint (see https://github.com/agazzarini/SolRDF/issues/25)
 	-->	
-	<requestHandler name="/solr-query" class="solr.SearchHandler">
+	<requestHandler name="/solr-query" class="solr.SearchHandler" default="true">
 		<lst name="defaults">
 			<str name="echoParams">none</str>
 			<int name="rows">10</int>
@@ -68,7 +75,7 @@
 	<!-- 
 		RequestHandler acting as SPARQL endpoint / facade 
 	-->
-	<requestHandler name="/sparql" class="org.gazzax.labs.solrdf.handler.search.handler.Sparql11SearchHandler" default="true">
+	<requestHandler name="/sparql" class="org.gazzax.labs.solrdf.handler.search.handler.Sparql11SearchHandler">
 		<lst name="invariants">
 			<str name="s">/sparql-query</str>
 			<str name="u">/sparql-update</str>
@@ -96,16 +103,19 @@
 		SPARQL Update 
 		see http://www.w3.org/TR/sparql11-update
 	-->
-	<requestHandler name="/sparql-update" class="org.gazzax.labs.solrdf.handler.update.RdfUpdateRequestHandler">
-		<lst name="defaults">
-			<str name="update.chain">dedupe</str>
-		</lst>
-	</requestHandler>
+	<requestHandler name="/sparql-update" class="org.gazzax.labs.solrdf.handler.update.RdfUpdateRequestHandler"/>
 
 	<!-- Bulk update REST handler -->
-	<requestHandler name="/update/bulk" class="org.gazzax.labs.solrdf.handler.update.RdfBulkUpdateRequestHandler">
+	<requestHandler name="/update/bulk" class="org.gazzax.labs.solrdf.handler.update.RdfBulkUpdateRequestHandler"/>
+
+	<!-- Replication Handler -->
+	<requestHandler name="/replication" class="solr.ReplicationHandler" startup="lazy" />
+
+	<!-- Realtime handler -->
+	<requestHandler name="/get" class="solr.RealTimeGetHandler">
 		<lst name="defaults">
-			<str name="update.chain">dedupe</str>
+			<str name="omitHeader">true</str>
+			<str name="wt">json</str>
 		</lst>
 	</requestHandler>
 	
@@ -123,16 +133,6 @@
 			<str name="echoParams">all</str>
 		</lst>
 	</requestHandler>
-	<updateRequestProcessorChain name="dedupe"> 
-		<processor class="solr.processor.SignatureUpdateProcessorFactory"> 
-			<bool name="enabled">true</bool> 
-			<str name="signatureField">id</str> 
-			<bool name="overwriteDupes">false</bool> 
-			<str name="fields">s,p,o,c</str>
-			<str name="signatureClass">solr.processor.Lookup3Signature</str> </processor> 
-			<processor class="solr.LogUpdateProcessorFactory" /> 
-			<processor class="solr.RunUpdateProcessorFactory" /> 
-	</updateRequestProcessorChain>
 	<queryParser name="sparql" class="org.gazzax.labs.solrdf.search.qparser.SparqlQParserPlugin"/>
 	<searchComponent name="sparql-query" class="org.gazzax.labs.solrdf.search.component.SparqlSearchComponent"/>
 	<searchComponent name="facet" class="org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent"/>

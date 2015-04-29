@@ -1,6 +1,7 @@
 package org.gazzax.labs.solrdf.graph;
 
 import org.apache.solr.search.DocSet;
+import org.gazzax.labs.solrdf.graph.standalone.DeepPagingIterator;
 
 import com.hp.hpl.jena.graph.Triple;
 

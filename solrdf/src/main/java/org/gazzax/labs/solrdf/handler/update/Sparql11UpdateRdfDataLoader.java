@@ -10,7 +10,7 @@ import org.apache.solr.handler.loader.ContentStreamLoader;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
-import org.gazzax.labs.solrdf.graph.SolRDFDatasetGraph;
+import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
@@ -45,6 +45,6 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 		
 		UpdateAction.execute(
 				UpdateFactory.create(q), 
-				new SolRDFDatasetGraph(request, response));
+				new LocalDatasetGraph(request, response));
 	}
 }	

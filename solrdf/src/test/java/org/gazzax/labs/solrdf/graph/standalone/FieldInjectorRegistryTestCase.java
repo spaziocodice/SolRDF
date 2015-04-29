@@ -1,10 +1,10 @@
-package org.gazzax.labs.solrdf.graph;
+package org.gazzax.labs.solrdf.graph.standalone;
 
 import static org.junit.Assert.assertSame;
 
 import java.util.Map.Entry;
 
-import org.gazzax.labs.solrdf.graph.FieldInjectorRegistry.FieldInjector;
+import org.gazzax.labs.solrdf.graph.standalone.FieldInjectorRegistry.FieldInjector;
 import org.junit.Before;
 import org.junit.Test;
 
