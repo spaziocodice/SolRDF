@@ -108,6 +108,9 @@
 	<!-- Bulk update REST handler -->
 	<requestHandler name="/update/bulk" class="org.gazzax.labs.solrdf.handler.update.RdfBulkUpdateRequestHandler"/>
 
+	<!-- Replication Handler -->
+	<requestHandler name="/replication" class="solr.ReplicationHandler" startup="lazy" />
+
 	<!-- Realtime handler -->
 	<requestHandler name="/get" class="solr.RealTimeGetHandler">
 		<lst name="defaults">
