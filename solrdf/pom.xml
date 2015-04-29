@@ -96,6 +96,103 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>standalone</id>
+			<properties>
+				<listen.port>8080</listen.port>
+			</properties>
+		</profile>
+		<profile>
+			<id>cloud</id>
+			<properties>
+				<listen.port>8080</listen.port>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.cargo</groupId>
+						<artifactId>cargo-maven2-plugin</artifactId>
+						<version>1.4.9</version>
+						<configuration>
+							<configuration>
+								<properties>
+									<cargo.hostname>0.0.0.0</cargo.hostname>
+									<cargo.servlet.port>${listen.port}</cargo.servlet.port>
+								</properties>
+							</configuration>
+							<container>
+								<systemProperties>
+									<solr.solr.home>${solr.home}</solr.solr.home>
+									<solr.data.dir>${project.build.directory}/data</solr.data.dir>
+									<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
+									<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
+									<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
+									<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
+									<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
+									<com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
+									<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
+									<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
+									<zkClientTimeout>15000</zkClientTimeout>
+									<zkHost>localhost:2181</zkHost>
+									<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
+									<collection.configName>solrdf-conf</collection.configName>
+									<numShards>2</numShards>
+								</systemProperties>
+								<containerId>jetty7x</containerId>
+								<type>embedded</type>
+								<dependencies>
+									<dependency>
+										<groupId>log4j</groupId>
+										<artifactId>log4j</artifactId>
+									</dependency>
+									<dependency>
+										<groupId>org.slf4j</groupId>
+										<artifactId>slf4j-api</artifactId>
+									</dependency>
+									<dependency>
+										<groupId>org.slf4j</groupId>
+										<artifactId>slf4j-log4j12</artifactId>
+									</dependency>
+									<dependency>
+										<groupId>commons-logging</groupId>
+										<artifactId>commons-logging</artifactId>
+									</dependency>
+								</dependencies>
+							</container>
+							<deployables>
+								<deployable>
+									<groupId>org.apache.solr</groupId>
+									<artifactId>solr</artifactId>
+									<type>war</type>
+									<properties>
+										<context>/solr</context>
+									</properties>
+								</deployable>
+							</deployables>
+							<wait>false</wait>
+						</configuration>
+						<executions>
+							<execution>
+								<id>start-container</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>stop-container</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
@@ -135,8 +232,9 @@
 				<configuration>
 					<configuration>
 						<properties>
-							<cargo.servlet.port>8983</cargo.servlet.port>
-						</properties>	
+							<cargo.hostname>0.0.0.0</cargo.hostname>
+							<cargo.servlet.port>${listen.port}</cargo.servlet.port>
+						</properties>
 					</configuration>
 					<container>
 						<systemProperties>
@@ -144,24 +242,17 @@
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
 							<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
-							
 							<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
-							<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only> 
+							<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
 							<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
 							<com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
 							<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
 							<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
-							<zkClientTimeout>15000</zkClientTimeout> 
+							<zkClientTimeout>15000</zkClientTimeout>
 							<zkHost>localhost:2181</zkHost>
-<!-- 							<bootstrap_confdir=/work/workspaces/rdf/SolRDF/solrdf/target/solrdf-1.0-dev/solrdf/store/conf \ -->
-							<collection.configName>solrdf-conf</collection.configName>
-							<numShards>2</numShards>						
-							<!-- SOLRCLOUD BOOTSTRAP PROPERTIES -->
-							<!-- 
 							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
- 							<collection.configName>solrdf</collection.configName>
- 							<zkHost>localhost:2181</zkHost>
- 							-->
+							<collection.configName>solrdf-conf</collection.configName>
+							<numShards>2</numShards>
 						</systemProperties>
 						<containerId>jetty7x</containerId>
 						<type>embedded</type>

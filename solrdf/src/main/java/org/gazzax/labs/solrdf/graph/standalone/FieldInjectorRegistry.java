@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.graph;
+package org.gazzax.labs.solrdf.graph.standalone;
 
 import java.util.HashMap;
 import java.util.List;

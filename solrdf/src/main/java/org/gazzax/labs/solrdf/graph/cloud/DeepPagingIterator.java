@@ -1,18 +1,17 @@
-package org.gazzax.labs.solrdf.graph;
+package org.gazzax.labs.solrdf.graph.cloud;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
-import org.apache.solr.search.CursorMark;
-import org.apache.solr.search.DocIterator;
-import org.apache.solr.search.DocList;
-import org.apache.solr.search.SolrIndexSearcher;
-import org.apache.solr.search.SortSpec;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
+import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 
 import com.google.common.collect.UnmodifiableIterator;
 import com.hp.hpl.jena.graph.Node;
@@ -38,13 +37,13 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 
 	protected static final Triple DUMMY_TRIPLE = new Triple(Node.ANY, Node.ANY, Node.ANY);
 	
-	private final SolrIndexSearcher searcher;
-	final SolrIndexSearcher.QueryCommand queryCommand;
+	final SolrServer cloud; 
+	final SolrQuery query;
 	final GraphEventConsumer consumer;
-	private DocList page;
+	private SolrDocumentList page;
 	
-	private CursorMark nextCursorMark;
-	private CursorMark sentCursorMark;
+	private String nextCursorMark;
+	private String sentCursorMark;
 
 	/**
 	 * Iteration state: we need to (re)execute a query. 
@@ -55,16 +54,16 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		@Override
 		public boolean hasNext() {
 			try {
-			    final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
-			    searcher.search(result, queryCommand);
-			  			
-			    consumer.onDocSet(result.getDocListAndSet().docSet);
-			    queryCommand.clearFlags(SolrIndexSearcher.GET_DOCSET);
-			    
-				sentCursorMark = queryCommand.getCursorMark();
-				nextCursorMark = result.getNextCursorMark();
+				final QueryResponse response = cloud.query(query);
 				
-				page = result.getDocListAndSet().docList;
+				// FIXME
+//			    consumer.onDocSet(result.getDocListAndSet().docSet);
+//			    queryCommand.clearFlags(SolrIndexSearcher.GET_DOCSET);
+			    
+				sentCursorMark = query.get("cursorMark");
+				nextCursorMark = response.getNextCursorMark();
+				
+				page = response.getResults();
 
 				return page.size() > 0;
 			} catch (final Exception exception) {
@@ -88,13 +87,12 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		@Override
 		public boolean hasNext() {
 			try {
-				final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
-			    searcher.search(result, queryCommand);
+				final QueryResponse response = cloud.query(query);
 			    
-				sentCursorMark = queryCommand.getCursorMark();
-				nextCursorMark = result.getNextCursorMark();
+				sentCursorMark = query.get("cursorMark");
+				nextCursorMark = response.getNextCursorMark();
 				
-				page = result.getDocListAndSet().docList;
+				page = response.getResults();
 
 				return page.size() > 0;
 			} catch (final Exception exception) {
@@ -113,7 +111,7 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * Iteration state: query has been executed and now it's time to iterate over results. 
 	 */
 	private final Iterator<Triple> iterateOverCurrentPage = new UnmodifiableIterator<Triple>() {
-		DocIterator iterator;
+		Iterator<SolrDocument> iterator;
 		
 		@Override
 		public boolean hasNext() {
@@ -128,27 +126,23 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		
 		@Override
 		public Triple next() {
-			try {
-				final int nextDocId = iterator().nextDoc();
-				
-				Triple triple = null;
-				if (consumer.requireTripleBuild()) { 
-					final Document document = searcher.doc(nextDocId, TRIPLE_FIELDS);
-					triple = Triple.create(
-							NTriples.asURIorBlankNode((String) document.get(Field.S)), 
-							NTriples.asURI((String) document.get(Field.P)),
-							NTriples.asNode((String) document.get(Field.O)));
-				} else {
-					triple = DUMMY_TRIPLE;
-				}
-				consumer.afterTripleHasBeenBuilt(triple, nextDocId);
-				return triple;
-			} catch (final IOException exception) {
-				throw new RuntimeException(exception);
+			final SolrDocument document = iterator().next();
+			
+			Triple triple = null;
+			if (consumer.requireTripleBuild()) { 
+				triple = Triple.create(
+						NTriples.asURIorBlankNode((String) document.getFieldValue(Field.S)), 
+						NTriples.asURI((String) document.getFieldValue(Field.P)),
+						NTriples.asNode((String) document.getFieldValue(Field.O)));
+			} else {
+				triple = DUMMY_TRIPLE;
 			}
+			// FIXME
+			// consumer.afterTripleHasBeenBuilt(triple, nextDocId);
+			return triple;
 		}
 		
-		DocIterator iterator() {
+		Iterator<SolrDocument> iterator() {
 			if (iterator == null) {
 				iterator = page.iterator();	
 			}
@@ -162,9 +156,9 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	private final Iterator<Triple> checkForConsumptionCompleteness = new UnmodifiableIterator<Triple>() {
 		@Override
 		public boolean hasNext() {
-			final boolean hasNext = (page.size() == queryCommand.getLen() && !sentCursorMark.equals(nextCursorMark));
+			final boolean hasNext = !sentCursorMark.equals(nextCursorMark);
 			if (hasNext) {
-				queryCommand.setCursorMark(nextCursorMark);			
+				query.set("cursorMark", nextCursorMark);
 				currentState = executeQuery;
 				return currentState.hasNext();
 			}
@@ -188,15 +182,13 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
 	DeepPagingIterator(
-			final SolrIndexSearcher searcher, 
-			final SolrIndexSearcher.QueryCommand queryCommand, 
-			final SortSpec sort, 
+			final SolrServer cloud, 
+			final SolrQuery query, 
 			final GraphEventConsumer consumer) {
-		this.searcher = searcher;
-		this.queryCommand = queryCommand;
-		sort.setOffset(0);
-		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
-		this.queryCommand.setCursorMark(sentCursorMark);
+		this.cloud = cloud;
+		this.query = query;
+		this.sentCursorMark = "*";
+		this.query.set("cursorMark", sentCursorMark);
 		this.consumer = consumer;
 	}
 

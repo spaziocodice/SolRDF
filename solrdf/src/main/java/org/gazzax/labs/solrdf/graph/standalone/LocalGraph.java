@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.graph;
+package org.gazzax.labs.solrdf.graph.standalone;
 
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.client.solrj.util.ClientUtils;
@@ -29,9 +31,11 @@ import org.apache.solr.update.DeleteUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Strings;
+import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
+import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -44,12 +48,12 @@ import com.hp.hpl.jena.util.iterator.NullIterator;
 import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
 /**
- * SolRDF {@link Graph} implementation.
+ * A local SolRDF {@link Graph} implementation.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public final class SolRDFGraph extends GraphBase {
+public final class LocalGraph extends GraphBase {
 	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
 	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
@@ -79,13 +83,13 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
-	public static SolRDFGraph readableAndWritableGraph(
+	public static LocalGraph readableAndWritableGraph(
 			final Node graphNode, 
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
 			final QParser qParser,
 			final GraphEventConsumer consumer) {
-		return new SolRDFGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, consumer);
+		return new LocalGraph(graphNode, request, response, qParser, DEFAULT_QUERY_FETCH_SIZE, consumer);
 	} 
 
 	/**
@@ -99,18 +103,18 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 * @return a RW {@link Graph} that can be used both for adding and querying data. 
 	 */
-	public static SolRDFGraph readableAndWritableGraph(
+	public static LocalGraph readableAndWritableGraph(
 			final Node graphNode, 
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response, 
 			final QParser qParser, 
 			final int fetchSize,
 			final GraphEventConsumer consumer) {
-		return new SolRDFGraph(graphNode, request, response, qParser, fetchSize, consumer);
+		return new LocalGraph(graphNode, request, response, qParser, fetchSize, consumer);
 	}
 
 	/**
-	 * Builds a new {@link SolRDFGraph} with the given data.
+	 * Builds a new {@link LocalGraph} with the given data.
 	 * 
 	 * @param graphNode the graph name.
 	 * @param request the Solr query request.
@@ -119,7 +123,7 @@ public final class SolRDFGraph extends GraphBase {
 	 * @param fetchSize the fetch size that will be used in reads.
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
-	private SolRDFGraph(
+	private LocalGraph(
 		final Node graphNode, 
 		final SolrQueryRequest request, 
 		final SolrQueryResponse response, 
@@ -171,7 +175,7 @@ public final class SolRDFGraph extends GraphBase {
 		try {
 			updateProcessor.processAdd(updateCommand);
 		} catch (final Exception exception) {
-			LoggerFactory.getLogger(SolRDFGraph.class).error("", exception);
+			LoggerFactory.getLogger(LocalGraph.class).error("", exception);
 			throw new AddDeniedException("", triple);
 		}
 	}
@@ -224,7 +228,7 @@ public final class SolRDFGraph extends GraphBase {
 		try {
 			return WrappedIterator.createNoRemove(query(pattern));
 		} catch (SyntaxError error) {
-			LoggerFactory.getLogger(SolRDFGraph.class).error("", error);
+			LoggerFactory.getLogger(LocalGraph.class).error("", error);
 			return new NullIterator<Triple>();
 		}
 	}
@@ -269,7 +273,9 @@ public final class SolRDFGraph extends GraphBase {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(filters, literalValue);
 			} else {
-				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));			
+				final PhraseQuery query = new PhraseQuery();
+				query.add(new Term(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));
+				filters.add(query);		
 			}
 		}
 		
