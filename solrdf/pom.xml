@@ -17,6 +17,7 @@
 		<junit.version>4.11</junit.version>
 		<solr.version>4.10.3</solr.version>
 		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/${project.artifactId}</solr.home>
+		<listen.port>8080</listen.port>
 	</properties>
 	<licenses>
 		<license>
@@ -106,7 +107,7 @@
 		<profile>
 			<id>cloud</id>
 			<properties>
-				<listen.port>8080</listen.port>
+				<listen.port>8983</listen.port>
 			</properties>
 			<build>
 				<plugins>
@@ -134,7 +135,7 @@
 									<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
 									<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
 									<zkClientTimeout>15000</zkClientTimeout>
-									<zkHost>localhost:2181</zkHost>
+									<zkHost>127.0.0.1:2181</zkHost>
 									<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
 									<collection.configName>solrdf-conf</collection.configName>
 									<numShards>2</numShards>
@@ -241,18 +242,6 @@
 							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
-							<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
-							<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
-							<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
-							<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
-							<com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
-							<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
-							<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
-							<zkClientTimeout>15000</zkClientTimeout>
-							<zkHost>localhost:2181</zkHost>
-							<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
-							<collection.configName>solrdf-conf</collection.configName>
-							<numShards>2</numShards>
 						</systemProperties>
 						<containerId>jetty7x</containerId>
 						<type>embedded</type>

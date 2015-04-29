@@ -208,7 +208,6 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 			}
 		}
 			
-		
 		if (graphNode != null) {
 			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
 		}

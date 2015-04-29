@@ -9,9 +9,16 @@ import org.apache.solr.search.QParser;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
 import com.hp.hpl.jena.sparql.core.Quad;
 
+/**
+ * Supertype layer for all SolRDF {@link DatasetGraph} implementations.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 public abstract class DatasetGraphSupertypeLayer extends DatasetGraphCaching {
 	protected final static GraphEventConsumer NULL_GRAPH_EVENT_CONSUMER = new GraphEventConsumer() {
 		
