@@ -1,4 +1,4 @@
-<img src="https://cloud.githubusercontent.com/assets/7569632/7524590/604323aa-f503-11e4-8ad6-ab1f52469fa8.png" width="50" height="50"/> SolRDF
+<img src="https://cloud.githubusercontent.com/assets/7569632/7524584/5971e1ba-f503-11e4-940e-72e808677c48.png" width="100" height="100"/>  An RDF plugin for Solr
 ======
 
 SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data. Join us at solrdf-user-list@googlegroups.com
