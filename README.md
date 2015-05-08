@@ -47,3 +47,7 @@ Ok, you just added about 5000 triples. Now, it's time to execute some query:
 >  ...
 
 Et voilà! Enjoy! As you can imagine I'm still working on that...so if you meet some annoying bug feel free to give me a shout ;)
+
+-----------------------------------
+
+The SolRDF logo was kindly provided by Umberto Basili. 
