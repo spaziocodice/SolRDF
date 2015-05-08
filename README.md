@@ -1,4 +1,5 @@
-<table><tr style="border:none"><td style="border:none"><img src="https://cloud.githubusercontent.com/assets/7569632/7524584/5971e1ba-f503-11e4-940e-72e808677c48.png" width="100" height="100"/></td><td style="border:none"><h1>Apache Solr meets RDF</h1></td></tr></table>
+<img src="https://cloud.githubusercontent.com/assets/7569632/7524584/5971e1ba-f503-11e4-940e-72e808677c48.png" width="100" height="100"/>
+<img src="https://cloud.githubusercontent.com/assets/7569632/7532363/51104a30-f566-11e4-8481-229f64064905.png">
 
 SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data. Join us at solrdf-user-list@googlegroups.com
 
