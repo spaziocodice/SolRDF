@@ -1,8 +1,8 @@
 package org.gazzax.labs.solrdf.search.qparser;
 
+import static org.gazzax.labs.solrdf.F.isHybrid;
+
 import org.apache.lucene.search.Query;
-import org.apache.solr.common.params.CommonParams;
-import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
@@ -37,20 +37,9 @@ public class SparqlQParser extends QParser {
 	@Override 
 	public Query parse() throws SyntaxError {
 		try {
-			return new SparqlQuery(QueryFactory.create(qstr), isHybrid());
+			return new SparqlQuery(QueryFactory.create(qstr), isHybrid(req));
 		} catch (final Exception exception) {
 			throw new SyntaxError(exception);
 		}
-	}
-	
-	/**
-	 * Returns true if the query is hybrid (e.g. SPARQL with Solr parameters)
-	 * 
-	 * @return true if the query is hybrid (e.g. SPARQL with Solr parameters)
-	 */
-	boolean isHybrid() {
-		return req.getParams().getBool(FacetParams.FACET, false) 
-				|| req.getParams().get(CommonParams.START) != null
-				|| req.getParams().get(CommonParams.ROWS) != null;
 	}
 }

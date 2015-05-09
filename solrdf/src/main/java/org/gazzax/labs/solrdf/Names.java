@@ -19,4 +19,6 @@ public interface Names {
 	String GRAPH_URI_PARAMETER_NAME = "graph";
 	String GRAPH_URI_ATTRIBUTE_NAME = "graph.uri";
 	String DEFAULT_GRAPH_PARAMETER_NAME = "default";
+	String DEFAULT_ = "default";
+	String DEFAULT_HYBRID_QUERY ="dfhq";
 }

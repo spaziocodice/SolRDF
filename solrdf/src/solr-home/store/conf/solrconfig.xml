@@ -93,6 +93,19 @@
 			<str name="sort">id asc</str>
 			<str name="wt">hybrid</str>
 		</lst>
+		<lst name="defaults">
+			<!-- 
+				A default value for q will act as default query both for RDF and Hybrid mode.
+				See https://github.com/agazzarini/SolRDF/issues/71
+				
+				<str name="q">SELECT * WHERE { ?s ?p ?o } LIMIT 10</str>
+			-->
+			<!--  
+				This is the default query when SolRDF will run in Hybrid mode.
+				See https://github.com/agazzarini/SolRDF/issues/71				
+			-->
+			<str name="dfhq">SELECT * WHERE { ?s ?p ?o }</str>
+		</lst>		
 		<arr name="components">
 			<str>sparql-query</str>
 			<str>facet</str>

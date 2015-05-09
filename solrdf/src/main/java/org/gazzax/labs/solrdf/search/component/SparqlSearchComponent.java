@@ -1,5 +1,7 @@
 package org.gazzax.labs.solrdf.search.component;
 
+import static org.gazzax.labs.solrdf.F.isHybrid;
+
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -192,6 +194,10 @@ public class SparqlSearchComponent extends SearchComponent {
 
 	    if (queryString == null) {
 	    	queryString = params.get(CommonParams.QUERY);
+	    }
+	    
+	    if (queryString == null && isHybrid(request)) {
+	    	queryString = params.get(Names.DEFAULT_HYBRID_QUERY);
 	    }
 	    
 	    if (queryString == null) {
