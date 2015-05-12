@@ -25,9 +25,15 @@ public interface MessageCatalog {
 	String _00096_SELECTED_BULK_LOADER = PREFIX + "-00096> : Incoming stream with Content-type %s has been associated with %s";	 	
 	String _00097_BULK_LOADER_REGISTRY_ENTRY = PREFIX + "-00097> : New Bulk Loader registry entry: %s => %s";	 	
 	String _00098_UPDATE_HANDLER_REGISTRY_ENTRY = PREFIX + "-00098> : New Update Loader registry entry: %s => %s";	 	
-	String _00099_INVALID_UPDATE_QUERY = PREFIX + "-00099> : Invalid update query %s";	
+	String _00099_INVALID_UPDATE_QUERY = PREFIX + "-00099> : Invalid update request: %s";	
 	String _00100_INVALID_FACET_METHOD = PREFIX + "-00100> : Invalid facet method %s for facet object query %s";
 	String _00101_PREFIX_AND_NUMERIC_FIELD = PREFIX + "-00101> : " + FacetParams.FACET_PREFIX + " is not supported on numeric types.";
 	String _00102_UNABLE_TO_COMPUTE_FOQ = PREFIX + "-00102> : Unable to compute facets for object query %s on field %s.";
 	String _00103_UNABLE_PARSE_DATEMATH_EXPRESSION = PREFIX + "-00103> : Unable to parse date expression %s";
+	String _00104_INCOMING_SPARQL_UPDATE_REQUEST_URL_ENCODED = PREFIX + "-00104> : Incoming SPARQL Update request with URL-encoded parameters.";
+	String _00105_INCOMING_SPARQL_UPDATE_REQUEST_DEBUG = PREFIX + "-00105> : Value of update parameter is %s";
+	String _00106_INCOMING_SPARQL_UPDATE_REQUEST_URL_ENCODED_TARGET_GRAPH = PREFIX + "-00106> : Applying the incoming Update Request to Graph %s";
+	String _00107_INCOMING_SPARQL_UPDATE_REQUEST_URL_ENCODED_ON_UNNAMED_GRAPH = PREFIX + "-00107> : Applying the incoming Update Request to the default Graph.";
+	String _00108_INCOMING_SPARQL_UPDATE_REQUEST_USING_POST_DIRECTLY = PREFIX + "-00108> : Incoming SPARQL Update request using POST directly.";
+	
 }

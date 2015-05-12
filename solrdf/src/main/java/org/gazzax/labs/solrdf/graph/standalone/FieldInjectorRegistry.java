@@ -120,7 +120,7 @@ class FieldInjectorRegistry {
 		
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.TEXT_OBJECT).append(":\"").append(value).append("\"");
+			builder.append(Field.TEXT_OBJECT).append(":\"").append(StringEscapeUtils.escapeXml(value)).append("\"");
 		}				
 	};
 	

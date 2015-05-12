@@ -16,7 +16,6 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.SolrInputDocument;
@@ -297,14 +296,14 @@ public final class LocalGraph extends GraphBase {
 	String deleteQuery(final Triple triple) {
 		final StringBuilder builder = new StringBuilder();
 		if (triple.getSubject().isConcrete()) {
-			builder.append(Field.S).append(":\"").append(ClientUtils.escapeQueryChars(asNt(triple.getSubject()))).append("\"");
+			builder.append(Field.S).append(":\"").append(asNt(triple.getSubject())).append("\"");
 		}
 		
 		if (triple.getPredicate().isConcrete()) {
 			if (builder.length() != 0) {
 				builder.append(" AND ");
 			}
-			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
+			builder.append(Field.P).append(":\"").append(asNtURI(triple.getPredicate())).append("\"");
 		}
 			
 		if (triple.getObject().isConcrete()) {
@@ -333,7 +332,7 @@ public final class LocalGraph extends GraphBase {
 			
 		
 		if (graphNode != null) {
-			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
+			builder.append(" AND ").append(Field.C).append(":\"").append(graphNodeStringified).append("\"");
 		}
 		
 		return builder.toString();

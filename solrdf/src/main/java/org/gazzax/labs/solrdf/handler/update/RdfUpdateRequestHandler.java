@@ -24,6 +24,7 @@ public class RdfUpdateRequestHandler extends UpdateRequestHandler {
 	@SuppressWarnings("rawtypes")
 	protected Map<String, ContentStreamLoader> createDefaultLoaders(final NamedList parameters) {
 		final Map<String, ContentStreamLoader> registry = new HashMap<String, ContentStreamLoader>();
+		registry.put("application/x-www-form-urlencoded", new Sparql11UpdateRdfDataLoader());
 		registry.put("application/rdf+xml", new Sparql11UpdateRdfDataLoader());
 		registry.put(WebContent.contentTypeSPARQLUpdate, new Sparql11UpdateRdfDataLoader());
 		
