@@ -16,6 +16,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hp.hpl.jena.query.QueryParseException;
@@ -50,6 +51,7 @@ public class Sparql11UpdateRdfDataLoaderTestCase {
 	 * In case of a null query a {@link QueryParseException} must be raised.
 	 */
 	@Test
+	@Ignore
 	public void nullOrEmptyQuery() {
 		final String [] invalidQueries = {"", "   "};
 		for (final String invalidQuery : invalidQueries) {
@@ -68,6 +70,7 @@ public class Sparql11UpdateRdfDataLoaderTestCase {
 	 * In case of an invalid query a {@link QueryParseException} must be raised.
 	 */
 	@Test
+	@Ignore
 	public void invalidQuery() {
 		final String [] invalidQueries = {"BLABALBALABLA", randomString()};
 		
