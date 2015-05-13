@@ -40,8 +40,9 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		final SolrParams parameters = request.getParams();
 		final Iterable<ContentStream> contentStreams = request.getContentStreams();
 		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY);
-		if (WebContent.contentTypeHTMLForm.equals(httpRequest.getContentType())) {
-			if (isNotNullOrEmptyString(parameters.get(Names.UPDATE_PARAMETER_NAME))) {
+		if (WebContent.contentTypeHTMLForm.equals(httpRequest.getContentType()) 
+				&& isNotNullOrEmptyString(parameters.get(Names.UPDATE_PARAMETER_NAME))) {
+				
 				request.getCore().getRequestHandler(
 						parameters.get(UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_UPDATE_HANDLER_NAME))
 					.handleRequest(new SolrQueryRequest() {
@@ -113,7 +114,6 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 						public void close() {
 						}
 					},  response);
-			}
 		} else {
 			request.getCore().getRequestHandler(
 					(contentStreams == null || !contentStreams.iterator().hasNext())
