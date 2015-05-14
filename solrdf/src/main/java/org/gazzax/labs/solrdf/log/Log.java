@@ -1,6 +1,9 @@
 package org.gazzax.labs.solrdf.log;
 
+import org.apache.lucene.search.Query;
+import org.apache.solr.search.SolrIndexSearcher.QueryCommand;
 import org.slf4j.Logger;
+
 import static org.gazzax.labs.solrdf.log.MessageFactory.*;
 /**
  * Logger wrapper.
@@ -119,5 +122,21 @@ public class Log {
 	 */
 	public boolean isDebugEnabled() {
 		return logger.isDebugEnabled();
+	}
+
+	/**
+	 * Debugs the given query command.
+	 * 
+	 * @param cmd the query command.
+	 */
+	public void debugQuery(final QueryCommand cmd) {
+		if (logger.isDebugEnabled()) {
+			final StringBuilder builder = new StringBuilder("*:*");
+			for (final Query filter : cmd.getFilterList()) {
+				builder.append(" & ").append(filter);
+			}
+			
+			logger.debug(createMessage(MessageCatalog._00109_SOLR_QUERY, builder.toString()));
+		}
 	}
 }

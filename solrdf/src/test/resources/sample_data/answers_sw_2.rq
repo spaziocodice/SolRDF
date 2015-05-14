@@ -1,0 +1,2 @@
+
+SELECT ?s FROM <http://grapha.com> WHERE { ?s <http://example.org/title> ?o }

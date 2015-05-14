@@ -3,8 +3,8 @@
 PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
 
 SELECT ?email 
-FROM <ex069.ttl>
-FROM <ex122.ttl>
+FROM <http://example.org.1#>
+FROM <http://example.org.2#>
 WHERE
 { ?s ab:email ?email . }
 

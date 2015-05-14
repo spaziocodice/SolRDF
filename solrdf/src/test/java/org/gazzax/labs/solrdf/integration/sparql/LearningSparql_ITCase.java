@@ -18,7 +18,10 @@ import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
 
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
  * Facet Object Queries integration test.
@@ -85,7 +88,7 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	}
 
 	@Test
-	public void regularExpression() throws Exception {
+	public void filterWithRegularExpression() throws Exception {
 		execute(misteryGuest("ex021.rq", "ex012.ttl"));		
 	}
 
@@ -152,6 +155,93 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 	@Test
 	public void bindEither_I() throws Exception {
 		execute(misteryGuest("ex075.rq", "ex074.ttl"));		
+	}	
+	
+	@Test
+	public void searchingWithBlankNodes() throws Exception {
+		execute(misteryGuest("ex088.rq", "ex041.ttl"));		
+	}		
+	
+	@Test
+	public void duplicates() throws Exception {
+		execute(misteryGuest("ex090.rq", "ex069.ttl"));		
+	}		
+	
+	@Test
+	public void distinct_I() throws Exception {
+		execute(misteryGuest("ex092.rq", "ex069.ttl"));		
+	}	
+	
+	@Test
+	public void distinct_II() throws Exception {
+		execute(misteryGuest("ex094.rq", "ex069.ttl"));		
+	}	
+	
+	@Test
+	public void union_I() throws Exception {
+		execute(misteryGuest("ex101.rq", "ex100.ttl"));		
+	}	
+	
+	@Test
+	public void union_II() throws Exception {
+		execute(misteryGuest("ex103.rq", "ex100.ttl"));		
+	}	
+	
+	@Test
+	public void filterWithSimpleMathExpression() throws Exception {
+		execute(misteryGuest("ex105.rq", "ex104.ttl"));		
+	}	
+
+	@Test
+	public void filterWithIsURIFunction() throws Exception {
+		execute(misteryGuest("ex107.rq", "ex104.ttl"));		
+	}	
+	
+	@Test
+	public void filterWithINFunction() throws Exception {
+		execute(misteryGuest("ex109.rq", "ex104.ttl"));		
+	}	
+	
+	@Test
+	public void filterWithNOTINFunction() throws Exception {
+		execute(misteryGuest("ex112.rq", "ex104.ttl"));		
+	}	
+	
+	@Test
+	public void limit() throws Exception {
+		execute(misteryGuest("ex116.rq", "ex115.ttl"));		
+	}	
+	
+	@Test
+	public void offset() throws Exception {
+		execute(misteryGuest("ex118.rq", "ex115.ttl"));		
+	}	
+
+	@Test
+	public void limitWithOffset() throws Exception {
+		execute(misteryGuest("ex120.rq", "ex115.ttl"));		
+	}	
+
+	/**
+	 * Curiously the Jena memory mode fails while SolRDF returns expected results
+	 */
+	@Test
+	@Ignore
+	public void from() throws Exception {
+		load(misteryGuest(null, NodeFactory.createURI("http://example.org.1#"), "ex069.ttl"));
+		load(misteryGuest(null, NodeFactory.createURI("http://example.org.2#"), "ex122.ttl"));
+		
+		execute(misteryGuest("ex123.rq"));		
+	}	
+	
+	@Test
+	@Ignore
+	public void fromNamed() throws Exception {
+		load(misteryGuest(null, NodeFactory.createURI("http://example.org.1#"), "ex069.ttl"));
+		load(misteryGuest(null, NodeFactory.createURI("http://example.org.2#"), "ex122.ttl"));
+		load(misteryGuest(null, NodeFactory.createURI("http://example.org.3#"), "ex125.ttl"));
+		
+		execute(misteryGuest("ex126.rq"));		
 	}	
 	
 	@Override

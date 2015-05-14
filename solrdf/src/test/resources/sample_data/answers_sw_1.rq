@@ -1,0 +1,1 @@
+SELECT ?s WHERE { ?s <http://example.org/title> ?o }

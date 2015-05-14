@@ -31,6 +31,7 @@ import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Strings;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.log.Log;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
@@ -53,6 +54,8 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @since 1.0
  */
 public final class LocalGraph extends GraphBase {
+	
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
 	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
 	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
@@ -283,7 +286,9 @@ public final class LocalGraph extends GraphBase {
 		}
 		
 		cmd.setFilterList(filters);
-
+		
+		LOGGER.debugQuery(cmd);
+		
 	    return new DeepPagingIterator(searcher, cmd, sortSpec, consumer);
 	}	
 	

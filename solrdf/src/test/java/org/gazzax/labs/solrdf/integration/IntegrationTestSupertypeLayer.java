@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +16,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.XMLResponseParser;
@@ -257,7 +260,7 @@ public abstract class IntegrationTestSupertypeLayer {
 					ResultSetCompare.isomorphic(
 							(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
 							(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
-		} catch (final Exception error) {
+		} catch (final Throwable error) {
 			QueryExecution debugExecution = null;
 			log.debug("JNS\n" + ResultSetFormatter.asText(
 					(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
@@ -275,10 +278,17 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * Loads all triples found in the datafile associated with the given name.
 	 * 
 	 * @param datafileName the name of the datafile.
+	 * @param graphs an optional set of target graph URIs. 
 	 * @throws Exception hopefully never, otherwise the test fails.
 	 */
 	protected void load(final MisteryGuest data) throws Exception {
-		final Model memoryModel = memoryDataset.getDefaultModel();
+		if (data.datasets == null || data.datasets.length == 0) {
+			return;
+		}
+		
+		final Model memoryModel = data.graphURI != null 
+				? memoryDataset.getNamedModel(data.graphURI) 
+				: memoryDataset.getDefaultModel();
 				 
 		for (final String datafileName : data.datasets) {
 			final String dataURL = source(datafileName).toString();
@@ -286,13 +296,33 @@ public abstract class IntegrationTestSupertypeLayer {
 			memoryModel.read(dataURL, DUMMY_BASE_URI, lang);
 		}  
   
-		DATASET.add(memoryModel);
+		if (data.graphURI != null) {
+			DATASET.add(data.graphURI, memoryModel);
+		} else {
+			DATASET.add(memoryModel);
+		}
 		commitChanges();
 		
-		final Model model = DATASET.getModel();
-		  
+		final Model model = (data.graphURI != null) ? DATASET.getModel(data.graphURI) : DATASET.getModel();
+		
 		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
-		assertTrue(Arrays.toString(data.datasets) + ", " + data.query, model.isIsomorphicWith(memoryModel));
+		
+		try {
+			assertTrue(Arrays.toString(data.datasets) + ", " + data.query, model.isIsomorphicWith(memoryModel));
+		} catch (Throwable exception) {
+			final StringWriter memoryModelWriter = new StringWriter();
+			final StringWriter remoteModelWriter = new StringWriter();
+			RDFDataMgr.write(memoryModelWriter, memoryModel, RDFFormat.NTRIPLES) ;
+			RDFDataMgr.write(remoteModelWriter, model, RDFFormat.NQUADS) ;
+			
+			log.debug("**** MEMORY MODEL AFTER LOAD ****");
+			log.debug(memoryModelWriter.toString());
+			log.debug("*********************************");
+			log.debug("**** REMOTE MODEL AFTER LOAD ****");
+			log.debug(remoteModelWriter.toString());
+			log.debug("*********************************");
+			throw exception;
+		}
 	} 
 	
 	

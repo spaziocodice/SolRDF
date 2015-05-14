@@ -1,15 +1,13 @@
 package org.gazzax.labs.solrdf.handler.update;
 
+import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
 import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.SolrParams;
@@ -49,7 +47,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 			final SolrQueryResponse response,
 			final ContentStream stream, 
 			final UpdateRequestProcessor processor) throws Exception {
-		
+		 
 		final SolrParams parameters = request.getParams();
 		String updateRequest = parameters.get(Names.UPDATE_PARAMETER_NAME);
 
@@ -58,7 +56,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 			updateRequest = URLDecoder.decode(updateRequest, characterEncoding(request));
 		} else {
 			LOGGER.debug(MessageCatalog._00108_INCOMING_SPARQL_UPDATE_REQUEST_USING_POST_DIRECTLY);
-			updateRequest = getUpdateOperationsFromIncomingStream(stream);
+			updateRequest = readCommandFromIncomingStream(stream);
 		}
 		
 		LOGGER.debug(MessageCatalog._00105_INCOMING_SPARQL_UPDATE_REQUEST_DEBUG, updateRequest);
@@ -96,28 +94,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 		final HttpServletRequest httpRequest = (HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY);
 		return httpRequest.getCharacterEncoding() != null ? httpRequest.getCharacterEncoding() : "UTF-8";
 	}
-	
-	/**
-	 * Reads the incoming stream in order to build the requested update operation.
-	 * 
-	 * @param stream the incoming content stream.
-	 * @return the incoming stream in order to build the requested update operation.
-	 * @throws IOException in case of I/O failure.
-	 */
-	String getUpdateOperationsFromIncomingStream(final ContentStream stream) throws IOException {
-		final BufferedReader reader = new BufferedReader(stream.getReader());
-		final StringBuilder builder = new StringBuilder();
-		String actLine = null;
-		try {
-			while ( (actLine = reader.readLine()) != null) {
-				builder.append(actLine).append(" ");
-			}
-			return builder.toString();
-		} finally {
-			IOUtils.closeQuietly(reader);
-		}
-	}
-	
+	 
 	/**
 	 * Creates the {@link UsingList} instance (using and using named graphs).
 	 * 

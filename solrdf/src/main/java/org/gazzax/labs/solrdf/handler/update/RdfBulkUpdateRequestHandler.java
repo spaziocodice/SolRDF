@@ -56,7 +56,7 @@ public class RdfBulkUpdateRequestHandler extends UpdateRequestHandler {
 		
 		final ContentStreamLoader quadsLoader = new ContentStreamLoader() {
 			@Override
-			public void load(
+			public void load( 
 					final SolrQueryRequest request, 
 					final SolrQueryResponse response,
 					final ContentStream stream, 

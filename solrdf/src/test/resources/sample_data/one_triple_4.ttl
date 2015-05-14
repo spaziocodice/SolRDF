@@ -1,0 +1,3 @@
+@prefix sbjct: <http://example.org/> .
+
+sbjct:book4 sbjct:title "4" . 
