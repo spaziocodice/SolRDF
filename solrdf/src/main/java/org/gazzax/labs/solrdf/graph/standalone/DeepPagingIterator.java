@@ -14,6 +14,8 @@ import org.apache.solr.search.SortSpec;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.log.Log;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.UnmodifiableIterator;
 import com.hp.hpl.jena.graph.Node;
@@ -30,6 +32,8 @@ import com.hp.hpl.jena.graph.Triple;
  * @since 1.0
  */
 public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
+	
 	protected static final Set<String> TRIPLE_FIELDS = new HashSet<String>();
 	static {
 		TRIPLE_FIELDS.add(Field.S);
@@ -59,6 +63,8 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			    final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 			    searcher.search(result, queryCommand);
 			  			
+			    LOGGER.debugQuery(queryCommand, result);
+			    
 			    consumer.onDocSet(result.getDocListAndSet().docSet);
 			    queryCommand.clearFlags(SolrIndexSearcher.GET_DOCSET);
 			    
@@ -91,6 +97,8 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			try {
 				final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 			    searcher.search(result, queryCommand);
+
+				LOGGER.debugQuery(queryCommand, result);
 			    
 				sentCursorMark = queryCommand.getCursorMark();
 				nextCursorMark = result.getNextCursorMark();

@@ -244,6 +244,82 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 		execute(misteryGuest("ex126.rq"));		
 	}	
 	
+	@Test
+	public void subQueries() throws Exception {
+		execute(misteryGuest("ex137.rq", "ex069.ttl"));		
+	}	
+	
+	@Test
+	public void combiningValuesAndAssigningValuesToVariables_I() throws Exception {
+		execute(misteryGuest("ex139.rq", "ex138.ttl"));		
+	}		
+	
+	@Test
+	public void combiningValuesAndAssigningValuesToVariables_II() throws Exception {
+		execute(misteryGuest("ex141.rq", "ex138.ttl"));		
+	}		
+	
+	@Test
+	public void combiningValuesAndAssigningValuesToVariables_withSubqueries() throws Exception {
+		execute(misteryGuest("ex143.rq", "ex138.ttl"));		
+	}			
+	
+	@Test
+	public void bindKeyword() throws Exception {
+		execute(misteryGuest("ex144.rq", "ex138.ttl"));		
+	}	
+	
+	@Test
+	public void valueKeyword_I() throws Exception {
+		execute(misteryGuest("ex492.rq", "ex138.ttl"));		
+	}	
+	
+	@Test
+	public void valueKeyword_II() throws Exception {
+		execute(misteryGuest("ex496.rq", "ex145.ttl"));		
+	}		
+	
+	@Test
+	public void valueKeyword_III() throws Exception {
+		execute(misteryGuest("ex498.rq", "ex145.ttl"));		
+	}		
+	
+	@Test
+	public void valueKeyword_IV() throws Exception {
+		execute(misteryGuest("ex500.rq", "ex145.ttl"));		
+	}		
+
+	@Test
+	public void orderByKeywordAsc() throws Exception {
+		execute(misteryGuest("ex146.rq", "ex145.ttl"));		
+	}		
+	
+	@Test
+	public void orderByKeywordDesc() throws Exception {
+		execute(misteryGuest("ex148.rq", "ex145.ttl"));		
+	}		
+	
+	@Test
+	public void orderByKeywordWithTwoKeys() throws Exception {
+		execute(misteryGuest("ex149.rq", "ex145.ttl"));		
+	}	
+	
+	@Test
+	public void limitAndOrderKeywords() throws Exception {
+		execute(misteryGuest("ex151.rq", "ex145.ttl"));		
+	}		
+	
+	@Test
+	public void maxFunction_I() throws Exception {
+		execute(misteryGuest("ex153.rq", "ex145.ttl"));		
+	}	
+	
+	@Test
+	public void maxFunction_II() throws Exception {
+		execute(misteryGuest("ex155.rq", "ex145.ttl"));		
+	}	
+	
+	
 	@Override
 	protected String examplesDirectory() {
 		return LEARNING_SPARQL_EXAMPLES_DIR;

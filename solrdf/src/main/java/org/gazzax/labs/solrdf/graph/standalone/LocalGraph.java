@@ -286,9 +286,6 @@ public final class LocalGraph extends GraphBase {
 		}
 		
 		cmd.setFilterList(filters);
-		
-		LOGGER.debugQuery(cmd);
-		
 	    return new DeepPagingIterator(searcher, cmd, sortSpec, consumer);
 	}	
 	

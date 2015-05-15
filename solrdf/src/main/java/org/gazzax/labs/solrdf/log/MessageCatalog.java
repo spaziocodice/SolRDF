@@ -35,5 +35,5 @@ public interface MessageCatalog {
 	String _00106_INCOMING_SPARQL_UPDATE_REQUEST_URL_ENCODED_TARGET_GRAPH = PREFIX + "-00106> : Applying the incoming Update Request to Graph %s";
 	String _00107_INCOMING_SPARQL_UPDATE_REQUEST_URL_ENCODED_ON_UNNAMED_GRAPH = PREFIX + "-00107> : Applying the incoming Update Request to the default Graph.";
 	String _00108_INCOMING_SPARQL_UPDATE_REQUEST_USING_POST_DIRECTLY = PREFIX + "-00108> : Incoming SPARQL Update request using POST directly.";
-	String _00109_SOLR_QUERY = PREFIX + "-00109> : Query : %s";
+	String _00109_SOLR_QUERY = PREFIX + "-00109> : Query : %s (returned %s of %s total matches)";
 }
