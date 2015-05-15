@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -62,7 +63,7 @@ class FieldInjectorRegistry {
 
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
-			filters.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, value)));
+			filters.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, value.substring(0,1).toUpperCase())));
 		}
 		
 		@Override
@@ -79,7 +80,8 @@ class FieldInjectorRegistry {
 		
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
-			filters.add(new TermQuery(new Term(Field.NUMERIC_OBJECT, value)));
+			final Double number = Double.valueOf(value);
+			filters.add(NumericRangeQuery.newDoubleRange(Field.NUMERIC_OBJECT, number, number, true, true));
 		}		
 
 		@Override
