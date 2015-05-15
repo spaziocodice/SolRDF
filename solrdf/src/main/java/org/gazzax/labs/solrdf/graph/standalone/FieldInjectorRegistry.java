@@ -1,5 +1,7 @@
 package org.gazzax.labs.solrdf.graph.standalone;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,9 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.SolrInputDocument;
 import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
@@ -23,6 +28,19 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
  * @since 1.0
  */
 class FieldInjectorRegistry {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
+	
+	private ThreadLocal<SimpleDateFormat> isoFormatterCache = new ThreadLocal<SimpleDateFormat>()
+	{
+		@Override
+		protected SimpleDateFormat initialValue()
+		{
+			final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			formatter.setLenient(false);
+			return formatter;
+		}
+	};
+	
 	/**
 	 * Command interface.
 	 * 
@@ -98,7 +116,13 @@ class FieldInjectorRegistry {
 		
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
-			filters.add(new TermQuery(new Term(Field.DATE_OBJECT, value)));
+			try {
+				final Long millisecs = isoFormatterCache.get().parse(value).getTime();
+				filters.add(NumericRangeQuery.newLongRange(Field.DATE_OBJECT, millisecs, millisecs, true, true));
+			} catch (final ParseException exception) {
+				LOGGER.error(MessageCatalog._00110_INVALID_DATE_VALUE, exception, value);
+				throw new IllegalArgumentException(exception);
+			}
 		}				
 
 		@Override
