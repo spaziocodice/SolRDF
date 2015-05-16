@@ -319,6 +319,40 @@ public class LearningSparql_ITCase extends IntegrationTestSupertypeLayer {
 		execute(misteryGuest("ex155.rq", "ex145.ttl"));		
 	}	
 	
+	@Test
+	public void avgFunction() throws Exception {
+		execute(misteryGuest("ex156.rq", "ex145.ttl"));		
+	}	
+	
+	/**
+	 * Fails because of the different order of the results.
+	 */
+	@Test
+	@Ignore
+	public void groupConcatFunction() throws Exception {
+		execute(misteryGuest("ex158.rq", "ex145.ttl"));		
+	}	
+	
+	@Test
+	public void groupByKeyword() throws Exception {
+		execute(misteryGuest("ex160.rq", "ex145.ttl"));		
+	}	
+	
+	@Test
+	public void countFunction() throws Exception {
+		execute(misteryGuest("ex162.rq", "ex145.ttl"));		
+	}	
+	
+	@Test
+	public void havingKeyword() throws Exception {
+		execute(misteryGuest("ex164.rq", "ex145.ttl"));		
+	}
+	
+	@Test
+	@Ignore
+	public void serviceKeyword() throws Exception {
+		execute(misteryGuest("ex167.rq", "ex145.ttl"));		
+	}
 	
 	@Override
 	protected String examplesDirectory() {
