@@ -91,9 +91,26 @@ public class LearningSparql_CONSTRUCT_ITCase extends IntegrationTestSupertypeLay
 	public void convertingDataFromRemoteService() throws Exception {
 		constructTest(misteryGuest("ex196.rq"));		
 	}
+
+	@Test
+	public void generatingDataAboutBrokenRules_I() throws Exception {
+		constructTest(misteryGuest("ex203.rq", "ex198.ttl"));		
+	}
 	
+	@Test
+	public void generatingDataAboutBrokenRules_II() throws Exception {
+		constructTest(misteryGuest("ex205.rq", "ex198.ttl"));		
+	}
 	
+	@Test
+	public void generatingDataAboutBrokenRules_III() throws Exception {
+		constructTest(misteryGuest("ex207.rq", "ex198.ttl"));		
+	}
 	
+	@Test
+	public void generatingDataAboutBrokenRules_I_II_III() throws Exception {
+		constructTest(misteryGuest("ex209.rq", "ex198.ttl"));		
+	}
 	
 	@Override
 	protected String examplesDirectory() {

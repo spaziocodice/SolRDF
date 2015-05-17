@@ -50,7 +50,11 @@ public class LearningSparql_ASK_ITCase extends IntegrationTestSupertypeLayer {
 		askTest(misteryGuest("ex201.rq", "ex198.ttl"));		
 	}
 
-	
+	@Test
+	public void bindAndFilter() throws Exception {
+		askTest(misteryGuest("ex202.rq", "ex198.ttl"));		
+	}
+
 	@Override
 	protected String examplesDirectory() {
 		return LEARNING_SPARQL_EXAMPLES_DIR;
