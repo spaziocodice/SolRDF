@@ -21,15 +21,15 @@ import org.junit.After;
 import org.junit.Test;
 
 /**
- * Querying string literals with diacritics or angle brackets yields no result.
+ * CONSTRUCT Integration tests using examples taken from LearningSPARQL book.
  *  
  * @author Andrea Gazzarini
  * @since 1.0
- * @see 
+ * @see http://learningsparql.com
  */  
-public class Issue53_ITCase extends IntegrationTestSupertypeLayer {
-	protected final static String EXAMPLES_DIR = "src/test/resources/sample_data";
-	
+public class LearningSparql_ASK_ITCase extends IntegrationTestSupertypeLayer {
+	protected final static String LEARNING_SPARQL_EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
+
 	/** 
 	 * Shutdown procedure for this test.
 	 * 
@@ -41,17 +41,18 @@ public class Issue53_ITCase extends IntegrationTestSupertypeLayer {
 	}
 	
 	@Test
-	public void diacriticsInWhereCondition() throws Exception {
-		selectTest(misteryGuest("issue_53_diacriticts.rq", "issue_53_diacriticts.ttl"));		
+	public void findingBadData() throws Exception {
+		askTest(misteryGuest("ex199.rq", "ex198.ttl"));		
 	}
 
 	@Test
-	public void squareBracketsInLiterals() throws Exception {
-		selectTest(misteryGuest("issue_53_square_brackets.rq", "issue_53_square_brackets.ttl"));		
+	public void datatypeFunction() throws Exception {
+		askTest(misteryGuest("ex201.rq", "ex198.ttl"));		
 	}
 
+	
 	@Override
 	protected String examplesDirectory() {
-		return EXAMPLES_DIR;
-	}	
+		return LEARNING_SPARQL_EXAMPLES_DIR;
+	}
 }

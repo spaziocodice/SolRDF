@@ -7,8 +7,8 @@ import java.util.Iterator;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
@@ -25,7 +25,6 @@ import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.NullIterator;
@@ -108,7 +107,7 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 	}
 	
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(final TripleMatch pattern) {	
+	public ExtendedIterator<Triple> graphBaseFind(final Triple pattern) {	
 		try {
 			return WrappedIterator.createNoRemove(query(pattern));
 		} catch (final SyntaxError error) {
@@ -123,7 +122,7 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 	 * @return an iterator containing matching triples.
 	 * @throws SyntaxError in case the query cannot be executed because syntax errors.
 	 */
-	Iterator<Triple> query(final TripleMatch pattern) throws SyntaxError {
+	Iterator<Triple> query(final Triple pattern) throws SyntaxError {
 		final SolrQuery query = new SolrQuery("*:*");
 		query.setSort("id", ORDER.asc);
 		query.setRequestHandler("/solr-query");

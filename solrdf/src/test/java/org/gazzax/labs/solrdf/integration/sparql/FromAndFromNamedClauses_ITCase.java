@@ -76,7 +76,7 @@ public class FromAndFromNamedClauses_ITCase extends IntegrationTestSupertypeLaye
 	 */
 	@Test
 	public void withoutAnyClause() throws Exception {
-		execute(misteryGuest("answers_sw_1.rq"));		
+		selectTest(misteryGuest("answers_sw_1.rq"));		
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -121,7 +121,7 @@ public class FromAndFromNamedClauses_ITCase extends IntegrationTestSupertypeLaye
 	 */
 	@Test
 	public void singleFromClause() throws Exception {
-		execute(misteryGuest("answers_sw_2.rq"));		
+		selectTest(misteryGuest("answers_sw_2.rq"));		
 	}	
 
 	@Override

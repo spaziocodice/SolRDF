@@ -6,7 +6,7 @@
 	<version>1.0</version>
 	<name>Solr RDF plugin</name>
 	<properties>
-		<jena.version>2.12.0</jena.version>
+		<jena.version>2.13.0</jena.version>
 		<jdk.version>1.7</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>org.apache.jena</groupId>
 			<artifactId>jena-arq</artifactId>
-			<version>2.12.1</version>
+			<version>${jena.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>

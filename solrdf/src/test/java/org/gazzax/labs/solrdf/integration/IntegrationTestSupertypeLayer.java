@@ -1,6 +1,7 @@
 package org.gazzax.labs.solrdf.integration;
 
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -243,14 +244,68 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected URI source(final String filename) {
 		return new File(examplesDirectory(), filename).toURI();
 	}	
-	
+
 	/**
-	 * Executes a given query against a given dataset.
+	 * Executes a given ASK query against a given dataset.
 	 * 
 	 * @param data the mistery guest containing test data (query and dataset)
 	 * @throws Exception never, otherwise the test fails.
 	 */
-	protected void execute(final MisteryGuest data) throws Exception {
+	protected void askTest(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final Query query = QueryFactory.create(queryString(data.query));
+		execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
+		inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
+			
+		assertEquals(
+				Arrays.toString(data.datasets) + ", " + data.query,
+				inMemoryExecution.execAsk(),
+				execution.execAsk());
+	}
+		
+	/**
+	 * Executes a given CONSTRUCT query against a given dataset.
+	 * 
+	 * @param data the mistery guest containing test data (query and dataset)
+	 * @throws Exception never, otherwise the test fails.
+	 */
+	protected void constructTest(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final Query query = QueryFactory.create(queryString(data.query));
+		try {
+			execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
+			inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
+			
+			assertTrue(
+					Arrays.toString(data.datasets) + ", " + data.query,
+					inMemoryExecution.execConstruct().isIsomorphicWith(execution.execConstruct()));
+		} catch (final Throwable error) {
+			QueryExecution debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
+			StringWriter writer = new StringWriter();
+			RDFDataMgr.write(writer, debugExecution.execConstruct(), RDFFormat.NTRIPLES);
+			log.debug("JNS\n" + writer);
+			
+			debugExecution.close();
+			debugExecution = QueryExecutionFactory.create(query, memoryDataset);
+			writer = new StringWriter();
+			RDFDataMgr.write(writer, debugExecution.execConstruct(), RDFFormat.NTRIPLES);
+			
+			log.debug("MEM\n" + writer);
+			
+			debugExecution.close();
+			throw error;
+		} 
+	}
+	
+	/**
+	 * Executes a given SELECT query against a given dataset.
+	 * 
+	 * @param data the mistery guest containing test data (query and dataset)
+	 * @throws Exception never, otherwise the test fails.
+	 */
+	protected void selectTest(final MisteryGuest data) throws Exception {
 		load(data);
 		
 		final Query query = QueryFactory.create(queryString(data.query));

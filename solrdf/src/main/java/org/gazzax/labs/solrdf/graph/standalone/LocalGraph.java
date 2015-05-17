@@ -39,7 +39,6 @@ import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.shared.AddDeniedException;
 import com.hp.hpl.jena.shared.DeleteDeniedException;
@@ -226,7 +225,7 @@ public final class LocalGraph extends GraphBase {
 	}
 	
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(final TripleMatch pattern) {	
+	public ExtendedIterator<Triple> graphBaseFind(final Triple pattern) {	
 		try {
 			return WrappedIterator.createNoRemove(query(pattern));
 		} catch (SyntaxError error) {
@@ -242,7 +241,7 @@ public final class LocalGraph extends GraphBase {
 	 * @return an iterator containing matching triples.
 	 * @throws SyntaxError in case the query cannot be executed because syntax errors.
 	 */
-	Iterator<Triple> query(final TripleMatch pattern) throws SyntaxError {
+	Iterator<Triple> query(final Triple pattern) throws SyntaxError {
 	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
 	    final SortSpec sortSpec = qParser.getSort(true);
 	    cmd.setQuery(new MatchAllDocsQuery());

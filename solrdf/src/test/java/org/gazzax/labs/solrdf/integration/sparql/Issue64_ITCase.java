@@ -42,7 +42,7 @@ public class Issue64_ITCase extends IntegrationTestSupertypeLayer {
 	
 	@Test
 	public void shouldReturnOneBinding() throws Exception {
-		execute(misteryGuest("issue_64_wrong_results.rq", "issue_64_wrong_results.ttl"));		
+		selectTest(misteryGuest("issue_64_wrong_results.rq", "issue_64_wrong_results.ttl"));		
 	}
 
 	@Override
