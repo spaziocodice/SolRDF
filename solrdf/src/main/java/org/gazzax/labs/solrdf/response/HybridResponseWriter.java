@@ -182,13 +182,13 @@ public class HybridResponseWriter implements QueryResponseWriter {
 					final String contentType) {
 				final Boolean askResult = response.getBooleanArg(Names.QUERY_RESULT);
 				if (WebContent.contentTypeTextCSV.equals(contentType) || WebContent.contentTypeTextPlain.equals(contentType)) {
-					ResultSetFormatter.outputAsCSV(askResult);
+					ResultSetFormatter.outputAsCSV(new WriterOutputStream(writer, CharacterSet.UTF_8), askResult);
 				} else if (WebContent.contentTypeTextTSV.equals(contentType)) {
-					ResultSetFormatter.outputAsTSV(askResult);
+					ResultSetFormatter.outputAsTSV(new WriterOutputStream(writer, CharacterSet.UTF_8), askResult);
 				} else if (ResultSetLang.SPARQLResultSetXML.getHeaderString().equals(contentType)) {
-					ResultSetFormatter.outputAsXML(askResult);
+					ResultSetFormatter.outputAsXML(new WriterOutputStream(writer, CharacterSet.UTF_8), askResult);
 				} else if (ResultSetLang.SPARQLResultSetJSON.getHeaderString().equals(contentType)) {
-					ResultSetFormatter.outputAsJSON(askResult);
+					ResultSetFormatter.outputAsJSON(new WriterOutputStream(writer, CharacterSet.UTF_8), askResult);
 				} 
 			}
 		});
