@@ -30,7 +30,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
  * @since 1.0
  * @see http://learningsparql.com
  */  
-public class LearningSparql_CONSTRUCT_ITCase extends IntegrationTestSupertypeLayer {
+public class LearningSparql_CONSTRUCT_DESCRIBE_ITCase extends IntegrationTestSupertypeLayer {
 	protected final static String LEARNING_SPARQL_EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
 
 	/** 
@@ -111,6 +111,27 @@ public class LearningSparql_CONSTRUCT_ITCase extends IntegrationTestSupertypeLay
 	public void generatingDataAboutBrokenRules_I_II_III() throws Exception {
 		constructTest(misteryGuest("ex209.rq", "ex198.ttl"));		
 	}
+	
+	@Test
+	public void describeResource() throws Exception {
+		describeTest(misteryGuest("ex213.rq", "ex069.ttl"));		
+	}	
+	
+	@Test
+	public void describeWithTriplePattern() throws Exception {
+		describeTest(misteryGuest("ex216.rq", "ex069.ttl"));		
+	}	
+	
+	@Test
+	public void ifFunction() throws Exception {
+		constructTest(misteryGuest("ex237.rq", "ex104.ttl"));		
+	}	
+	
+	@Test
+	@Ignore
+	public void nodeTypeConversionFunction() throws Exception {
+		constructTest(misteryGuest("ex246.rq", "ex241.ttl"));		
+	}		
 	
 	@Override
 	protected String examplesDirectory() {

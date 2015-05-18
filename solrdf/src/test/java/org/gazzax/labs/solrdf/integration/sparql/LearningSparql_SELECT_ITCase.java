@@ -355,6 +355,81 @@ public class LearningSparql_SELECT_ITCase extends IntegrationTestSupertypeLayer 
 		selectTest(misteryGuest("ex167.rq", "ex145.ttl"));		
 	}
 	
+	@Test
+	public void integerDatatypeAssumption() throws Exception {
+		selectTest(misteryGuest("ex218.rq", "ex217.ttl"));		
+	}	
+	
+	@Test
+	public void stringDatatypeAssumption_I() throws Exception {
+		selectTest(misteryGuest("ex220.rq", "ex217.ttl"));		
+	}		
+	
+	@Test
+	public void explicitStringDatatype() throws Exception {
+		selectTest(misteryGuest("ex221.rq", "ex217.ttl"));		
+	}	
+	
+	@Test
+	@Ignore
+	/**
+	 * @see https://github.com/agazzarini/SolRDF/issues/79
+	 */
+	public void customDatatype() throws Exception {
+		selectTest(misteryGuest("ex222.rq", "ex217.ttl"));		
+	}		
+	
+	@Test
+	public void ignoreDatatypeAndLanguage() throws Exception {
+		selectTest(misteryGuest("ex223.rq", "ex217.ttl"));		
+	}	
+	
+	@Test
+	public void representingStrings() throws Exception {
+		selectTest(misteryGuest("ex225.rq", "ex224.ttl"));		
+	}	
+	
+	@Test
+	public void comparingDecimals() throws Exception {
+		selectTest(misteryGuest("ex228.rq", "ex227.ttl"));		
+	}	
+	
+	@Test
+	public void comparingDate() throws Exception {
+		selectTest(misteryGuest("ex230.rq", "ex227.ttl"));		
+	}			
+
+	@Test
+	public void arithmeticExpressionWithBind_I() throws Exception {
+		selectTest(misteryGuest("ex232.rq", "ex138.ttl"));		
+	}			
+
+	@Test
+	public void arithmeticExpressionWithBind_II() throws Exception {
+		selectTest(misteryGuest("ex233.rq", "ex033.ttl"));		
+	}	
+	
+	@Test
+	public void ifFunctionWithInMemoryData() throws Exception {
+		selectTest(misteryGuest("ex235.rq"));		
+	}	
+	
+	@Test
+	public void coalesceFunction() throws Exception {
+		selectTest(misteryGuest("ex239.rq", "ex054.ttl"));		
+	}	
+	
+	@Test
+	public void nodeTypeCheckingFunction() throws Exception {
+		selectTest(misteryGuest("ex242.rq", "ex241.ttl"));		
+	}	
+	
+	@Test
+	public void dataTypeCheckingFunction() throws Exception {
+		selectTest(misteryGuest("ex244.rq", "ex241.ttl"));		
+	}	
+	
+
 	@Override
 	protected String examplesDirectory() {
 		return LEARNING_SPARQL_EXAMPLES_DIR;

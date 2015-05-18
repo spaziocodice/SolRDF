@@ -2,7 +2,7 @@ package org.gazzax.labs.solrdf.graph.standalone;
 
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
-
+import static org.gazzax.labs.solrdf.Strings.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,6 +57,10 @@ public final class LocalGraph extends GraphBase {
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
 	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
+	
+	private final static String NULL_LANGUAGE = "00";
+	private final static TermQuery NULL_LANGUAGE_TERM_QUERY = new TermQuery(new Term(Field.LANG, NULL_LANGUAGE));
+	
 	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
 	
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
@@ -164,7 +168,8 @@ public final class LocalGraph extends GraphBase {
 
 		final Node object = triple.getObject();
 		if (object.isLiteral()) {
-			document.setField(Field.LANG, object.getLiteralLanguage());				
+			final String language = object.getLiteralLanguage();
+			document.setField(Field.LANG, isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE);				
 
 			final RDFDatatype dataType = object.getLiteralDatatype();
 			final Object value = object.getLiteralValue();
@@ -266,9 +271,7 @@ public final class LocalGraph extends GraphBase {
 		if (o != null) {
 			if (o.isLiteral()) {
 				final String language = o.getLiteralLanguage();
-				if (Strings.isNotNullOrEmptyString(language)) {
-					filters.add(languageTermQuery(language));
-				}
+				filters.add(isNotNullOrEmptyString(language) ? languageTermQuery(language) : NULL_LANGUAGE_TERM_QUERY);
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
 				final RDFDatatype dataType = o.getLiteralDatatype();
@@ -319,7 +322,7 @@ public final class LocalGraph extends GraphBase {
 					builder
 						.append(Field.LANG)
 						.append(":")
-						.append(language)
+						.append(isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE)
 						.append(" AND ");
 				}
 				

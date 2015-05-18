@@ -270,6 +270,41 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @param data the mistery guest containing test data (query and dataset)
 	 * @throws Exception never, otherwise the test fails.
 	 */
+	protected void describeTest(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final Query query = QueryFactory.create(queryString(data.query));
+		try {
+			execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
+			inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
+			
+			assertTrue(
+					Arrays.toString(data.datasets) + ", " + data.query,
+					inMemoryExecution.execDescribe().isIsomorphicWith(execution.execDescribe()));
+		} catch (final Throwable error) {
+			QueryExecution debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
+			StringWriter writer = new StringWriter();
+			RDFDataMgr.write(writer, debugExecution.execDescribe(), RDFFormat.NTRIPLES);
+			log.debug("JNS\n" + writer);
+			
+			debugExecution.close();
+			debugExecution = QueryExecutionFactory.create(query, memoryDataset);
+			writer = new StringWriter();
+			RDFDataMgr.write(writer, debugExecution.execDescribe(), RDFFormat.NTRIPLES);
+			
+			log.debug("MEM\n" + writer);
+			
+			debugExecution.close();
+			throw error;
+		} 
+	}	
+	
+	/**
+	 * Executes a given CONSTRUCT query against a given dataset.
+	 * 
+	 * @param data the mistery guest containing test data (query and dataset)
+	 * @throws Exception never, otherwise the test fails.
+	 */
 	protected void constructTest(final MisteryGuest data) throws Exception {
 		load(data);
 		
