@@ -396,14 +396,20 @@ public abstract class IntegrationTestSupertypeLayer {
 		final Model model = (data.graphURI != null) ? DATASET.getModel(data.graphURI) : DATASET.getModel();
 		
 		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
-		
+		assertIsomorphic(memoryModel, model);
+	} 
+	
+	
+	protected abstract String examplesDirectory();
+	
+	protected void assertIsomorphic(final Model memoryModel, final Model solrdfModel) {
 		try {
-			assertTrue(Arrays.toString(data.datasets) + ", " + data.query, model.isIsomorphicWith(memoryModel));
+			assertTrue(solrdfModel.isIsomorphicWith(memoryModel));
 		} catch (Throwable exception) {
 			final StringWriter memoryModelWriter = new StringWriter();
 			final StringWriter remoteModelWriter = new StringWriter();
 			RDFDataMgr.write(memoryModelWriter, memoryModel, RDFFormat.NTRIPLES) ;
-			RDFDataMgr.write(remoteModelWriter, model, RDFFormat.NQUADS) ;
+			RDFDataMgr.write(remoteModelWriter, solrdfModel, RDFFormat.NQUADS) ;
 			
 			log.debug("**** MEMORY MODEL AFTER LOAD ****");
 			log.debug(memoryModelWriter.toString());
@@ -413,8 +419,6 @@ public abstract class IntegrationTestSupertypeLayer {
 			log.debug("*********************************");
 			throw exception;
 		}
-	} 
-	
-	
-	protected abstract String examplesDirectory();
+	}
+
 }

@@ -14,6 +14,16 @@
  */
 package org.gazzax.labs.solrdf.integration.sparql;
 
+import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
+
+import org.gazzax.labs.solrdf.MisteryGuest;
+import org.junit.Test;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.update.UpdateAction;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateFactory;
+
 /**
  * SPARQL Update Integration tests using examples taken from LearningSPARQL book.
  *  
@@ -22,6 +32,39 @@ package org.gazzax.labs.solrdf.integration.sparql;
  * @see http://learningsparql.com
  */  
 public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
-
 	
+	/**
+	 * Executes a given update command both on remote and local model.
+	 * 
+	 * @param data the object holding test data (i.e. commands, queries, datafiles).
+	 * @throws Exception hopefully never otherwise the corresponding test fails.
+	 */
+	void executeUpdate(final MisteryGuest data) throws Exception {
+		final String updateCommandString = readFile(data.query);
+		UpdateExecutionFactory.createRemote(UpdateFactory.create(updateCommandString), SPARQL_ENDPOINT_URI).execute();
+
+		commitChanges();
+
+		final Model memoryModel = memoryDataset.getDefaultModel();
+		UpdateAction.parseExecute(updateCommandString, memoryModel);
+		
+		assertIsomorphic(memoryModel, DATASET.getModel());
+	}
+	
+	@Test
+	public void insertDataKeyword() throws Exception {
+		executeUpdate(misteryGuest("ex312.ru"));
+	}
+	
+	@Test
+	public void insertKeyword() throws Exception {
+		load(misteryGuest("", "ex012.ttl"));
+		executeUpdate(misteryGuest("ex313.ru"));
+	}	
+	
+	@Test
+	public void insertAsConstructThatChangesData() throws Exception {
+		load(misteryGuest("", "ex012.ttl"));
+		executeUpdate(misteryGuest("ex316.ru"));
+	}
 }
