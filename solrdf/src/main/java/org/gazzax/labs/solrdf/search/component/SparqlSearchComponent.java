@@ -132,11 +132,11 @@ public class SparqlSearchComponent extends SearchComponent {
 
 				response.add(Names.QUERY_RESULT, result);
 				break;				
-			}
+			} 
 			case Query.QueryTypeConstruct: {				
 				final Model result = execution.execConstruct();
-				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
-				while (iterator.hasNext()) { iterator.next(); }
+//				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
+//				while (iterator.hasNext()) { iterator.next(); }
 
 		    	responseBuilder.setResults(results);
 

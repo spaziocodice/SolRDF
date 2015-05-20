@@ -429,7 +429,90 @@ public class LearningSparql_SELECT_ITCase extends IntegrationTestSupertypeLayer 
 		selectTest(misteryGuest("ex244.rq", "ex241.ttl"));		
 	}	
 	
+	@Test
+	public void strFunction() throws Exception {
+		selectTest(misteryGuest("ex251.rq", "ex241.ttl"));		
+	}	
+	
+	@Test
+	public void datatypeConversion_I() throws Exception {
+		selectTest(misteryGuest("ex257.rq", "ex241.ttl"));		
+	}	
 
+	@Test
+	public void datatypeConversion_II() throws Exception {
+		selectTest(misteryGuest("ex260.rq", "ex259.ttl"));		
+	}	
+
+	@Test
+	public void datatypeConversion_III() throws Exception {
+		selectTest(misteryGuest("ex262.rq", "ex259.ttl"));		
+	}	
+	
+	@Test
+	public void strdtFunction() throws Exception {
+		selectTest(misteryGuest("ex264.rq", "ex259.ttl"));		
+	}	
+	
+	@Test
+	public void langFunction() throws Exception {
+		selectTest(misteryGuest("ex271.rq", "ex039.ttl"));		
+	}		
+
+	@Test
+	public void removeLanguageTag_I() throws Exception {
+		selectTest(misteryGuest("ex273.rq", "ex039.ttl"));		
+	}	
+	
+	@Test
+	public void removeLanguageTag_II() throws Exception {
+		selectTest(misteryGuest("ex273.rq", "ex037.ttl"));		
+	}	
+	
+	@Test
+	public void langMatchesFunction_I() throws Exception {
+		selectTest(misteryGuest("ex276.rq", "ex037.ttl"));		
+	}	
+	
+	@Test
+	public void langMatchesFunction_II() throws Exception {
+		selectTest(misteryGuest("ex279.rq", "ex278.ttl"));		
+	}	
+	
+	@Test
+	public void stringFunctions_I() throws Exception {
+		selectTest(misteryGuest("ex285.rq", "ex284.ttl"));		
+	}		
+	
+	@Test
+	public void stringFunctions_II() throws Exception {
+		selectTest(misteryGuest("ex287.rq", "ex284.ttl"));		
+	}
+	
+	@Test
+	public void stringFunctions_III() throws Exception {
+		selectTest(misteryGuest("ex290.rq", "ex289.ttl"));		
+	}
+	
+	@Test
+	public void numericFunctions() throws Exception {
+		selectTest(misteryGuest("ex293.rq", "ex292.ttl"));		
+	}	
+	
+	/**
+	 * Cannot execute: currentSeconds are different between comparisons.
+	 */
+	@Test
+	@Ignore
+	public void dateAndTimeFunctions() throws Exception {
+		selectTest(misteryGuest("ex303.rq"));		
+	}	
+	
+	@Test
+	public void extensionFunctions() throws Exception {
+		selectTest(misteryGuest("ex308.rq", "ex012.ttl"));		
+	}	
+			
 	@Override
 	protected String examplesDirectory() {
 		return LEARNING_SPARQL_EXAMPLES_DIR;

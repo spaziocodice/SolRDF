@@ -127,11 +127,49 @@ public class LearningSparql_CONSTRUCT_DESCRIBE_ITCase extends IntegrationTestSup
 		constructTest(misteryGuest("ex237.rq", "ex104.ttl"));		
 	}	
 	
+	/**
+	 * @see https://github.com/agazzarini/SolRDF/issues/81
+	 */
 	@Test
 	@Ignore
-	public void nodeTypeConversionFunction() throws Exception {
+	public void uriFunction() throws Exception {
 		constructTest(misteryGuest("ex246.rq", "ex241.ttl"));		
+	}	
+	
+	@Test
+	public void encodeForUriFunction_I() throws Exception {
+		constructTest(misteryGuest("ex248.rq", "ex241.ttl"));		
 	}		
+	
+	@Test
+	public void encodeForUriFunction_II() throws Exception {
+		constructTest(misteryGuest("ex248.rq", "ex249.ttl"));		
+	}	
+		
+	@Test
+	public void strFunction() throws Exception {
+		constructTest(misteryGuest("ex253.rq", "ex241.ttl"));		
+	}		
+
+	@Test
+	public void strUriEncodeIfAndBindFunctions() throws Exception {
+		constructTest(misteryGuest("ex255.rq", "ex241.ttl"));		
+	}		
+	
+	@Test
+	public void strdtFunction() throws Exception {
+		constructTest(misteryGuest("ex267.rq", "ex266.ttl"));		
+	}	
+
+	@Test
+	public void strlangFunction() throws Exception {
+		constructTest(misteryGuest("ex282.rq", "ex281.ttl"));		
+	}			
+	
+	@Test
+	public void hashFunctions() throws Exception {
+		constructTest(misteryGuest("ex305.rq", "ex012.ttl"));		
+	}	
 	
 	@Override
 	protected String examplesDirectory() {
