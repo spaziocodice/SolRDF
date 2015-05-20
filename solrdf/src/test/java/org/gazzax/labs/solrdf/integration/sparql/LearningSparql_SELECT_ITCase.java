@@ -16,8 +16,6 @@ package org.gazzax.labs.solrdf.integration.sparql;
 
 import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
 
-import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
-import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -30,19 +28,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
  * @since 1.0
  * @see http://learningsparql.com
  */  
-public class LearningSparql_SELECT_ITCase extends IntegrationTestSupertypeLayer {
-	protected final static String LEARNING_SPARQL_EXAMPLES_DIR = "src/test/resources/LearningSPARQLExamples";
-
-	/** 
-	 * Shutdown procedure for this test.
-	 * 
-	 * @throws Exception hopefully never.
-	 */
-	@After
-	public void tearDown() throws Exception {
-		clearDatasets();
-	}
-	
+public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
 	@Test
 	public void queryWithPrefixes_I() throws Exception {
 		selectTest(misteryGuest("ex003.rq", "ex002.ttl"));		
@@ -512,9 +498,4 @@ public class LearningSparql_SELECT_ITCase extends IntegrationTestSupertypeLayer 
 	public void extensionFunctions() throws Exception {
 		selectTest(misteryGuest("ex308.rq", "ex012.ttl"));		
 	}	
-			
-	@Override
-	protected String examplesDirectory() {
-		return LEARNING_SPARQL_EXAMPLES_DIR;
-	}
 }
