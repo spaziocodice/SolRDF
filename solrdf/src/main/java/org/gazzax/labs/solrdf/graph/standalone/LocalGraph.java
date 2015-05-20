@@ -3,6 +3,7 @@ package org.gazzax.labs.solrdf.graph.standalone;
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 import static org.gazzax.labs.solrdf.Strings.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
+import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SortSpec;
 import org.apache.solr.search.SyntaxError;
@@ -248,7 +250,7 @@ public final class LocalGraph extends GraphBase {
 	 */
 	Iterator<Triple> query(final Triple pattern) throws SyntaxError {
 	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
-	    final SortSpec sortSpec = qParser.getSort(true);
+	    final SortSpec sortSpec = qParser != null ? qParser.getSort(true) : QueryParsing.parseSortSpec("id asc", request);
 	    cmd.setQuery(new MatchAllDocsQuery());
 	    cmd.setSort(sortSpec.getSort());
 	    cmd.setLen(queryFetchSize);
