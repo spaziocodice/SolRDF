@@ -20,4 +20,13 @@ public abstract class TestUtility {
 	public static String randomString() {
 		return String.valueOf(System.currentTimeMillis() + RANDOMIZER.nextLong());
 	}
+	
+	/**
+	 * Returns a pseudorandom int.
+	 * 
+	 * @return a pseudorandom int.
+	 */
+	public static int randomInt() {
+		return RANDOMIZER.nextInt();
+	}
 }   
