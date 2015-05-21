@@ -37,4 +37,5 @@ public interface MessageCatalog {
 	String _00108_INCOMING_SPARQL_UPDATE_REQUEST_USING_POST_DIRECTLY = PREFIX + "-00108> : Incoming SPARQL Update request using POST directly.";
 	String _00109_SOLR_QUERY = PREFIX + "-00109> : Query : %s (returned %s of %s total matches)";
 	String _00110_INVALID_DATE_VALUE = PREFIX + "-00110> : Unable to convert the given value %s in a valid date.";
+	String _00111_UNKNOWN_QUERY_TYPE = PREFIX + "-00111> : Unknown / unsupported query type %s";
 }

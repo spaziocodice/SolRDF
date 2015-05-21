@@ -3,7 +3,6 @@ package org.gazzax.labs.solrdf.search.component;
 import static org.gazzax.labs.solrdf.F.isHybrid;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
@@ -21,16 +20,18 @@ import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.graph.cloud.ReadOnlyCloudDatasetGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.gazzax.labs.solrdf.log.MessageFactory;
 import org.gazzax.labs.solrdf.search.qparser.SparqlQuery;
+import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSetRewindable;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 
 /**
@@ -41,7 +42,8 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
  */
 public class SparqlSearchComponent extends SearchComponent {
 	private static final String DEFAULT_DEF_TYPE = "sparql";
-
+	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SparqlSearchComponent.class));
+	
 	@Override
 	public int distributedProcess(final ResponseBuilder responseBuilder) throws IOException {
 		doProcess(responseBuilder);
@@ -52,7 +54,13 @@ public class SparqlSearchComponent extends SearchComponent {
 	public void process(final ResponseBuilder responseBuilder) throws IOException {
 		doProcess(responseBuilder);
 	}
-
+	
+	/**
+	 * Executes the logic of this {@link SearchComponent}.
+	 * 
+	 * @param responseBuilder the {@link ResponseBuilder} associated with this request.
+	 * @throws IOException in case of I/O failure.
+	 */
 	protected void doProcess(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
@@ -113,9 +121,7 @@ public class SparqlSearchComponent extends SearchComponent {
 					}
 			    	
 					resultSet.reset();
-			    	
 			    	responseBuilder.setResults(results);
-			    	
 					response.add(Names.QUERY_RESULT, resultSet);					
 					response.add(Names.NUM_FOUND, results.docSet.size());					
 				} else {
@@ -124,27 +130,19 @@ public class SparqlSearchComponent extends SearchComponent {
 				break;
 			}
 			case Query.QueryTypeDescribe: {
-				final Model result = execution.execDescribe();
-				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
-				while (iterator.hasNext()) { iterator.next(); }
-
-		    	responseBuilder.setResults(results);
-
-				response.add(Names.QUERY_RESULT, result);
+				response.add(Names.QUERY_RESULT, execution.execDescribe());
 				break;				
 			} 
 			case Query.QueryTypeConstruct: {				
-				final Model result = execution.execConstruct();
-//				final Iterator<Triple> iterator = result.getGraph().find(Node.ANY, Node.ANY, Node.ANY);
-//				while (iterator.hasNext()) { iterator.next(); }
-
-		    	responseBuilder.setResults(results);
-
-				response.add(Names.QUERY_RESULT, result);
+				response.add(Names.QUERY_RESULT, execution.execConstruct());
 				break;
 			}
 			default:
-				throw new IllegalArgumentException("Unknown query type: " + query.getQueryType());
+				final String message = MessageFactory.createMessage(
+						MessageCatalog._00111_UNKNOWN_QUERY_TYPE, 
+						query.getQueryType());
+				LOGGER.error(message);
+				throw new IllegalArgumentException(message);
 			}
 	    } catch (final SyntaxError exception) {
 	    	throw new SolrException(ErrorCode.BAD_REQUEST, exception);
