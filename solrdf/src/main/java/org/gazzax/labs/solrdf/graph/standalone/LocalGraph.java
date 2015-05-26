@@ -2,7 +2,7 @@ package org.gazzax.labs.solrdf.graph.standalone;
 
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
-import static org.gazzax.labs.solrdf.Strings.*;
+import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,9 +31,9 @@ import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.DeleteUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Field;
-import org.gazzax.labs.solrdf.Strings;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
@@ -57,15 +57,12 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
 public final class LocalGraph extends GraphBase {
 	
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
-	
 	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
+	static final String NULL_LANGUAGE = "_";
+	static final String UNNAMED_GRAPH_PLACEHOLDER = "_";	
+	static final TermQuery NULL_LANGUAGE_TERM_QUERY = new TermQuery(new Term(Field.LANG, NULL_LANGUAGE));
+	static final Map<String, TermQuery> LANGUAGE_TERM_QUERIES = new HashMap<String, TermQuery>();
 	
-	private final static String NULL_LANGUAGE = "00";
-	private final static TermQuery NULL_LANGUAGE_TERM_QUERY = new TermQuery(new Term(Field.LANG, NULL_LANGUAGE));
-	
-	private final static Map<String, TermQuery> languageTermQueries = new HashMap<String, TermQuery>();
-	
-	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	final UpdateRequestProcessor updateProcessor;
 	final AddUpdateCommand updateCommand;
 	final SolrQueryRequest request;
@@ -73,12 +70,14 @@ public final class LocalGraph extends GraphBase {
 	final SolrIndexSearcher searcher;
 	final QParser qParser;
 	
-	final Node graphNode;
+	final TermQuery graphTermQuery;
 	final String graphNodeStringified;
 	
 	final int queryFetchSize;
 	
 	final GraphEventConsumer consumer;
+	
+	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
 	/**
 	 * Creates a Read / Write {@link Graph}.
@@ -137,8 +136,8 @@ public final class LocalGraph extends GraphBase {
 		final QParser qparser, 
 		final int fetchSize, 
 		final GraphEventConsumer consumer) {
-		this.graphNode = graphNode;
-		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
+		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : UNNAMED_GRAPH_PLACEHOLDER;
+		this.graphTermQuery = new TermQuery(new Term(Field.C, graphNodeStringified));
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateProcessor = request.getCore().getUpdateProcessingChain(null).createProcessor(request, response);
@@ -183,8 +182,8 @@ public final class LocalGraph extends GraphBase {
 		try {
 			updateProcessor.processAdd(updateCommand);
 		} catch (final Exception exception) {
-			LoggerFactory.getLogger(LocalGraph.class).error("", exception);
-			throw new AddDeniedException("", triple);
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			throw new AddDeniedException(exception.getMessage(), triple);
 		}
 	}
 	
@@ -195,7 +194,8 @@ public final class LocalGraph extends GraphBase {
 		try {
 			updateProcessor.processDelete(deleteCommand);
 		} catch (final Exception exception) {
-			throw new DeleteDeniedException("Unable to clean this graph " + this);
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			throw new DeleteDeniedException(exception.getMessage(), triple);
 		}		
 	}
 	
@@ -205,15 +205,14 @@ public final class LocalGraph extends GraphBase {
 	    cmd.setQuery(new MatchAllDocsQuery());
 	    cmd.setLen(0);
 
-		if (graphNode != null) {
-			cmd.setFilterList(new TermQuery(new Term(Field.C, asNtURI(graphNode))));				
-		}
+	    cmd.setFilterList(graphTermQuery);				
 		
 		final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 	    try {
 			searcher.search(result, cmd);
 		    return result.getDocListAndSet().docList.matches();
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}	    
 	}
@@ -221,12 +220,13 @@ public final class LocalGraph extends GraphBase {
 	@Override
     public void clear() {
 		final DeleteUpdateCommand deleteCommand = new DeleteUpdateCommand(request);
-		deleteCommand.query = "*:*";
+		deleteCommand.query = Field.C + ":\"" + graphNodeStringified + "\"";
 		deleteCommand.commitWithin = 1000;
 		try {
 			updateProcessor.processDelete(deleteCommand);
 	        getEventManager().notifyEvent(this, GraphEvents.removeAll);
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new DeleteDeniedException("Unable to clean this graph " + this);
 		}
 	}
@@ -235,8 +235,8 @@ public final class LocalGraph extends GraphBase {
 	public ExtendedIterator<Triple> graphBaseFind(final Triple pattern) {	
 		try {
 			return WrappedIterator.createNoRemove(query(pattern));
-		} catch (SyntaxError error) {
-			LoggerFactory.getLogger(LocalGraph.class).error("", error);
+		} catch (final SyntaxError exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			return new NullIterator<Triple>();
 		}
 	}
@@ -285,9 +285,7 @@ public final class LocalGraph extends GraphBase {
 			}
 		}
 		
-		if (graphNode != null) {
-			filters.add(new TermQuery(new Term(Field.C, asNtURI(graphNode))));				
-		}
+		filters.add(graphTermQuery);				
 		
 		cmd.setFilterList(filters);
 	    return new DeepPagingIterator(searcher, cmd, sortSpec, consumer);
@@ -320,13 +318,11 @@ public final class LocalGraph extends GraphBase {
 			final Node o = triple.getObject();
 			if (o.isLiteral()) {
 				final String language = o.getLiteralLanguage();
-				if (Strings.isNotNullOrEmptyString(language)) {
-					builder
-						.append(Field.LANG)
-						.append(":")
-						.append(isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE)
-						.append(" AND ");
-				}
+				builder
+					.append(Field.LANG)
+					.append(":")
+					.append(isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE)
+					.append(" AND ");
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
 				final RDFDatatype dataType = o.getLiteralDatatype();
@@ -337,11 +333,13 @@ public final class LocalGraph extends GraphBase {
 		}
 			
 		
-		if (graphNode != null) {
-			builder.append(" AND ").append(Field.C).append(":\"").append(graphNodeStringified).append("\"");
-		}
-		
-		return builder.toString();
+		return builder
+			.append(" AND ")
+			.append(Field.C)
+			.append(":\"")
+			.append(graphNodeStringified)
+			.append("\"")
+			.toString();
 	}	
 	
 	/**
@@ -353,10 +351,10 @@ public final class LocalGraph extends GraphBase {
 	 * @return a language {@link TermQuery} from the cache.
 	 */
 	TermQuery languageTermQuery(final String language) {
-		TermQuery query = languageTermQueries.get(language);
+		TermQuery query = LANGUAGE_TERM_QUERIES.get(language);
 		if (query == null) {
 			query = new TermQuery(new Term(Field.LANG, language));
-			languageTermQueries.put(language, query);
+			LANGUAGE_TERM_QUERIES.put(language, query);
 		}
 		return query;
 	}
