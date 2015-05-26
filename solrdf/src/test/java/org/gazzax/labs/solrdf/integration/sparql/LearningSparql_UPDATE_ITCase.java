@@ -66,12 +66,12 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 	}
 	
 	@Test
-	public void insertDataKeyword() throws Exception {
+	public void insertData() throws Exception {
 		executeUpdate(misteryGuest("ex312.ru"));
 	}
 	
 	@Test
-	public void insertKeyword() throws Exception {
+	public void insert() throws Exception {
 		executeUpdate(misteryGuest("ex313.ru", "ex012.ttl"));
 	}	
 	
@@ -86,25 +86,30 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 	}	
 	
 	@Test
-	public void deleteDataKeyword() throws Exception {
+	public void deleteData() throws Exception {
 		selectTest(misteryGuest("ex547.rq", "exxyz.ttl"));
 		executeUpdate(misteryGuest("ex548.ru"));
 		selectTest(misteryGuest("ex547.rq"));		
 	}	
 	
 	@Test
-	public void deleteKeyword_I() throws Exception {
+	public void delete_I() throws Exception {
 		executeUpdate(misteryGuest("ex549.ru", "exxyz.ttl"));
 	}		
 	
 	@Test
-	public void deleteKeyword_II() throws Exception {
+	public void delete_II() throws Exception {
 		executeUpdate(misteryGuest("ex550.ru", "exxyz.ttl"));
 	}			
 	
 	@Test
-	public void deleteKeyword_III() throws Exception {
+	public void delete_III() throws Exception {
 		executeUpdate(misteryGuest("ex551.ru", "exxyz.ttl"));
+	}
+
+	@Test
+	public void clear() throws Exception {
+		executeUpdate(misteryGuest("ex324.ru", "ex012.ttl"));
 	}
 	
 	@Test
@@ -124,6 +129,7 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 	public void insertDataInNamedGraphs() throws Exception {
 		executeUpdate(misteryGuest("ex330.ru"));
 		executeUpdate(misteryGuest("ex331.ru"));
+		executeUpdate(misteryGuest("ex333.ru"));
 		selectTest(misteryGuest("ex332.rq"));
 	}	
 
@@ -135,24 +141,119 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 	}	
 
 	@Test
-	public void createGraph() throws Exception {
-		executeUpdate(misteryGuest("ex340.ru"));
+	public void droppingNamedGraph() throws Exception {
+		executeUpdate(misteryGuest("ex330.ru"));
+		executeUpdate(misteryGuest("ex331.ru"));
+		executeUpdate(misteryGuest("ex334.ru"));
+		executeUpdate(misteryGuest("ex335.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+
+	@Test
+	public void droppingDefaultGraph() throws Exception {
+		executeUpdate(misteryGuest("ex330.ru"));
+		executeUpdate(misteryGuest("ex331.ru"));
+		executeUpdate(misteryGuest("ex334.ru"));
+		executeUpdate(misteryGuest("ex336.ru"));
+		selectTest(misteryGuest("ex332.rq"));
 	}	
 	
+	@Test
+	public void droppingAllNamedGraphs() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex339.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+
+	@Test
+	public void createGraph() throws Exception {
+		executeUpdate(misteryGuest("ex340.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+
 	@Test
 	public void withKeyword() throws Exception {
 		executeUpdate(misteryGuest("ex342.ru"));
 	}	
 	
 	@Test
-	public void copyKeyword() throws Exception {
+	public void usingKeyword() throws Exception {
+		executeUpdate(misteryGuest("ex342.ru"));
+		executeUpdate(misteryGuest("ex343.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void usingNamedKeyword() throws Exception {
+		executeUpdate(misteryGuest("ex342.ru"));
+		executeUpdate(misteryGuest("ex345.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void copyingGraphs() throws Exception {
 		executeUpdate(misteryGuest("ex338.ru"));
 		executeUpdate(misteryGuest("ex503.ru"));		
 	}	
 
 	@Test
-	public void moveKeyword() throws Exception {
+	public void movingGraphs() throws Exception {
 		executeUpdate(misteryGuest("ex338.ru"));
 		executeUpdate(misteryGuest("ex505.ru"));	
+	}		
+	
+	@Test
+	public void deletingGraphsWithDeleteData() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex346.ru"));	
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void deletingGraphsWithDelete() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex347.ru"));	
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void deletingGraphsWithDeleteAndWith() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex348.ru"));	
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void replaceData() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex349.ru"));	
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void replaceDataWith() throws Exception {
+		executeUpdate(misteryGuest("ex338.ru"));
+		executeUpdate(misteryGuest("ex350.ru"));	
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void dropAllAndCreateSomeData() throws Exception {
+		executeUpdate(misteryGuest("ex351.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}
+	
+	@Test
+	public void dropAllInsertAndChangeSomeData_I() throws Exception {
+		executeUpdate(misteryGuest("ex351.ru"));
+		executeUpdate(misteryGuest("ex352.ru"));
+		selectTest(misteryGuest("ex332.rq"));
+	}	
+	
+	@Test
+	public void dropAllInsertAndChangeSomeData_II() throws Exception {
+		executeUpdate(misteryGuest("ex351.ru"));
+		executeUpdate(misteryGuest("ex353.ru"));
+		selectTest(misteryGuest("ex354.rq"));
 	}		
 }
