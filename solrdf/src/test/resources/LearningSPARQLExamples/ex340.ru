@@ -2,5 +2,5 @@
 
 PREFIX d: <http://learningsparql.com/ns/data#>
 
-CREATE GRAPH d:g3
+CREATE GRAPH d:g2
 

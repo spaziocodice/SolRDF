@@ -12,6 +12,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -33,6 +34,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -393,16 +395,25 @@ public abstract class IntegrationTestSupertypeLayer {
 		}
 		commitChanges();
 		
-		final Model model = (data.graphURI != null) ? DATASET.getModel(data.graphURI) : DATASET.getModel();
+		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();
+		if (nodes != null) {
+			while (nodes.hasNext()) {
+				final Node graphNode = nodes.next();
+				final String graphUri = graphNode.getURI();
+				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
+				assertIsomorphic(inMemoryNamedModel, DATASET.getModel(graphUri), graphUri);		
+			}
+		}
 		
+		final Model model = (data.graphURI != null) ? DATASET.getModel(data.graphURI) : DATASET.getModel();
 		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
-		assertIsomorphic(memoryModel, model);
+		assertIsomorphic(memoryModel, model, null);
 	} 
 	
 	
 	protected abstract String examplesDirectory();
 	
-	protected void assertIsomorphic(final Model memoryModel, final Model solrdfModel) {
+	protected void assertIsomorphic(final Model memoryModel, final Model solrdfModel, final String uri) {
 		try {
 			assertTrue(solrdfModel.isIsomorphicWith(memoryModel));
 		} catch (Throwable exception) {
@@ -410,11 +421,12 @@ public abstract class IntegrationTestSupertypeLayer {
 			final StringWriter remoteModelWriter = new StringWriter();
 			RDFDataMgr.write(memoryModelWriter, memoryModel, RDFFormat.NTRIPLES) ;
 			RDFDataMgr.write(remoteModelWriter, solrdfModel, RDFFormat.NQUADS) ;
-			
-			log.debug("**** MEMORY MODEL AFTER LOAD ****");
+
+			final String name = uri != null ? uri : " (DEFAULT) ";
+			log.debug("**** MEMORY MODEL " + name + " ****");
 			log.debug(memoryModelWriter.toString());
-			log.debug("*********************************");
-			log.debug("**** REMOTE MODEL AFTER LOAD ****");
+			log.debug("");
+			log.debug("**** REMOTE MODEL " + name + " ****");
 			log.debug(remoteModelWriter.toString());
 			log.debug("*********************************");
 			throw exception;

@@ -1,3 +1,3 @@
 # filename: ex551.ru
 
-DELETE WHERE  { <http://www.worldcat.org/isbn/0062515861> ?p ?o }
+DELETE WHERE  { <http://www.worldcat.org/oclc/41238513> ?p ?o }
