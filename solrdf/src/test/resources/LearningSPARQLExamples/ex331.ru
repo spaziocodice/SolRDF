@@ -1,6 +1,6 @@
 # filename: ex331.ru
 
-PREFIX d:  <http://learningsparql.com/ns/data#>
+PREFIX d: <http://learningsparql.com/ns/data#>
 PREFIX dm: <http://learningsparql.com/ns/demo#>
 
 INSERT DATA

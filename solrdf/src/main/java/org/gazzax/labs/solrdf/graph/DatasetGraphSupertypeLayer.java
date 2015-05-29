@@ -63,9 +63,7 @@ public abstract class DatasetGraphSupertypeLayer extends DatasetGraphCaching {
 	}
 	
 	@Override
-	public Iterator<Node> listGraphNodes() {
-		return namedGraphs.keys();
-	}
+	protected abstract boolean _containsGraph(final Node graphNode);
 
 	@Override
 	protected void _close() {
@@ -101,7 +99,7 @@ public abstract class DatasetGraphSupertypeLayer extends DatasetGraphCaching {
 
 	@Override
 	protected Iterator<Quad> findInSpecificNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		return triples2quads(Quad.tripleInQuad, getGraph(g).find(s, p, o));
+		return triples2quads(g, getGraph(g).find(s, p, o));
 	}
 
 	@Override

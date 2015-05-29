@@ -32,6 +32,7 @@ import org.apache.solr.update.DeleteUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
@@ -41,12 +42,8 @@ import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.shared.AddDeniedException;
 import com.hp.hpl.jena.shared.DeleteDeniedException;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
-import com.hp.hpl.jena.util.iterator.NullIterator;
-import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
 /**
  * A local SolRDF {@link Graph} implementation.
@@ -54,14 +51,14 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public final class LocalGraph extends GraphBase {
+public final class LocalGraph extends SolRDFGraph {
 	
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
-	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
-	static final String NULL_LANGUAGE = "_";
-	static final String UNNAMED_GRAPH_PLACEHOLDER = "_";	
-	static final TermQuery NULL_LANGUAGE_TERM_QUERY = new TermQuery(new Term(Field.LANG, NULL_LANGUAGE));
+		
 	static final Map<String, TermQuery> LANGUAGE_TERM_QUERIES = new HashMap<String, TermQuery>();
+	
+	private SolrIndexSearcher.QueryCommand graphSizeQueryCommand;
+	private DeleteUpdateCommand clearCommand;
 	
 	final UpdateRequestProcessor updateProcessor;
 	final AddUpdateCommand updateCommand;
@@ -71,12 +68,7 @@ public final class LocalGraph extends GraphBase {
 	final QParser qParser;
 	
 	final TermQuery graphTermQuery;
-	final String graphNodeStringified;
-	
-	final int queryFetchSize;
-	
-	final GraphEventConsumer consumer;
-	
+		
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	
 	/**
@@ -136,15 +128,13 @@ public final class LocalGraph extends GraphBase {
 		final QParser qparser, 
 		final int fetchSize, 
 		final GraphEventConsumer consumer) {
-		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : UNNAMED_GRAPH_PLACEHOLDER;
+		super(graphNode, consumer, fetchSize);
 		this.graphTermQuery = new TermQuery(new Term(Field.C, graphNodeStringified));
 		this.request = request;
 		this.updateCommand = new AddUpdateCommand(request);
 		this.updateProcessor = request.getCore().getUpdateProcessingChain(null).createProcessor(request, response);
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
-		this.queryFetchSize = fetchSize;
-		this.consumer = consumer;
 	}
 	
 	@Override
@@ -201,16 +191,9 @@ public final class LocalGraph extends GraphBase {
 	
 	@Override
 	protected int graphBaseSize() {
-	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
-	    cmd.setQuery(new MatchAllDocsQuery());
-	    cmd.setLen(0);
-
-	    cmd.setFilterList(graphTermQuery);				
-		
 		final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 	    try {
-			searcher.search(result, cmd);
-		    return result.getDocListAndSet().docList.matches();
+		    return searcher.search(result, graphSizeQueryCommand()).getDocListAndSet().docList.matches();
 		} catch (final Exception exception) {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
@@ -219,11 +202,8 @@ public final class LocalGraph extends GraphBase {
 	
 	@Override
     public void clear() {
-		final DeleteUpdateCommand deleteCommand = new DeleteUpdateCommand(request);
-		deleteCommand.query = Field.C + ":\"" + graphNodeStringified + "\"";
-		deleteCommand.commitWithin = 1000;
 		try {
-			updateProcessor.processDelete(deleteCommand);
+			updateProcessor.processDelete(clearCommand());
 	        getEventManager().notifyEvent(this, GraphEvents.removeAll);
 		} catch (final Exception exception) {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
@@ -232,23 +212,7 @@ public final class LocalGraph extends GraphBase {
 	}
 	
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(final Triple pattern) {	
-		try {
-			return WrappedIterator.createNoRemove(query(pattern));
-		} catch (final SyntaxError exception) {
-			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
-			return new NullIterator<Triple>();
-		}
-	}
-	
-	/**
-	 * Executes a query using the given triple pattern.
-	 * 
-	 * @param pattern the triple pattern
-	 * @return an iterator containing matching triples.
-	 * @throws SyntaxError in case the query cannot be executed because syntax errors.
-	 */
-	Iterator<Triple> query(final Triple pattern) throws SyntaxError {
+	protected Iterator<Triple> query(final Triple pattern) throws SyntaxError {
 	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
 	    final SortSpec sortSpec = qParser != null ? qParser.getSort(true) : QueryParsing.parseSortSpec("id asc", request);
 	    cmd.setQuery(new MatchAllDocsQuery());
@@ -300,14 +264,23 @@ public final class LocalGraph extends GraphBase {
 	String deleteQuery(final Triple triple) {
 		final StringBuilder builder = new StringBuilder();
 		if (triple.getSubject().isConcrete()) {
-			builder.append(Field.S).append(":\"").append(asNt(triple.getSubject())).append("\"");
+			builder
+				.append(Field.S)
+				.append(":\"")
+				.append(asNt(triple.getSubject()))
+				.append("\"");
 		}
 		
 		if (triple.getPredicate().isConcrete()) {
 			if (builder.length() != 0) {
 				builder.append(" AND ");
 			}
-			builder.append(Field.P).append(":\"").append(asNtURI(triple.getPredicate())).append("\"");
+			
+			builder
+				.append(Field.P)
+				.append(":\"")
+				.append(asNtURI(triple.getPredicate()))
+				.append("\"");
 		}
 			
 		if (triple.getObject().isConcrete()) {
@@ -357,5 +330,44 @@ public final class LocalGraph extends GraphBase {
 			LANGUAGE_TERM_QUERIES.put(language, query);
 		}
 		return query;
+	}
+	
+	/**
+	 * Graph size query command lazy loader.
+	 * 
+	 * @return the graph size query command.
+	 */
+	SolrIndexSearcher.QueryCommand graphSizeQueryCommand() {
+		if (graphSizeQueryCommand == null) {
+			graphSizeQueryCommand = new SolrIndexSearcher.QueryCommand();
+			graphSizeQueryCommand.setQuery(new MatchAllDocsQuery());
+			graphSizeQueryCommand.setLen(0);
+			graphSizeQueryCommand.setFilterList(graphTermQuery);	
+		}
+		return graphSizeQueryCommand;
+	}
+	
+	/**
+	 * Clear graph command lazy loader.
+	 * 
+	 * @return the clear graph command. 
+	 */
+	DeleteUpdateCommand clearCommand() {
+		if (clearCommand == null) {
+			clearCommand = new DeleteUpdateCommand(request);
+			clearCommand.query = 
+					new StringBuilder(Field.C)
+						.append(":\"")
+						.append(graphNodeStringified)
+						.append("\"")
+						.toString();
+			clearCommand.commitWithin = 1000;			
+		}
+		return clearCommand;
+	}
+	
+	@Override
+	protected Log logger() {
+		return LOGGER;
 	}
 }

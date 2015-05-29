@@ -145,8 +145,10 @@ public class SparqlSearchComponent extends SearchComponent {
 				throw new IllegalArgumentException(message);
 			}
 	    } catch (final SyntaxError exception) {
+	    	LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 	    	throw new SolrException(ErrorCode.BAD_REQUEST, exception);
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new IOException(exception);
 		}		
 	}

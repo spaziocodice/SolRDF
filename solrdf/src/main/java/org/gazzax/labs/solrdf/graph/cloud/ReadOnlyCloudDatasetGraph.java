@@ -2,8 +2,13 @@ package org.gazzax.labs.solrdf.graph.cloud;
 
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
@@ -12,8 +17,10 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.QParser;
 import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.NTriples;
 import org.gazzax.labs.solrdf.graph.DatasetGraphSupertypeLayer;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 
 import com.hp.hpl.jena.graph.Graph;
@@ -40,7 +47,7 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	public ReadOnlyCloudDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response) {
-		super(request, response, null, null);
+		this(request, response, null, null);
 	}	
 	
 	/**
@@ -68,19 +75,41 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return new ReadOnlyCloudGraph(graphNode, cloud, qParser, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
+		return new ReadOnlyCloudGraph(graphNode, cloud, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return new ReadOnlyCloudGraph(null, cloud, qParser, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
+		return new ReadOnlyCloudGraph(null, cloud, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
+	@Override
+	public Iterator<Node> listGraphNodes() {
+		final SolrQuery query = new SolrQuery("*:*");
+		query.setFacet(true);
+		query.addFacetField(Field.C);
+		query.setFacetMinCount(1);
+		final List<Node> graphs = new ArrayList<Node>();
+		try {
+			final QueryResponse response = cloud.query(query);
+			final FacetField graphFacetField = response.getFacetField(Field.C);
+			if (graphFacetField != null) {
+				for (final FacetField.Count graphName : graphFacetField.getValues()) {
+					if (!SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER.equals(graphName.getName())) {
+						graphs.add(NTriples.asURI(graphName.getName()));
+					}
+				}
+			}
+			return graphs.iterator();
+		} catch (final Exception exception) {
+			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
+		}	
+	}
+	
 	@Override
 	protected boolean _containsGraph(final Node graphNode) {
 		final SolrQuery query = new SolrQuery("*:*");
 		query.addFilterQuery(Field.C + ":\"" + asNtURI(graphNode) + "\"");
-		query.setRequestHandler("/solr-query");
 		query.setRows(0);
 		try {
 			final QueryResponse response = cloud.query(query);

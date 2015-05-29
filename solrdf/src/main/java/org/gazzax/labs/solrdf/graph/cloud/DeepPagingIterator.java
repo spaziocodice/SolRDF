@@ -55,10 +55,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 		public boolean hasNext() {
 			try {
 				final QueryResponse response = cloud.query(query);
-				
-				// FIXME
-//			    consumer.onDocSet(result.getDocListAndSet().docSet);
-//			    queryCommand.clearFlags(SolrIndexSearcher.GET_DOCSET);
 			    
 				sentCursorMark = query.get("cursorMark");
 				nextCursorMark = response.getNextCursorMark();

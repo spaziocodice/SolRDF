@@ -19,21 +19,19 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SimpleFacets;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.search.DocSet;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
+import org.gazzax.labs.solrdf.graph.DatasetGraphSupertypeLayer;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
-import com.hp.hpl.jena.sparql.core.Quad;
 
 /**
  * A local SolRDF (Solr low level) implementation of a Jena Dataset.
@@ -41,7 +39,7 @@ import com.hp.hpl.jena.sparql.core.Quad;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class LocalDatasetGraph extends DatasetGraphCaching {
+public class LocalDatasetGraph extends DatasetGraphSupertypeLayer {
 	final static Log LOGGER = new Log(LoggerFactory.getLogger(LocalDatasetGraph.class));
 	final static SolrIndexSearcher.QueryCommand GET_GRAPH_NODES_QUERY = new SolrIndexSearcher.QueryCommand();
 	static {
@@ -51,29 +49,6 @@ public class LocalDatasetGraph extends DatasetGraphCaching {
 	}
 	
 	final static SolrParams GET_GRAPH_NODES_QUERY_PARAMS = new ModifiableSolrParams().add(FacetParams.FACET_MINCOUNT, "1");
-	
-	final static GraphEventConsumer NULL_GRAPH_EVENT_CONSUMER = new GraphEventConsumer() {
-		
-		@Override
-		public boolean requireTripleBuild() {
-			return true;
-		}
-		
-		@Override
-		public void onDocSet(final DocSet docSet) {
-			// Nothing to be done here.
-		}
-		
-		@Override
-		public void afterTripleHasBeenBuilt(final Triple triple, final int docId) {
-			// Nothing to be done here.
-		}
-	};
-	
-	final SolrQueryRequest request;
-	final SolrQueryResponse response;
-	final QParser qParser;
-	final GraphEventConsumer listener;
 	
 	/**
 	 * Builds a new Dataset graph with the given data.
@@ -98,10 +73,7 @@ public class LocalDatasetGraph extends DatasetGraphCaching {
 			final SolrQueryResponse response,
 			final QParser qParser,
 			final GraphEventConsumer listener) {
-		this.request = request;
-		this.response = response;
-		this.qParser = qParser;
-		this.listener = listener != null ? listener : NULL_GRAPH_EVENT_CONSUMER;
+		super(request, response, qParser, listener);
 	}
 	
 	@Override
@@ -116,7 +88,7 @@ public class LocalDatasetGraph extends DatasetGraphCaching {
 			final NamedList<Integer> list = facets.getTermCounts(Field.C, result.getDocSet());
 			final List<Node> graphs = new ArrayList<Node>();
 			for (final Entry<String, Integer> entry : list) {
-				if (!LocalGraph.UNNAMED_GRAPH_PLACEHOLDER.equals(entry.getKey())) {
+				if (!SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER.equals(entry.getKey())) {
 					graphs.add(NTriples.asURI(entry.getKey()));
 				}
 			}
@@ -128,11 +100,6 @@ public class LocalDatasetGraph extends DatasetGraphCaching {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}	    
-	}
-
-	@Override
-	protected void _close() {
-		// Nothing to be done here...
 	}
 
 	@Override
@@ -160,42 +127,5 @@ public class LocalDatasetGraph extends DatasetGraphCaching {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}	    
-	}
-
-	@Override
-	protected void addToDftGraph(final Node s, final Node p, final Node o) {
-		getDefaultGraph().add(new Triple(s, p, o));
-	}
-
-	@Override
-	protected void addToNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		getGraph(g).add(Triple.create(s, p, o));
-	}
-
-	@Override
-	protected void deleteFromDftGraph(final Node s, final Node p, final Node o) {
-		getDefaultGraph().delete(new Triple(s, p, o));
-	}
-
-	@Override
-	protected void deleteFromNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		if (containsGraph(g)) {
-			getGraph(g).delete(Triple.createMatch(s, p, o));
-		}
-	}
-
-	@Override
-	protected Iterator<Quad> findInDftGraph(final Node s, final Node p, final Node o) {
-		return triples2quads(Quad.tripleInQuad, getDefaultGraph().find(s, p, o));
-	}
-
-	@Override
-	protected Iterator<Quad> findInSpecificNamedGraph(final Node g, final Node s, final Node p, final Node o) {
-		return triples2quads(g, getGraph(g).find(s, p, o));
-	}
-
-	@Override
-	protected Iterator<Quad> findInAnyNamedGraphs(final Node s, final Node p, final Node o) {
-		return triples2quads(Quad.tripleInQuad, getDefaultGraph().find(s, p, o));
 	}
 }

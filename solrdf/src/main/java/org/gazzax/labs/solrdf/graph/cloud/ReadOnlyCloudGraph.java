@@ -9,26 +9,25 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
-import org.apache.solr.search.QParser;
 import org.apache.solr.search.SyntaxError;
 import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Strings;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalGraph;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.impl.GraphBase;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
-import com.hp.hpl.jena.util.iterator.NullIterator;
-import com.hp.hpl.jena.util.iterator.WrappedIterator;
+import com.hp.hpl.jena.shared.AddDeniedException;
 
 /**
  * A read only SolRDF Cloud {@link Graph} implementation.
@@ -39,18 +38,14 @@ import com.hp.hpl.jena.util.iterator.WrappedIterator;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public final class ReadOnlyCloudGraph extends GraphBase {
-	static final int DEFAULT_QUERY_FETCH_SIZE = 1000;
-	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
-	final QParser qParser;
+public final class ReadOnlyCloudGraph extends SolRDFGraph {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(ReadOnlyCloudGraph.class));
 	
-	final Node graphNode;
-	final String graphNodeStringified;
+	final FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	final SolrServer cloud;
-	final int queryFetchSize;
-	
-	final GraphEventConsumer consumer;
 
+	private SolrQuery graphSizeQuery;
+	
 	/**
 	 * Builds a new {@link ReadOnlyCloudGraph} with the given data.
 	 * 
@@ -64,105 +59,90 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 	ReadOnlyCloudGraph(
 		final Node graphNode, 
 		final SolrServer cloud, 
-		final QParser qparser, 
 		final int fetchSize, 
 		final GraphEventConsumer consumer) {
-		this.graphNode = graphNode;
-		this.graphNodeStringified = (graphNode != null) ? asNtURI(graphNode) : null;
-		this.qParser = qparser;
-		this.queryFetchSize = fetchSize;
-		this.consumer = consumer;
+		super(graphNode, consumer, fetchSize);
 		this.cloud = cloud;
 	}
 	
 	@Override
 	public void performAdd(final Triple triple) {
-//		throw new AddDeniedException("Sorry, this is a read-only dataset graph.", triple);
+		LOGGER.error(MessageCatalog._00114_ADD_NOT_ALLOWED);
+		throw new AddDeniedException(MessageCatalog._00114_ADD_NOT_ALLOWED, triple);
 	}
 	
 	@Override
 	public void performDelete(final Triple triple) {
-//		throw new AddDeniedException("Sorry, this is a read-only dataset graph.", triple);
+		LOGGER.error(MessageCatalog._00115_DELETE_NOT_ALLOWED);
+		throw new AddDeniedException(MessageCatalog._00115_DELETE_NOT_ALLOWED, triple);
 	}
 	
 	@Override
 	protected int graphBaseSize() {
-		final SolrQuery query = new SolrQuery("*:*");
-		if (graphNodeStringified != null) {
-			query.addFilterQuery("c:\"" + graphNodeStringified + "\"");
-		}
-		query.setRequestHandler("/solr-query");
-		query.setRows(0);
 		try {
-			final QueryResponse response = cloud.query(query);
-			return (int)response.getResults().getNumFound();
+			return (int)cloud.query(graphSizeQuery()).getResults().getNumFound();
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}	  
 	}
 	
 	@Override
     public void clear() {
-//		throw new AddDeniedException("Sorry, this is a read-only dataset graph.", triple);
+		LOGGER.error(MessageCatalog._00116_CLEAR_NOT_ALLOWED);
+		throw new AddDeniedException(MessageCatalog._00116_CLEAR_NOT_ALLOWED);
 	}
 	
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(final Triple pattern) {	
-		try {
-			return WrappedIterator.createNoRemove(query(pattern));
-		} catch (final SyntaxError error) {
-			return new NullIterator<Triple>();
-		}
-	}
-	
-	/**
-	 * Executes a query using the given triple pattern.
-	 * 
-	 * @param pattern the triple pattern
-	 * @return an iterator containing matching triples.
-	 * @throws SyntaxError in case the query cannot be executed because syntax errors.
-	 */
-	Iterator<Triple> query(final Triple pattern) throws SyntaxError {
+	protected Iterator<Triple> query(final Triple pattern) throws SyntaxError {
 		final SolrQuery query = new SolrQuery("*:*");
-		query.setSort("id", ORDER.asc);
-		query.setRequestHandler("/solr-query");
+		query.setSort(Field.ID, ORDER.asc);
 	    query.setRows(queryFetchSize);
-	    // ??
-	    // cmd.setFlags(cmd.getFlags() | SolrIndexSearcher.GET_DOCSET);
 	    
 		final Node s = pattern.getMatchSubject();
 		final Node p = pattern.getMatchPredicate();
 		final Node o = pattern.getMatchObject();
 		
 		if (s != null) {
-			query.addFilterQuery(Field.S + ":\"" + asNt(s) + "\"");
+			query.addFilterQuery(fq(Field.S, asNt(s)));
 		}
 		
 		if (p != null) {
-			query.addFilterQuery(Field.P + ":\"" + asNtURI(p) + "\"");
+			query.addFilterQuery(fq(Field.P, asNtURI(p)));
 		}
 		
 		if (o != null) {
 			if (o.isLiteral()) {
 				final String language = o.getLiteralLanguage();
-				if (Strings.isNotNullOrEmptyString(language)) {
-					query.addFilterQuery(Field.LANG + ":" + language);
-				}
+				query.addFilterQuery(fq(Field.LANG, (Strings.isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE)));
 				
 				final String literalValue = o.getLiteralLexicalForm(); 
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(query, literalValue);
 			} else {
-				query.addFilterQuery(Field.TEXT_OBJECT + ":\"" + StringEscapeUtils.escapeXml(asNt(o)) + "\"");		
+				query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));		
 			}
 		}
 		
-		if (graphNode != null) {
-			query.addFilterQuery(Field.C + ":\"" + asNtURI(graphNode) + "\"");			
-		}
+		query.addFilterQuery(fq(Field.C, graphNodeStringified));			
 		
 	    return new DeepPagingIterator(cloud, query, consumer);
 	}	
+	
+	/**
+	 * Builds a filter query using the given (field) name and value.
+	 * 
+	 * @param fieldName the field name.
+	 * @param fieldValue the field value.
+	 * @return a filter query using the given (field) name and value.
+	 */
+	String fq(final String fieldName, final String fieldValue) {
+		return new StringBuilder(fieldName)
+			.append(":\"")
+			.append(fieldValue)
+			.append("\"")
+			.toString();
+	}
 	
 	/**
 	 * Builds a DELETE query.
@@ -207,10 +187,32 @@ public final class ReadOnlyCloudGraph extends GraphBase {
 			}
 		}
 			
-		if (graphNode != null) {
-			builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
-		}
+		builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
 		
 		return builder.toString();
+	}	
+	
+	/**
+	 * Graph size query command lazy loader.
+	 * 
+	 * @return the graph size query command.
+	 */
+	SolrQuery graphSizeQuery() {
+		if (graphSizeQuery == null) {
+			graphSizeQuery = new SolrQuery("*:*");
+			graphSizeQuery.addFilterQuery(
+					new StringBuilder(Field.C)
+						.append(":\"")
+						.append(graphNodeStringified)
+						.append("\"")
+						.toString());
+			graphSizeQuery.setRows(0);		
+		} 
+		return graphSizeQuery;
+	}
+	
+	@Override
+	protected Log logger() {
+		return LOGGER;
 	}	
 }

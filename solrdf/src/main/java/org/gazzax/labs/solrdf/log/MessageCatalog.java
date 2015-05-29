@@ -40,4 +40,7 @@ public interface MessageCatalog {
 	String _00111_UNKNOWN_QUERY_TYPE = PREFIX + "-00111> : Unknown / unsupported query type %s";
 	String _00112_GRAPHS_TOTAL_COUNT = PREFIX + "-00112> : SolRDF has %s graphs.";
 	String _00113_NWS_FAILURE = PREFIX + "-00113> : An error has been detected. See below for further details.";
+	String _00114_ADD_NOT_ALLOWED = PREFIX + "-00114> : Add operation not allowed as this is a read-only view of the underlying graph.";
+	String _00115_DELETE_NOT_ALLOWED = PREFIX + "-00114> : Delete operation not allowed as this is a read-only view of the underlying graph.";
+	String _00116_CLEAR_NOT_ALLOWED = PREFIX + "-00115> : Clear operation not allowed as this is a read-only view of the underlying graph.";
 }
