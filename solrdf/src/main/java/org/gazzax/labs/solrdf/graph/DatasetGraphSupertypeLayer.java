@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.graph;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.solr.request.SolrQueryRequest;
@@ -20,6 +21,7 @@ import com.hp.hpl.jena.sparql.core.Quad;
  * @since 1.0
  */
 public abstract class DatasetGraphSupertypeLayer extends DatasetGraphCaching {
+	protected final static Iterator<Node> EMPTY_GRAPHS_ITERATOR = Collections.emptyIterator();
 	protected final static GraphEventConsumer NULL_GRAPH_EVENT_CONSUMER = new GraphEventConsumer() {
 		
 		@Override

@@ -227,7 +227,7 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 	public void replaceData() throws Exception {
 		executeUpdate(misteryGuest("ex338.ru"));
 		executeUpdate(misteryGuest("ex349.ru"));	
-		selectTest(misteryGuest("ex332.rq"));
+//		selectTest(misteryGuest("ex332.rq"));
 	}	
 	
 	@Test

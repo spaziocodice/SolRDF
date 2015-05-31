@@ -23,6 +23,7 @@ import org.apache.jena.riot.RDFFormat;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.XMLResponseParser;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -144,7 +145,13 @@ public abstract class IntegrationTestSupertypeLayer {
 	 */
 	protected static void commitChanges() throws SolrServerException, IOException {
 		solr.setParser(new XMLResponseParser());
-		solr.commit();		
+//		solr.commit(true, true, true);		
+		
+		UpdateRequest req = new UpdateRequest();
+		req.setAction(UpdateRequest.ACTION.COMMIT, true, true);
+		req.setParam("openSearcher", "true");
+		req.process(solr);  
+		  
 		resetSolRDFXmlResponseParser();
 	}	
 	
@@ -393,6 +400,7 @@ public abstract class IntegrationTestSupertypeLayer {
 		} else {
 			DATASET.add(memoryModel);
 		}
+		
 		commitChanges();
 		
 		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();

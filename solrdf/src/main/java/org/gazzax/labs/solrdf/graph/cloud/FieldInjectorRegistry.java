@@ -3,8 +3,8 @@ package org.gazzax.labs.solrdf.graph.cloud;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.gazzax.labs.solrdf.Field;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
@@ -79,12 +79,12 @@ class FieldInjectorRegistry {
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
 		@Override
 		public void addFilterConstraint(final SolrQuery query, final String value) {
-			query.addFilterQuery(Field.TEXT_OBJECT + ":\"" + StringEscapeUtils.escapeXml(value) + "\"");
+			query.addFilterQuery(Field.TEXT_OBJECT + ":\"" + ClientUtils.escapeQueryChars(value) + "\"");
 		}		
 		
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.TEXT_OBJECT).append(":\"").append(value).append("\"");
+			builder.append(Field.TEXT_OBJECT).append(":\"").append(ClientUtils.escapeQueryChars(value) + "\"");
 		}				
 	};
 	

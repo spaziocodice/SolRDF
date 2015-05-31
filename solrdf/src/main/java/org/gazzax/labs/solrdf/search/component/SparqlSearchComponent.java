@@ -1,13 +1,16 @@
 package org.gazzax.labs.solrdf.search.component;
 
 import static org.gazzax.labs.solrdf.F.isHybrid;
+import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 
 import java.io.IOException;
 
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.SolrQueryRequest;
@@ -43,6 +46,20 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 public class SparqlSearchComponent extends SearchComponent {
 	private static final String DEFAULT_DEF_TYPE = "sparql";
 	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SparqlSearchComponent.class));
+	
+	private CloudSolrServer server;
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	// FIXME: to be handled better
+	public void init(NamedList args) {
+		super.init(args);
+		final String zkAddress = System.getProperty("zkHost");
+		if (isNotNullOrEmptyString(zkAddress)) {
+			this.server= new CloudSolrServer(zkAddress);
+			this.server.setDefaultCollection("store");
+		}
+	}
 	
 	@Override
 	public int distributedProcess(final ResponseBuilder responseBuilder) throws IOException {
@@ -218,8 +235,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	 */
 	DatasetGraph datasetGraph(final SolrQueryRequest request, final SolrQueryResponse response, final QParser parser, final GraphEventConsumer consumer) {
 		return request.getCore().getCoreDescriptor().getCoreContainer().isZooKeeperAware() 
-				? new ReadOnlyCloudDatasetGraph(request, response)
+				? new ReadOnlyCloudDatasetGraph(request, response, server)
 				: new LocalDatasetGraph(request, response, parser, consumer);
 	}
-	
 }

@@ -5,7 +5,6 @@ import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 
 import java.util.Iterator;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServer;
@@ -120,7 +119,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(query, literalValue);
 			} else {
-				query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));		
+				query.addFilterQuery(fq(Field.TEXT_OBJECT, asNt(o)));		
 			}
 		}
 		
@@ -138,9 +137,8 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	 */
 	String fq(final String fieldName, final String fieldValue) {
 		return new StringBuilder(fieldName)
-			.append(":\"")
-			.append(fieldValue)
-			.append("\"")
+			.append(":")
+			.append(ClientUtils.escapeQueryChars(fieldValue))
 			.toString();
 	}
 	

@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.graph.standalone;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ class FieldInjectorRegistry {
 	final FieldInjector numericFieldInjector = new FieldInjector() {
 		@Override
 		public void inject(final SolrInputDocument document, final Object value) {
-			document.setField(Field.NUMERIC_OBJECT, value);
+			document.setField(Field.NUMERIC_OBJECT, value instanceof BigDecimal ? ((BigDecimal)value).doubleValue() : value);
 		}
 		
 		@Override

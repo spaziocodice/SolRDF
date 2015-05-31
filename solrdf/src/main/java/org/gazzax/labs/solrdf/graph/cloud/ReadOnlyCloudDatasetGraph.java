@@ -14,14 +14,15 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.search.QParser;
 import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
 import org.gazzax.labs.solrdf.graph.DatasetGraphSupertypeLayer;
-import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.graph.SolRDFGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -36,42 +37,31 @@ import com.hp.hpl.jena.graph.Node;
  * @since 1.0
  */
 public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(ReadOnlyCloudDatasetGraph.class));
+	
 	protected CloudSolrServer cloud;
 	
-	/**
-	 * Builds a new Dataset graph with the given data.
-	 * 
-	 * @param request the Solr query request.
-	 * @param response the Solr query response.
-	 */
-	public ReadOnlyCloudDatasetGraph(
-			final SolrQueryRequest request, 
-			final SolrQueryResponse response) {
-		this(request, response, null, null);
-	}	
+	final static SolrQuery LIST_GRAPHS_QUERY = new SolrQuery("*:*");
+	static {
+		LIST_GRAPHS_QUERY.setFacet(true);
+		LIST_GRAPHS_QUERY.addFilterQuery(Field.C + ":" + SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER);
+		LIST_GRAPHS_QUERY.addFacetField(Field.C);
+		LIST_GRAPHS_QUERY.setFacetMinCount(1);
+	}
 	
 	/**
 	 * Builds a new Dataset graph with the given data.
 	 * 
 	 * @param request the Solr query request.
 	 * @param response the Solr query response.
-	 * @param qParser the (SPARQL) query parser.
-	 * 
 	 */
 	public ReadOnlyCloudDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response,
-			final QParser qParser,
-			final GraphEventConsumer listener) {
-		super(request, response, qParser, listener != null ? listener : NULL_GRAPH_EVENT_CONSUMER);
-		this.cloud = new CloudSolrServer(request.getCore().getCoreDescriptor().getCoreContainer().getZkController().getZkServerAddress());
-		this.cloud.setDefaultCollection(request.getCore().getName());
-	}
-
-	@Override
-	public void close() {
-		cloud.shutdown();
-	}
+			final CloudSolrServer server) {
+		super(request, response, null, NULL_GRAPH_EVENT_CONSUMER);
+		this.cloud = server;
+	}	
 	
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
@@ -85,23 +75,19 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 
 	@Override
 	public Iterator<Node> listGraphNodes() {
-		final SolrQuery query = new SolrQuery("*:*");
-		query.setFacet(true);
-		query.addFacetField(Field.C);
-		query.setFacetMinCount(1);
-		final List<Node> graphs = new ArrayList<Node>();
 		try {
-			final QueryResponse response = cloud.query(query);
+			final QueryResponse response = cloud.query(LIST_GRAPHS_QUERY);
 			final FacetField graphFacetField = response.getFacetField(Field.C);
-			if (graphFacetField != null) {
+			if (graphFacetField != null && graphFacetField.getValueCount() > 0) {
+				final List<Node> graphs = new ArrayList<Node>();				
 				for (final FacetField.Count graphName : graphFacetField.getValues()) {
-					if (!SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER.equals(graphName.getName())) {
-						graphs.add(NTriples.asURI(graphName.getName()));
-					}
+					graphs.add(NTriples.asURI(graphName.getName()));
 				}
+				return graphs.iterator();
 			}
-			return graphs.iterator();
+			return EMPTY_GRAPHS_ITERATOR;
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}	
 	}
@@ -115,6 +101,7 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 			final QueryResponse response = cloud.query(query);
 			return response.getResults().getNumFound() > 0;
 		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);
 		}			    
 	}

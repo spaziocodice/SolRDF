@@ -107,7 +107,9 @@
 		<profile>
 			<id>cloud</id>
 			<properties>
-				<listen.port>8983</listen.port>
+				<listen.port>8080</listen.port>
+				<index.data.dir>${project.build.directory}/data</index.data.dir>
+				<ulog.dir>${project.build.directory}/ulog</ulog.dir>
 			</properties>
 			<build>
 				<plugins>
@@ -124,10 +126,11 @@
 							</configuration>
 							<container>
 								<systemProperties>
+									<jetty.port>${listen.port}</jetty.port>
 									<solr.solr.home>${solr.home}</solr.solr.home>
-									<solr.data.dir>${project.build.directory}/data</solr.data.dir>
+									<solr.data.dir>${index.data.dir}</solr.data.dir>
 									<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
-									<solr.ulog.dir>${project.build.directory}/ulog</solr.ulog.dir>
+									<solr.ulog.dir>${ulog.dir}</solr.ulog.dir>
 									<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
 									<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
 									<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
@@ -239,6 +242,7 @@
 					</configuration>
 					<container>
 						<systemProperties>
+							<jetty.port>${listen.port}</jetty.port>
 							<solr.solr.home>${solr.home}</solr.solr.home>
 							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
 							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
