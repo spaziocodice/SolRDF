@@ -43,4 +43,5 @@ public interface MessageCatalog {
 	String _00114_ADD_NOT_ALLOWED = PREFIX + "-00114> : Add operation not allowed as this is a read-only view of the underlying graph.";
 	String _00115_DELETE_NOT_ALLOWED = PREFIX + "-00114> : Delete operation not allowed as this is a read-only view of the underlying graph.";
 	String _00116_CLEAR_NOT_ALLOWED = PREFIX + "-00115> : Clear operation not allowed as this is a read-only view of the underlying graph.";
+	String _00117_UTF8_NOT_SUPPORTED = PREFIX + "-00116> : URL cannot be properly encoded using UTF-8. As consequence of that the system will use the default platform encoding.";
 }
