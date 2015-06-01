@@ -44,7 +44,7 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	final static SolrQuery LIST_GRAPHS_QUERY = new SolrQuery("*:*");
 	static {
 		LIST_GRAPHS_QUERY.setFacet(true);
-		LIST_GRAPHS_QUERY.addFilterQuery(Field.C + ":" + SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER);
+		LIST_GRAPHS_QUERY.addFilterQuery("-" + Field.C + ":" + SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER);
 		LIST_GRAPHS_QUERY.addFacetField(Field.C);
 		LIST_GRAPHS_QUERY.setFacetMinCount(1);
 	}
