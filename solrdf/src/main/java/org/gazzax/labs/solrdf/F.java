@@ -4,10 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.util.ContentStream;
 import org.apache.solr.request.SolrQueryRequest;
+import org.gazzax.labs.solrdf.log.Log;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Booch Utility holding shared and global functions. 
@@ -16,6 +19,8 @@ import org.apache.solr.request.SolrQueryRequest;
  * @since 1.0
  */
 public abstract class F {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(F.class));
+	
 	/**
 	 * Returns true if the query is hybrid (e.g. SPARQL with Solr parameters)
 	 * 
@@ -48,4 +53,18 @@ public abstract class F {
 			IOUtils.closeQuietly(reader);
 		}
 	}
+	
+	/**
+	 * Builds a filter query using the given (field) name and value.
+	 * 
+	 * @param fieldName the field name.
+	 * @param fieldValue the field value.
+	 * @return a filter query using the given (field) name and value.
+	 */
+	public static String fq(final String fieldName, final String fieldValue) {
+			return new StringBuilder(fieldName)
+				.append(":")
+				.append(ClientUtils.escapeQueryChars(fieldValue))
+				.toString();
+	}	
 }

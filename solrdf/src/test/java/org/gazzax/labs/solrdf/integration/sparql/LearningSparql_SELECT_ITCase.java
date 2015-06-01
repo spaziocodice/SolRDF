@@ -29,6 +29,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
  * @see http://learningsparql.com
  */  
 public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
+	
 	@Test
 	public void queryWithPrefixes_I() throws Exception {
 		selectTest(misteryGuest("ex003.rq", "ex002.ttl"));		

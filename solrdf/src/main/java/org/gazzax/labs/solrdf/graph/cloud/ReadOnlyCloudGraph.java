@@ -1,14 +1,15 @@
 package org.gazzax.labs.solrdf.graph.cloud;
 
+import static org.gazzax.labs.solrdf.F.fq;
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 
 import java.util.Iterator;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.search.SyntaxError;
@@ -119,7 +120,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(query, literalValue);
 			} else {
-				query.addFilterQuery(fq(Field.TEXT_OBJECT, asNt(o)));		
+				query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));		
 			}
 		}
 		
@@ -129,65 +130,52 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	}	
 	
 	/**
-	 * Builds a filter query using the given (field) name and value.
-	 * 
-	 * @param fieldName the field name.
-	 * @param fieldValue the field value.
-	 * @return a filter query using the given (field) name and value.
-	 */
-	String fq(final String fieldName, final String fieldValue) {
-		return new StringBuilder(fieldName)
-			.append(":")
-			.append(ClientUtils.escapeQueryChars(fieldValue))
-			.toString();
-	}
-	
-	/**
 	 * Builds a DELETE query.
 	 * 
 	 * @param triple the triple (maybe a pattern?) that must be deleted.
 	 * @return a DELETE query.
 	 */
 	String deleteQuery(final Triple triple) {
-		final StringBuilder builder = new StringBuilder();
-		if (triple.getSubject().isConcrete()) {
-			builder.append(Field.S).append(":\"").append(ClientUtils.escapeQueryChars(asNt(triple.getSubject()))).append("\"");
-		}
-		
-		if (triple.getPredicate().isConcrete()) {
-			if (builder.length() != 0) {
-				builder.append(" AND ");
-			}
-			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
-		}
-			
-		if (triple.getObject().isConcrete()) {
-			if (builder.length() != 0) {
-				builder.append(" AND ");
-			}
-			
-			final Node o = triple.getObject();
-			if (o.isLiteral()) {
-				final String language = o.getLiteralLanguage();
-				if (Strings.isNotNullOrEmptyString(language)) {
-					builder
-						.append(Field.LANG)
-						.append(":")
-						.append(language)
-						.append(" AND ");
-				}
-				
-				final String literalValue = o.getLiteralLexicalForm(); 
-				final RDFDatatype dataType = o.getLiteralDatatype();
-				registry.get(dataType != null ? dataType.getURI() : null).addConstraint(builder, literalValue);
-			} else {
-				registry.catchAllInjector().addConstraint(builder, asNt(o));
-			}
-		}
-			
-		builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
-		
-		return builder.toString();
+		throw new IllegalArgumentException();
+//		final StringBuilder builder = new StringBuilder();
+//		if (triple.getSubject().isConcrete()) {
+//			builder.append(fq(Field.S, asNt(triple.getSubject()))); 
+//		}
+//		
+//		if (triple.getPredicate().isConcrete()) {
+//			if (builder.length() != 0) {
+//				builder.append(" AND ");
+//			}
+//			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
+//		}
+//			
+//		if (triple.getObject().isConcrete()) {
+//			if (builder.length() != 0) {
+//				builder.append(" AND ");
+//			}
+//			
+//			final Node o = triple.getObject();
+//			if (o.isLiteral()) {
+//				final String language = o.getLiteralLanguage();
+//				if (Strings.isNotNullOrEmptyString(language)) {
+//					builder
+//						.append(Field.LANG)
+//						.append(":")
+//						.append(language)
+//						.append(" AND ");
+//				}
+//				
+//				final String literalValue = o.getLiteralLexicalForm(); 
+//				final RDFDatatype dataType = o.getLiteralDatatype();
+//				registry.get(dataType != null ? dataType.getURI() : null).addConstraint(builder, literalValue);
+//			} else {
+//				registry.catchAllInjector().addConstraint(builder, asNt(o));
+//			}
+//		}
+//			
+//		builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
+//		
+//		return builder.toString();
 	}	
 	
 	/**

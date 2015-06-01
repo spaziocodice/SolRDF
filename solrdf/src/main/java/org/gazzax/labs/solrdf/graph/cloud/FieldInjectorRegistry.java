@@ -1,10 +1,12 @@
 package org.gazzax.labs.solrdf.graph.cloud;
 
+import static org.gazzax.labs.solrdf.F.fq;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.gazzax.labs.solrdf.Field;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
@@ -67,24 +69,24 @@ class FieldInjectorRegistry {
 	final FieldInjector dateTimeFieldInjector = new FieldInjector() {
 		@Override
 		public void addFilterConstraint(final SolrQuery query, final String value) {
-			query.addFilterQuery(Field.DATE_OBJECT + ":" + value);
+			query.addFilterQuery(fq(Field.DATE_OBJECT, value));
 		}				
 
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.DATE_OBJECT).append(":").append(value);
+			builder.append(fq(Field.DATE_OBJECT, value));
 		}		
 	};
 	
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
 		@Override
 		public void addFilterConstraint(final SolrQuery query, final String value) {
-			query.addFilterQuery(Field.TEXT_OBJECT + ":\"" + ClientUtils.escapeQueryChars(value) + "\"");
+			query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(value)));
 		}		
 		
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.TEXT_OBJECT).append(":\"").append(ClientUtils.escapeQueryChars(value) + "\"");
+			builder.append(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(value)));
 		}				
 	};
 	
