@@ -144,11 +144,10 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @throws IOException in case of I/O failure.
 	 */
 	protected static void commitChanges() throws SolrServerException, IOException {
-		solr.setParser(new XMLResponseParser());
-//		solr.commit(true, true, true);		
+		solr.setParser(new XMLResponseParser());	
 		
 		UpdateRequest req = new UpdateRequest();
-		req.setAction(UpdateRequest.ACTION.COMMIT, true, true);
+		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, true);
 		req.setParam("openSearcher", "true");
 		req.process(solr);  
 		  

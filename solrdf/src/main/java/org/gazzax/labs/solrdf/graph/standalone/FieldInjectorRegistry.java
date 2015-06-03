@@ -6,8 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringEscapeUtils;
+import static org.gazzax.labs.solrdf.F.fq;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -135,19 +134,19 @@ class FieldInjectorRegistry {
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
 		@Override
 		public void inject(final SolrInputDocument document, final Object value) {
-			document.setField(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(String.valueOf(value)));
+			document.setField(Field.TEXT_OBJECT, String.valueOf(value));
 		}
 
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
 			final PhraseQuery query = new PhraseQuery();
-			query.add(new Term(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(value)));
+			query.add(new Term(Field.TEXT_OBJECT, value));
 			filters.add(query);
 		}		
 		
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.TEXT_OBJECT).append(":\"").append(StringEscapeUtils.escapeXml(value)).append("\"");
+			builder.append(fq(Field.TEXT_OBJECT, value));
 		}				
 	};
 	
