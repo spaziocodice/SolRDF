@@ -119,6 +119,12 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		}
 	}
 
+	/**
+	 * Checks if the current (HTTP) request contains a valid body.
+	 * 
+	 * @param request the Solr request.
+	 * @return true if the current (HTTP) request contains a valid body, false otherwise.
+	 */
 	boolean isBodyNotEmpty(final SolrQueryRequest request) {
 		return request.getContentStreams() != null && request.getContentStreams().iterator().hasNext();
 	}

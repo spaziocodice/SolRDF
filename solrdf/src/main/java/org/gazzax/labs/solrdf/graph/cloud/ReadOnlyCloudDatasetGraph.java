@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.graph.cloud;
 
+import static org.gazzax.labs.solrdf.F.fq;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
 
 import java.util.ArrayList;
@@ -94,12 +95,11 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	
 	@Override
 	protected boolean _containsGraph(final Node graphNode) {
-		final SolrQuery query = new SolrQuery("*:*");
-		query.addFilterQuery(Field.C + ":\"" + asNtURI(graphNode) + "\"");
-		query.setRows(0);
+		final SolrQuery query = new SolrQuery("*:*")
+			.addFilterQuery(fq(Field.C, asNtURI(graphNode)))
+			.setRows(0);
 		try {
-			final QueryResponse response = cloud.query(query);
-			return response.getResults().getNumFound() > 0;
+			return cloud.query(query).getResults().getNumFound() > 0;
 		} catch (final Exception exception) {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
 			throw new SolrException(ErrorCode.SERVER_ERROR, exception);

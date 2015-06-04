@@ -3,15 +3,17 @@ package org.gazzax.labs.solrdf.graph.cloud;
 import static org.gazzax.labs.solrdf.F.fq;
 import static org.gazzax.labs.solrdf.NTriples.asNt;
 import static org.gazzax.labs.solrdf.NTriples.asNtURI;
+import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 
 import java.util.Iterator;
+import java.util.UUID;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.search.SyntaxError;
 import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
@@ -28,6 +30,7 @@ import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.shared.AddDeniedException;
+import com.hp.hpl.jena.shared.DeleteDeniedException;
 
 /**
  * A read only SolRDF Cloud {@link Graph} implementation.
@@ -67,14 +70,49 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	
 	@Override
 	public void performAdd(final Triple triple) {
-		LOGGER.error(MessageCatalog._00114_ADD_NOT_ALLOWED);
-		throw new AddDeniedException(MessageCatalog._00114_ADD_NOT_ALLOWED, triple);
+		final SolrInputDocument document = new SolrInputDocument();
+		document.setField(Field.C, graphNodeStringified);
+		document.setField(Field.S, asNt(triple.getSubject()));
+		document.setField(Field.P, asNtURI(triple.getPredicate()));
+		document.setField(Field.ID, UUID.nameUUIDFromBytes(
+				new StringBuilder()
+					.append(graphNodeStringified)
+					.append(triple.getSubject())
+					.append(triple.getPredicate())
+					.append(triple.getObject())
+					.toString().getBytes()).toString());
+		
+		final Node object = triple.getObject();
+		final String o = asNt(object);
+		document.setField(Field.O, o);
+
+		if (object.isLiteral()) {
+			final String language = object.getLiteralLanguage();
+			document.setField(Field.LANG, isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE);				
+
+			final RDFDatatype dataType = object.getLiteralDatatype();
+			final Object value = object.getLiteralValue();
+			registry.get(dataType != null ? dataType.getURI() : null).inject(document, value);
+		} else {
+			registry.catchAllFieldInjector.inject(document, o);
+		}			
+
+		try {
+			cloud.add(document);
+		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			throw new AddDeniedException(exception.getMessage(), triple);
+		}
 	}
 	
 	@Override
 	public void performDelete(final Triple triple) {
-		LOGGER.error(MessageCatalog._00115_DELETE_NOT_ALLOWED);
-		throw new AddDeniedException(MessageCatalog._00115_DELETE_NOT_ALLOWED, triple);
+		try {
+			cloud.deleteByQuery(deleteQuery(triple));
+		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			throw new DeleteDeniedException(exception.getMessage(), triple);
+		}	
 	}
 	
 	@Override
@@ -89,8 +127,12 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	
 	@Override
     public void clear() {
-		LOGGER.error(MessageCatalog._00116_CLEAR_NOT_ALLOWED);
-		throw new AddDeniedException(MessageCatalog._00116_CLEAR_NOT_ALLOWED);
+		try {
+			cloud.deleteByQuery(fq(Field.C, graphNodeStringified));
+		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			throw new DeleteDeniedException(exception.getMessage());
+		}	
 	}
 	
 	@Override
@@ -120,7 +162,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(query, literalValue);
 			} else {
-				query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));		
+				query.addFilterQuery(fq(Field.TEXT_OBJECT, asNt(o)));		
 			}
 		}
 		
@@ -136,47 +178,50 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	 * @return a DELETE query.
 	 */
 	String deleteQuery(final Triple triple) {
-		throw new IllegalArgumentException();
-//		final StringBuilder builder = new StringBuilder();
-//		if (triple.getSubject().isConcrete()) {
-//			builder.append(fq(Field.S, asNt(triple.getSubject()))); 
-//		}
-//		
-//		if (triple.getPredicate().isConcrete()) {
-//			if (builder.length() != 0) {
-//				builder.append(" AND ");
-//			}
-//			builder.append(Field.P).append(":\"").append(ClientUtils.escapeQueryChars(asNtURI(triple.getPredicate()))).append("\"");
-//		}
-//			
-//		if (triple.getObject().isConcrete()) {
-//			if (builder.length() != 0) {
-//				builder.append(" AND ");
-//			}
-//			
-//			final Node o = triple.getObject();
-//			if (o.isLiteral()) {
-//				final String language = o.getLiteralLanguage();
-//				if (Strings.isNotNullOrEmptyString(language)) {
-//					builder
-//						.append(Field.LANG)
-//						.append(":")
-//						.append(language)
-//						.append(" AND ");
-//				}
-//				
-//				final String literalValue = o.getLiteralLexicalForm(); 
-//				final RDFDatatype dataType = o.getLiteralDatatype();
-//				registry.get(dataType != null ? dataType.getURI() : null).addConstraint(builder, literalValue);
-//			} else {
-//				registry.catchAllInjector().addConstraint(builder, asNt(o));
-//			}
-//		}
-//			
-//		builder.append(" AND ").append(Field.C).append(":\"").append(ClientUtils.escapeQueryChars(graphNodeStringified)).append("\"");
-//		
-//		return builder.toString();
+		final StringBuilder builder = new StringBuilder();
+		if (triple.getSubject().isConcrete()) {
+			and(builder).append(fq(Field.S, asNt(triple.getSubject()))); 
+		}
+		
+		if (triple.getPredicate().isConcrete()) {
+			and(builder).append(fq(Field.P, asNtURI(triple.getPredicate())));
+		}
+			
+		if (triple.getObject().isConcrete()) {
+			and(builder);
+			
+			final Node o = triple.getObject();
+			if (o.isLiteral()) {
+				final String language = o.getLiteralLanguage();
+				if (Strings.isNotNullOrEmptyString(language)) {
+					builder
+						.append(fq(Field.LANG, language))
+						.append(" AND ");
+				}
+				
+				final String literalValue = o.getLiteralLexicalForm(); 
+				final RDFDatatype dataType = o.getLiteralDatatype();
+				registry.get(dataType != null ? dataType.getURI() : null).addConstraint(builder, literalValue);
+			} else {
+				registry.catchAllInjector().addConstraint(builder, asNt(o));
+			}
+		}
+		
+		return and(builder).append(fq(Field.C, graphNodeStringified)).toString();
 	}	
+	
+	/**
+	 * Adds an AND clause to a given query builder.
+	 * 
+	 * @param queryBuilder the query builder.
+	 * @return the query builder.
+	 */
+	final StringBuilder and(final StringBuilder queryBuilder) {
+		if (queryBuilder.length() != 0) {
+			queryBuilder.append(" AND ");
+		}
+		return queryBuilder;
+	}
 	
 	/**
 	 * Graph size query command lazy loader.
@@ -186,12 +231,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	SolrQuery graphSizeQuery() {
 		if (graphSizeQuery == null) {
 			graphSizeQuery = new SolrQuery("*:*");
-			graphSizeQuery.addFilterQuery(
-					new StringBuilder(Field.C)
-						.append(":\"")
-						.append(graphNodeStringified)
-						.append("\"")
-						.toString());
+			graphSizeQuery.addFilterQuery(fq(Field.C, graphNodeStringified));
 			graphSizeQuery.setRows(0);		
 		} 
 		return graphSizeQuery;

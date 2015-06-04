@@ -8,6 +8,7 @@ import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.SolrParams;
@@ -17,6 +18,8 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
+import org.gazzax.labs.solrdf.graph.cloud.ReadOnlyCloudDatasetGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
@@ -40,7 +43,16 @@ import com.hp.hpl.jena.update.UpdateRequest;
  */
 class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 	private final static Log LOGGER = new Log(LoggerFactory.getLogger(Sparql11UpdateRdfDataLoader.class));
-
+	private static CloudSolrServer CLUSTER;
+	static {
+		// FIXME: TBHB
+		final String zkAddress = System.getProperty("zkHost");
+		if (isNotNullOrEmptyString(zkAddress)) {
+			CLUSTER = new CloudSolrServer(zkAddress);
+			CLUSTER.setDefaultCollection("store");
+		}
+	}
+	
 	@Override
 	public void load(
 			final SolrQueryRequest request, 
@@ -63,7 +75,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 		execute(
 				usingList(parameters), 
 				updateRequest, 
-				new LocalDatasetGraph(request, response));
+				datasetGraph(request, response));
 
 	}
 	
@@ -76,9 +88,14 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 	 */
 	void execute(final UsingList list, final String updateRequests, final DatasetGraph datasetGraph) {
 		try {
-			UpdateAction.parseExecute(list, datasetGraph, new ByteArrayInputStream(updateRequests.getBytes("UTF-8")));		
+			UpdateAction.parseExecute(
+					list, 
+					datasetGraph, 
+					new ByteArrayInputStream(updateRequests.getBytes("UTF-8")));		
 		} catch (final Exception exception) {	
-			final String message = MessageFactory.createMessage(MessageCatalog._00099_INVALID_UPDATE_QUERY, updateRequests);
+			final String message = MessageFactory.createMessage(
+					MessageCatalog._00099_INVALID_UPDATE_QUERY, 
+					updateRequests);
 			LOGGER.error(message, exception);
 			throw new SolrException(ErrorCode.BAD_REQUEST, message);
 		}	
@@ -121,4 +138,19 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 		}        
         return result;
     }	
+    
+	/**
+	 * Creates an appropriate {@link DatasetGraph} for this SolRDF instance.
+	 * 
+	 * @param request the current Solr request
+	 * @param response the current Solr response.
+	 * @param parser the Query parser associated with the current request.
+	 * @param consumer a {@link GraphEventConsumer} for this query cycle.
+	 * @return an appropriate {@link DatasetGraph} for this SolRDF instance.
+	 */
+	DatasetGraph datasetGraph(final SolrQueryRequest request, final SolrQueryResponse response) {
+		return CLUSTER != null 
+				? new ReadOnlyCloudDatasetGraph(request, response, CLUSTER)
+				: new LocalDatasetGraph(request, response);
+	}    
 }	 
