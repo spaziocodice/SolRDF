@@ -122,6 +122,10 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected void clearDatasets() throws Exception {
 		clearData();
 		if (memoryDataset != null) {
+			for (final Iterator<String> graphsIterator = memoryDataset.listNames(); graphsIterator.hasNext();)
+			{
+				memoryDataset.getNamedModel(graphsIterator.next()).removeAll();
+			}
 			memoryDataset.getDefaultModel().removeAll();
 		}
 	}
@@ -135,7 +139,8 @@ public abstract class IntegrationTestSupertypeLayer {
 		solr.setParser(new XMLResponseParser());
 		solr.deleteByQuery("*:*");
 		commitChanges();
-		resetSolRDFXmlResponseParser();	}
+		resetSolRDFXmlResponseParser();	
+	}
 	
 	/**
 	 * Commits changes on Solr.
@@ -146,8 +151,8 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected static void commitChanges() throws SolrServerException, IOException {
 		solr.setParser(new XMLResponseParser());	
 		
-		UpdateRequest req = new UpdateRequest();
-		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, true);
+		final UpdateRequest req = new UpdateRequest();
+		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, false);
 		req.setParam("openSearcher", "true");
 		req.process(solr);  
 		  

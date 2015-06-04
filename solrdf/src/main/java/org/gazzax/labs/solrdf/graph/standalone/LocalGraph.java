@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.SolrException;
@@ -243,9 +241,7 @@ public final class LocalGraph extends SolRDFGraph {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(filters, literalValue);
 			} else {
-				final PhraseQuery query = new PhraseQuery();
-				query.add(new Term(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));
-				filters.add(query);		
+				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));		
 			}
 		}
 		

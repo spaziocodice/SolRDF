@@ -68,9 +68,6 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 		this.cloud = cloud;
 	}
 	
-	// TODO: Theoretically the add() could be also done locally. However I think
-	// It would result in some unnecessary network roundtrips in case the local 
-	// replica is not a leader.
 	@Override
 	public void performAdd(final Triple triple) {
 		final SolrInputDocument document = new SolrInputDocument();
@@ -85,10 +82,10 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 					.append(triple.getObject())
 					.toString().getBytes()).toString());
 		
-		final String o = asNt(triple.getObject());
+		final Node object = triple.getObject();
+		final String o = asNt(object);
 		document.setField(Field.O, o);
 
-		final Node object = triple.getObject();
 		if (object.isLiteral()) {
 			final String language = object.getLiteralLanguage();
 			document.setField(Field.LANG, isNotNullOrEmptyString(language) ? language : NULL_LANGUAGE);				
@@ -165,7 +162,6 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 				final RDFDatatype dataType = o.getLiteralDatatype();
 				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(query, literalValue);
 			} else {
-//				query.addFilterQuery(fq(Field.TEXT_OBJECT, StringEscapeUtils.escapeXml(asNt(o))));		
 				query.addFilterQuery(fq(Field.TEXT_OBJECT, asNt(o)));		
 			}
 		}
@@ -184,20 +180,15 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	String deleteQuery(final Triple triple) {
 		final StringBuilder builder = new StringBuilder();
 		if (triple.getSubject().isConcrete()) {
-			builder.append(fq(Field.S, asNt(triple.getSubject()))); 
+			and(builder).append(fq(Field.S, asNt(triple.getSubject()))); 
 		}
 		
 		if (triple.getPredicate().isConcrete()) {
-			if (builder.length() != 0) {
-				builder.append(" AND ");
-			}
-			builder.append(fq(Field.P, asNtURI(triple.getPredicate())));
+			and(builder).append(fq(Field.P, asNtURI(triple.getPredicate())));
 		}
 			
 		if (triple.getObject().isConcrete()) {
-			if (builder.length() != 0) {
-				builder.append(" AND ");
-			}
+			and(builder);
 			
 			final Node o = triple.getObject();
 			if (o.isLiteral()) {
@@ -215,11 +206,22 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 				registry.catchAllInjector().addConstraint(builder, asNt(o));
 			}
 		}
-			
-		builder.append(" AND ").append(fq(Field.C,graphNodeStringified));
 		
-		return builder.toString();
+		return and(builder).append(fq(Field.C, graphNodeStringified)).toString();
 	}	
+	
+	/**
+	 * Adds an AND clause to a given query builder.
+	 * 
+	 * @param queryBuilder the query builder.
+	 * @return the query builder.
+	 */
+	final StringBuilder and(final StringBuilder queryBuilder) {
+		if (queryBuilder.length() != 0) {
+			queryBuilder.append(" AND ");
+		}
+		return queryBuilder;
+	}
 	
 	/**
 	 * Graph size query command lazy loader.

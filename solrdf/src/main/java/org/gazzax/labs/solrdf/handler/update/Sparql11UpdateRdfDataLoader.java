@@ -88,9 +88,14 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 	 */
 	void execute(final UsingList list, final String updateRequests, final DatasetGraph datasetGraph) {
 		try {
-			UpdateAction.parseExecute(list, datasetGraph, new ByteArrayInputStream(updateRequests.getBytes("UTF-8")));		
+			UpdateAction.parseExecute(
+					list, 
+					datasetGraph, 
+					new ByteArrayInputStream(updateRequests.getBytes("UTF-8")));		
 		} catch (final Exception exception) {	
-			final String message = MessageFactory.createMessage(MessageCatalog._00099_INVALID_UPDATE_QUERY, updateRequests);
+			final String message = MessageFactory.createMessage(
+					MessageCatalog._00099_INVALID_UPDATE_QUERY, 
+					updateRequests);
 			LOGGER.error(message, exception);
 			throw new SolrException(ErrorCode.BAD_REQUEST, message);
 		}	
