@@ -110,7 +110,7 @@
 				<listen.port>8080</listen.port>
 				<index.data.dir>${project.build.directory}/data</index.data.dir>
 				<ulog.dir>${project.build.directory}/ulog</ulog.dir>
-				<shards>1</shards>
+				<shards>2</shards>
 			</properties>
 			<build>
 				<plugins>
