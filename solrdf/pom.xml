@@ -111,6 +111,7 @@
 				<index.data.dir>${project.build.directory}/data</index.data.dir>
 				<ulog.dir>${project.build.directory}/ulog</ulog.dir>
 				<shards>2</shards>
+				<zk>127.0.0.1:2181</zk>
 			</properties>
 			<build>
 				<plugins>
@@ -139,7 +140,7 @@
 									<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
 									<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
 									<zkClientTimeout>15000</zkClientTimeout>
-									<zkHost>127.0.0.1:2181</zkHost>
+									<zkHost>${zk}</zkHost>
 									<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
 									<collection.configName>solrdf-conf</collection.configName>
 									<numShards>${shards}</numShards>
