@@ -15,30 +15,26 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.NTriples;
 import org.gazzax.labs.solrdf.graph.DatasetGraphSupertypeLayer;
 import org.gazzax.labs.solrdf.graph.SolRDFGraph;
-import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 
 /**
- * A read only SolRDF implementation of a Jena Dataset.
- * This is a read only dataset graph because changes (i.e. updates and deletes) are executed using 
- * {@link DistributedUpdateProcessor}; that means each node will be responsible to apply local changes using 
- * its own {@link LocalDatasetGraph} instance.
+ * A Jena {@link DatasetGraph} implementaton that will be used when SolRDF is running in SolrCloud.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
-	static final Log LOGGER = new Log(LoggerFactory.getLogger(ReadOnlyCloudDatasetGraph.class));
+public class CloudDatasetGraph extends DatasetGraphSupertypeLayer {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(CloudDatasetGraph.class));
 	
 	protected CloudSolrServer cloud;
 	
@@ -56,7 +52,7 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	 * @param request the Solr query request.
 	 * @param response the Solr query response.
 	 */
-	public ReadOnlyCloudDatasetGraph(
+	public CloudDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response,
 			final CloudSolrServer server) {
@@ -66,12 +62,12 @@ public class ReadOnlyCloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	
 	@Override
 	protected Graph _createNamedGraph(final Node graphNode) {
-		return new ReadOnlyCloudGraph(graphNode, cloud, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
+		return new CloudGraph(graphNode, cloud, CloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
 	@Override
 	protected Graph _createDefaultGraph() {
-		return new ReadOnlyCloudGraph(null, cloud, ReadOnlyCloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
+		return new CloudGraph(null, cloud, CloudGraph.DEFAULT_QUERY_FETCH_SIZE, listener);
 	}
 
 	@Override

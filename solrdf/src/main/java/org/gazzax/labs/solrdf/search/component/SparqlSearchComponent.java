@@ -21,7 +21,7 @@ import org.apache.solr.search.QParser;
 import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
-import org.gazzax.labs.solrdf.graph.cloud.ReadOnlyCloudDatasetGraph;
+import org.gazzax.labs.solrdf.graph.cloud.CloudDatasetGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
@@ -235,7 +235,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	 */
 	DatasetGraph datasetGraph(final SolrQueryRequest request, final SolrQueryResponse response, final QParser parser, final GraphEventConsumer consumer) {
 		return request.getCore().getCoreDescriptor().getCoreContainer().isZooKeeperAware() 
-				? new ReadOnlyCloudDatasetGraph(request, response, server)
+				? new CloudDatasetGraph(request, response, server)
 				: new LocalDatasetGraph(request, response, parser, consumer);
 	}
 }

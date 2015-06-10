@@ -15,34 +15,28 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.search.SyntaxError;
-import org.apache.solr.update.processor.DistributedUpdateProcessor;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Strings;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
 import org.gazzax.labs.solrdf.graph.SolRDFGraph;
-import org.gazzax.labs.solrdf.graph.standalone.LocalGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.shared.AddDeniedException;
 import com.hp.hpl.jena.shared.DeleteDeniedException;
 
 /**
- * A read only SolRDF Cloud {@link Graph} implementation.
- * This is a read only graph because changes (i.e. updates and deletes) are executed using 
- * {@link DistributedUpdateProcessor}; that means each node will be responsible to apply local changes using 
- * its own {@link LocalGraph} instance.
+ * A {@link SolRDFGraph} implementation for running SolRDF in SolrCloud.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public final class ReadOnlyCloudGraph extends SolRDFGraph {
-	static final Log LOGGER = new Log(LoggerFactory.getLogger(ReadOnlyCloudGraph.class));
+public final class CloudGraph extends SolRDFGraph {
+	static final Log LOGGER = new Log(LoggerFactory.getLogger(CloudGraph.class));
 	
 	final FieldInjectorRegistry registry = new FieldInjectorRegistry();
 	final SolrServer cloud;
@@ -50,7 +44,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	private SolrQuery graphSizeQuery;
 	
 	/**
-	 * Builds a new {@link ReadOnlyCloudGraph} with the given data.
+	 * Builds a new {@link CloudGraph} with the given data.
 	 * 
 	 * @param graphNode the graph name.
 	 * @param request the Solr query request.
@@ -59,7 +53,7 @@ public final class ReadOnlyCloudGraph extends SolRDFGraph {
 	 * @param fetchSize the fetch size that will be used in reads.
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
-	ReadOnlyCloudGraph(
+	CloudGraph(
 		final Node graphNode, 
 		final SolrServer cloud, 
 		final int fetchSize, 

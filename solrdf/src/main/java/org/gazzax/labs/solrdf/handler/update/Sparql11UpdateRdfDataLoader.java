@@ -19,7 +19,7 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.GraphEventConsumer;
-import org.gazzax.labs.solrdf.graph.cloud.ReadOnlyCloudDatasetGraph;
+import org.gazzax.labs.solrdf.graph.cloud.CloudDatasetGraph;
 import org.gazzax.labs.solrdf.graph.standalone.LocalDatasetGraph;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
@@ -150,7 +150,7 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 	 */
 	DatasetGraph datasetGraph(final SolrQueryRequest request, final SolrQueryResponse response) {
 		return CLUSTER != null 
-				? new ReadOnlyCloudDatasetGraph(request, response, CLUSTER)
+				? new CloudDatasetGraph(request, response, CLUSTER)
 				: new LocalDatasetGraph(request, response);
 	}    
 }	 
