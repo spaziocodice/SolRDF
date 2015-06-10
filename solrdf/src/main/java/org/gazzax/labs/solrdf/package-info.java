@@ -1,5 +1,5 @@
 /**
- * This package contains some code from Jena-NoSQL project.
+ * Shared utilities and common behaviours.
  * 
  * @see https://github.com/agazzarini/SolRDF/issues/13
  */
