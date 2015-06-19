@@ -337,7 +337,6 @@ public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
 	}
 	
 	@Test
-	@Ignore
 	public void serviceKeyword() throws Exception {
 		selectTest(misteryGuest("ex167.rq", "ex145.ttl"));		
 	}
