@@ -18,7 +18,9 @@ Checkout the project Open a new shell and type the following:
 
 Build and run SolrRDF
 
-> cd solrdf-download/solrdf  
+> cd solrdf-download/solrdf
+> mvn clean install
+> cd solrdf-integration-tests
 > mvn clean package cargo:run  
 
 The very first time you run this command a lot of things will be downloaded, Solr included. At the end you should see sheomething like this:
