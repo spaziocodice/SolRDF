@@ -1,0 +1,54 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.gazzax.labs</groupId>
+    <packaging>pom</packaging>
+    <artifactId>solrdf-parent</artifactId>
+    <version>1.0</version>
+    <name>Solrdf Parent Project</name>
+    
+    <properties>
+        <jena.version>2.13.0</jena.version>
+        <jdk.version>1.7</jdk.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <slf4j.version>1.6.6</slf4j.version>
+        <junit.version>4.11</junit.version>
+        <mockito.version>1.9.5-rc1</mockito.version>
+        <junit.version>4.11</junit.version>
+        <solr.version>4.10.3</solr.version>
+        <httpclient.version>4.4.1</httpclient.version>
+    </properties>
+
+    <modules>
+        <module>solrdf</module>
+        <module>solrdf-web</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

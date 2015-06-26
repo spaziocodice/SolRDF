@@ -1,25 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.gazzax.labs</groupId>
 	<artifactId>solrdf</artifactId>
-	<version>1.0</version>
 	<name>Solr RDF plugin</name>
-	<packaging>war</packaging>
-	<properties>
-		<jena.version>2.13.0</jena.version>
-		<jdk.version>1.7</jdk.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<slf4j.version>1.6.6</slf4j.version>
-		<junit.version>4.11</junit.version>
-		<mockito.version>1.9.5-rc1</mockito.version>
-		<junit.version>4.11</junit.version>
-		<solr.version>4.10.3</solr.version>
-		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/${project.artifactId}</solr.home>
-		<listen.port>8080</listen.port>
-	</properties>
+
+	<parent>
+		<groupId>org.gazzax.labs</groupId>
+		<artifactId>solrdf-parent</artifactId>
+		<version>1.0</version>
+		<relativePath>../</relativePath>
+	</parent>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -110,177 +100,21 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.4.1</version>
+			<version>${httpclient.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
-			<version>4.4.1</version>
+			<version>${httpclient.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
-			<version>4.4.1</version>
+			<version>${httpclient.version}</version>
 		</dependency>
 	</dependencies>
-	<profiles>
-		<profile>
-			<id>standalone</id>
-			<properties>
-				<listen.port>8080</listen.port>
-			</properties>
-		</profile>
-		<profile>
-			<id>cloud</id>
-			<properties>
-				<listen.port>8080</listen.port>
-				<index.data.dir>${project.build.directory}/data</index.data.dir>
-				<ulog.dir>${project.build.directory}/ulog</ulog.dir>
-				<shards>2</shards>
-				<zk>127.0.0.1:2181</zk>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-war-plugin</artifactId>
-						<version>2.1.1</version>
-						<configuration>
-							<overlays>
-								<overlay>
-									<groupId>org.apache.solr</groupId>
-									<artifactId>solr</artifactId>
-									<excludes>
-										<exclude>**/httpclient*</exclude>
-										<exclude>**/httpcore*</exclude>
-										<exclude>**/httpmime*</exclude>
-									</excludes>
-								</overlay>
-							</overlays>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.codehaus.cargo</groupId>
-						<artifactId>cargo-maven2-plugin</artifactId>
-						<version>1.4.9</version>
-						<configuration>
-							<configuration>
-								<properties>
-									<cargo.hostname>0.0.0.0</cargo.hostname>
-									<cargo.servlet.port>${listen.port}</cargo.servlet.port>
-								</properties>
-							</configuration>
-							<container>
-								<systemProperties>
-									<jetty.port>${listen.port}</jetty.port>
-									<solr.solr.home>${solr.home}</solr.solr.home>
-									<solr.data.dir>${index.data.dir}</solr.data.dir>
-									<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
-									<solr.ulog.dir>${ulog.dir}</solr.ulog.dir>
-									<com.sun.management.jmxremote>true</com.sun.management.jmxremote>
-									<com.sun.management.jmxremote.local.only>false</com.sun.management.jmxremote.local.only>
-									<com.sun.management.jmxremote.ssl>false</com.sun.management.jmxremote.ssl>
-									<com.sun.management.jmxremote.authenticate>false</com.sun.management.jmxremote.authenticate>
-									<com.sun.management.jmxremote.port>1083</com.sun.management.jmxremote.port>
-									<com.sun.management.jmxremote.rmi.port>1083</com.sun.management.jmxremote.rmi.port>
-									<zkClientTimeout>15000</zkClientTimeout>
-									<zkHost>${zk}</zkHost>
-									<bootstrap_confdir>${solr.home}/store/conf</bootstrap_confdir>
-									<collection.configName>solrdf-conf</collection.configName>
-									<numShards>${shards}</numShards>
-								</systemProperties>
-								<containerId>jetty7x</containerId>
-								<type>embedded</type>
-								<dependencies>
-									<dependency>
-										<groupId>log4j</groupId>
-										<artifactId>log4j</artifactId>
-									</dependency>
-									<dependency>
-										<groupId>org.slf4j</groupId>
-										<artifactId>slf4j-api</artifactId>
-									</dependency>
-									<dependency>
-										<groupId>org.slf4j</groupId>
-										<artifactId>slf4j-log4j12</artifactId>
-									</dependency>
-									<dependency>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-									</dependency>
-								</dependencies>
-							</container>
-							<deployables>
-								<deployable>
-									<groupId>org.gazzax.labs</groupId>
-									<artifactId>solrdf</artifactId>
-									<type>war</type>
-									<properties>
-										<context>/solr</context>
-									</properties>
-								</deployable>
-							</deployables>
-							<wait>false</wait>
-						</configuration>
-						<executions>
-							<execution>
-								<id>start-container</id>
-								<phase>pre-integration-test</phase>
-								<goals>
-									<goal>start</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>stop-container</id>
-								<phase>post-integration-test</phase>
-								<goals>
-									<goal>stop</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1.1</version>
-				<configuration>
-					<overlays>
-						<overlay>
-							<groupId>org.apache.solr</groupId>
-							<artifactId>solr</artifactId>
-							<excludes>
-								<exclude>**/httpclient*</exclude>
-								<exclude>**/httpcore*</exclude>
-								<exclude>**/httpmime*</exclude>
-							</excludes>
-						</overlay>
-					</overlays>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2.1</version>
-				<configuration>
-					<descriptors>
-						<descriptor>src/assembly/development.xml</descriptor>
-					</descriptors>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.6</version>
@@ -289,74 +123,6 @@
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.cargo</groupId>
-				<artifactId>cargo-maven2-plugin</artifactId>
-				<version>1.4.9</version>
-				<configuration>
-					<configuration>
-						<properties>
-							<cargo.hostname>0.0.0.0</cargo.hostname>
-							<cargo.servlet.port>${listen.port}</cargo.servlet.port>
-						</properties>
-					</configuration>
-					<container>
-						<systemProperties>
-							<jetty.port>${listen.port}</jetty.port>
-							<solr.solr.home>${solr.home}</solr.solr.home>
-							<solr.data.dir>${project.build.directory}/data</solr.data.dir>
-							<log4j.configuration>file:///${basedir}/src/test/resources/log4j.xml</log4j.configuration>
-						</systemProperties>
-						<containerId>jetty7x</containerId>
-						<type>embedded</type>
-						<dependencies>
-							<dependency>
-								<groupId>log4j</groupId>
-								<artifactId>log4j</artifactId>
-							</dependency>
-							<dependency>
-								<groupId>org.slf4j</groupId>
-								<artifactId>slf4j-api</artifactId>
-							</dependency>
-							<dependency>
-								<groupId>org.slf4j</groupId>
-								<artifactId>slf4j-log4j12</artifactId>
-							</dependency>
-							<dependency>
-								<groupId>commons-logging</groupId>
-								<artifactId>commons-logging</artifactId>
-							</dependency>
-						</dependencies>
-					</container>
-					<deployables>
-						<deployable>
-							<groupId>org.gazzax.labs</groupId>
-							<artifactId>solrdf</artifactId>
-							<type>war</type>
-							<properties>
-								<context>/solr</context>
-							</properties>
-						</deployable>
-					</deployables>
-					<wait>false</wait>
-				</configuration>
-				<executions>
-					<execution>
-						<id>start-container</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>stop-container</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>stop</goal>
 						</goals>
 					</execution>
 				</executions>

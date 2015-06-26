@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- 
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
+			 -->
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p %F|[%c:%L] %m%n" />
+		</layout>
+	</appender>
+	<category name="org.gazzax">
+		<priority value="DEBUG"/>	
+   	</category>
+   	<category name="org.apache.solr">
+   	    <priority value="INFO"/>
+   	</category>     
+   	<category name="org.apache.solr.core.SolrCore">
+   	    <priority value="INFO"/>
+   	</category>     
+	<category name="com.hp.hpl.jena">
+   	    <priority value="DEBUG"/>
+   	</category>
+   	<category name="arq">
+   	    <priority value="DEBUG"/>
+   	</category>   	   	
+	<root>
+		<priority value="INFO"/>
+ 		<appender-ref ref="CONSOLE"/>
+   	</root>
+</log4j:configuration>
