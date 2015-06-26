@@ -9,7 +9,7 @@
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<fileSet>
-			<directory>${project.basedir}/src/solr-home</directory>
+			<directory>${project.basedir}/../solrdf-core/src/solr-home</directory>
 			<outputDirectory>/solrdf</outputDirectory>
 			<includes>
 				<include>**/*</include>

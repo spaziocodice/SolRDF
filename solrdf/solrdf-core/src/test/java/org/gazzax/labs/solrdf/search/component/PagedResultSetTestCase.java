@@ -3,6 +3,8 @@ package org.gazzax.labs.solrdf.search.component;
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
+
 import org.apache.jena.riot.Lang;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +37,10 @@ public class PagedResultSetTestCase {
 	@Before
 	public void setUp() throws Exception {
 		model = ModelFactory.createDefaultModel();
-		model.read(getClass().getResourceAsStream("/sample_data/bsbm-generated-dataset.nt"), DUMMY_BASE_URI, Lang.NTRIPLES.getLabel());
+		model.read(new FileInputStream(
+				"../solrdf-integration-tests/src/test/resources/sample_data/bsbm-generated-dataset.nt"), 
+				DUMMY_BASE_URI, 
+				Lang.NTRIPLES.getLabel());
 	}
 	
 	/**
@@ -141,6 +146,11 @@ public class PagedResultSetTestCase {
 		assertFalse(cut.hasNext());
 	}
 	
+	/**
+	 * Executes a "SELECT ALL" query.
+	 * 
+	 * @return the {@link ResultSet} as result of the query execution.
+	 */
 	ResultSet executeQuery() {
 		final Query query = QueryFactory.create("SELECT * WHERE {?s ?p ?o}");
 		final QueryExecution execution = QueryExecutionFactory.create(query, model);
