@@ -177,7 +177,8 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	 * @return true if the current request is using POST method and URL-encoded parameters.
 	 */
 	boolean isUsingURLEncodedParameters(final SolrQueryRequest request) {
-		return WebContent.contentTypeHTMLForm.equals(((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType());
+		String type = ((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType();
+		return type.indexOf(WebContent.contentTypeHTMLForm) > -1;
 	}
 	
 	/**
