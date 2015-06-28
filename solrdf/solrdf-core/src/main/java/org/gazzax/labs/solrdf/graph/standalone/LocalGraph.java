@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.GraphEvents;
+import com.hp.hpl.jena.graph.GraphStatisticsHandler;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.shared.AddDeniedException;
@@ -68,6 +69,31 @@ public final class LocalGraph extends SolRDFGraph {
 	final TermQuery graphTermQuery;
 		
 	private FieldInjectorRegistry registry = new FieldInjectorRegistry();
+	
+	private SortSpec sortSpec;
+	
+    /**
+     * A {@link GraphStatisticsHandler} with the same logic of GraphMemStatisticsHandler. 
+     * It queries the Solr-based Graph for delivering statistics on single-concrete-node 
+     * queries and for trivial cases of two-concrete-node queries.
+     * 
+     * @author Andrea Gazzarini
+     * @since 1.0
+     */
+	public class LocalGraphStatisticHandler implements GraphStatisticsHandler {
+		@Override
+		public long getStatistic(final Node s, final Node p, final Node o) {
+			final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
+		    try {
+			    return searcher.search(
+			    		result, 
+			    		queryCommand(Triple.create(s, p, o), sortSpec())).getDocListAndSet().docList.matches();
+			} catch (final Exception exception) {
+				LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+				throw new SolrException(ErrorCode.SERVER_ERROR, exception);
+			}	    
+		}
+	}
 	
 	/**
 	 * Creates a Read / Write {@link Graph}.
@@ -134,6 +160,11 @@ public final class LocalGraph extends SolRDFGraph {
 		this.searcher = request.getSearcher();
 		this.qParser = qparser;
 	}
+	
+	@Override
+    protected GraphStatisticsHandler createStatisticsHandler() { 
+    	return new LocalGraphStatisticHandler(); 
+    }
 	
 	@Override
 	public void performAdd(final Triple triple) {
@@ -211,44 +242,11 @@ public final class LocalGraph extends SolRDFGraph {
 	
 	@Override
 	protected Iterator<Triple> query(final Triple pattern) throws SyntaxError {
-	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
-	    final SortSpec sortSpec = qParser != null ? qParser.getSort(true) : QueryParsing.parseSortSpec("id asc", request);
-	    cmd.setQuery(new MatchAllDocsQuery());
-	    cmd.setSort(sortSpec.getSort());
-	    cmd.setLen(queryFetchSize);
-	    cmd.setFlags(cmd.getFlags() | SolrIndexSearcher.GET_DOCSET);
-	    
-	    final List<Query> filters = new ArrayList<Query>();
-	    
-		final Node s = pattern.getMatchSubject();
-		final Node p = pattern.getMatchPredicate();
-		final Node o = pattern.getMatchObject();
-		
-		if (s != null) {
-			filters.add(new TermQuery(new Term(Field.S, asNt(s))));
-		}
-		
-		if (p != null) {
-			filters.add(new TermQuery(new Term(Field.P, asNtURI(p))));
-		}
-		
-		if (o != null) {
-			if (o.isLiteral()) {
-				final String language = o.getLiteralLanguage();
-				filters.add(isNotNullOrEmptyString(language) ? languageTermQuery(language) : NULL_LANGUAGE_TERM_QUERY);
-				
-				final String literalValue = o.getLiteralLexicalForm(); 
-				final RDFDatatype dataType = o.getLiteralDatatype();
-				registry.get(dataType != null ? dataType.getURI() : null).addFilterConstraint(filters, literalValue);
-			} else {
-				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));		
-			}
-		}
-		
-		filters.add(graphTermQuery);				
-		
-		cmd.setFilterList(filters);
-	    return new DeepPagingIterator(searcher, cmd, sortSpec, consumer);
+	    return new DeepPagingIterator(
+	    		searcher, 
+	    		queryCommand(pattern, sortSpec()), 
+	    		sortSpec(), 
+	    		consumer);
 	}	
 	
 	/**
@@ -342,6 +340,62 @@ public final class LocalGraph extends SolRDFGraph {
 		}
 		return graphSizeQueryCommand;
 	}
+	
+	SortSpec sortSpec() throws SyntaxError {
+		if (sortSpec == null) {
+				sortSpec = qParser != null 
+			    		? qParser.getSort(true) 
+			    		: QueryParsing.parseSortSpec("id asc", request);
+			    sortSpec.setOffset(0);		
+		}
+		return sortSpec;
+	}
+	
+	SolrIndexSearcher.QueryCommand queryCommand(final Triple pattern, final SortSpec sortSpec) throws SyntaxError {
+	    final SolrIndexSearcher.QueryCommand cmd = new SolrIndexSearcher.QueryCommand();
+	    cmd.setQuery(new MatchAllDocsQuery());
+	    cmd.setSort(sortSpec.getSort());
+	    cmd.setLen(queryFetchSize);
+	    cmd.setFlags(cmd.getFlags() | SolrIndexSearcher.GET_DOCSET);
+	    
+	    final List<Query> filters = new ArrayList<Query>();
+	    
+		final Node s = pattern.getMatchSubject();
+		final Node p = pattern.getMatchPredicate();
+		final Node o = pattern.getMatchObject();
+		
+		if (s != null) {
+			filters.add(new TermQuery(new Term(Field.S, asNt(s))));
+		}
+		
+		if (p != null) {
+			filters.add(new TermQuery(new Term(Field.P, asNtURI(p))));
+		}
+		
+		if (o != null) {
+			if (o.isLiteral()) {
+				final String language = o.getLiteralLanguage();
+				filters.add(
+						isNotNullOrEmptyString(language) 
+							? languageTermQuery(language) 
+							: NULL_LANGUAGE_TERM_QUERY);
+				
+				final String literalValue = o.getLiteralLexicalForm(); 
+				final RDFDatatype dataType = o.getLiteralDatatype();
+				registry.get(
+						dataType != null 
+							? dataType.getURI() 
+							: null).addFilterConstraint(filters, literalValue);
+			} else {
+				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));		
+			}
+		}
+		
+		filters.add(graphTermQuery);				
+		
+		cmd.setFilterList(filters);
+		return cmd;
+	}	
 	
 	/**
 	 * Clear graph command lazy loader.

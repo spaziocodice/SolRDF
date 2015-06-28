@@ -203,7 +203,6 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 			final GraphEventConsumer consumer) {
 		this.searcher = searcher;
 		this.queryCommand = queryCommand;
-		sort.setOffset(0);
 		this.sentCursorMark = new CursorMark(searcher.getSchema(), sort);
 		this.queryCommand.setCursorMark(sentCursorMark);
 		this.consumer = consumer;
