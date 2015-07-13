@@ -1,12 +1,12 @@
 package org.gazzax.labs.solrdf.graph.standalone;
 
+import static org.gazzax.labs.solrdf.F.fq;
+
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static org.gazzax.labs.solrdf.F.fq;
+
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -16,6 +16,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
@@ -30,14 +33,30 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 class FieldInjectorRegistry {
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
 	
-	private ThreadLocal<SimpleDateFormat> isoFormatterCache = new ThreadLocal<SimpleDateFormat>()
+	private ThreadLocal<DateTimeFormatter> isoFormatterCache = new ThreadLocal<DateTimeFormatter>()
 	{
 		@Override
-		protected SimpleDateFormat initialValue()
+		protected DateTimeFormatter initialValue()
 		{
-			final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-			formatter.setLenient(false);
-			return formatter;
+			return new DateTimeFormatterBuilder()
+				.append(DateTimeFormat.forPattern("yyyy-MM-dd"))                                            
+				.appendOptional(
+						new DateTimeFormatterBuilder()
+							.appendLiteral('T')
+							.appendOptional(
+									new DateTimeFormatterBuilder()
+										.append(DateTimeFormat.forPattern("HH"))
+										.appendOptional(
+												new DateTimeFormatterBuilder()
+													.append(DateTimeFormat.forPattern(":mm"))
+														.appendOptional(
+																new DateTimeFormatterBuilder()
+																	.append(DateTimeFormat.forPattern(":ss"))
+																.toParser())
+												.toParser())
+									.toParser())
+						.toParser())
+				.toFormatter();
 		}
 	};
 	
@@ -117,9 +136,9 @@ class FieldInjectorRegistry {
 		@Override
 		public void addFilterConstraint(final List<Query> filters, final String value) {
 			try {
-				final Long millisecs = isoFormatterCache.get().parse(value).getTime();
+				final long millisecs = isoFormatterCache.get().parseMillis(value);
 				filters.add(NumericRangeQuery.newLongRange(Field.DATE_OBJECT, millisecs, millisecs, true, true));
-			} catch (final ParseException exception) {
+			} catch (final IllegalArgumentException exception) {
 				LOGGER.error(MessageCatalog._00110_INVALID_DATE_VALUE, exception, value);
 				throw new IllegalArgumentException(exception);
 			}
