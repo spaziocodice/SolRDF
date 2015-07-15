@@ -15,15 +15,45 @@ public class TestUtility {
 	
 	static List<Statement> STATEMENTS;
 	
+	/**
+	 * Returns a set of sample statements,
+	 * 
+	 * @return a set of sample statements,
+	 * @throws IOException in case of I/O failure.
+	 */
 	public static List<Statement> sampleStatements() throws IOException {
 		if (STATEMENTS == null) {
 			STATEMENTS = Lists.newArrayList(
-				ModelFactory.createDefaultModel().read(source(), "N-TRIPLES").listStatements());
+				ModelFactory.createDefaultModel().read(sampleSourceFileURI(sampleSourceFile()), "N-TRIPLES").listStatements());
 		} 
 		return STATEMENTS;
 	}
-
-	private static String source() {
-		return new File("../solrdf-integration-tests/src/test/resources/sample_data/bsbm-generated-dataset.nt").toURI().toString();
+	
+	/**
+	 * Returns the sample source file.
+	 * 
+	 * @return the sample source file.
+  	 */
+	public static File sampleSourceFile() {
+		return new File("../solrdf-integration-tests/src/test/resources/sample_data/bsbm-generated-dataset.nt");
+	}		
+	
+	/**
+	 * Returns the given file as URI string.
+	 * 
+	 * @param file the file.
+	 * @return the given file as URI string.
+	 */
+	public static String sampleSourceFileURI(final File file) {
+		return file.toURI().toString();
 	}	
+	
+	/**
+	 * Returns an invalid (inexistent) path.
+	 *  
+	 * @return an invalid (inexistent) path.
+	 */
+	public static String invalidPath() {
+		return String.valueOf(System.currentTimeMillis());
+	}
 }
