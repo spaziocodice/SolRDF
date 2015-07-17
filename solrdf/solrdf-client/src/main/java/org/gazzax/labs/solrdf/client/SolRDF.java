@@ -1,8 +1,15 @@
 package org.gazzax.labs.solrdf.client;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetAccessor;
@@ -22,26 +29,91 @@ import com.hp.hpl.jena.rdf.model.Statement;
  * @since 1.0
  */
 public class SolRDF {
-	final DatasetAccessor dataset;
-	final Dataset memoryDataset;
+	final DatasetAccessor remoteDataset;
+	final Dataset localDataset;
+	
+	final SolrServer solr;
 	
 	/**
-	 * Builds a new SolRDF proxy with the given remote address.
+	 * SolRDF proxy builder.
 	 * 
-	 * @param baseAddress the HTTP URL where SolRDF is listening.
+	 * @author Andrea Gazzarini
+	 * @since 1.0
 	 */
-	public SolRDF(final String baseAddress) {
-		this(DatasetAccessorFactory.createHTTP(baseAddress + "/rdf-graph-store"));
+	public static class Builder {
+		
+		private final static String DEFAULT_ENDPOINT = "http://127.0.0.1:8080/solr/store";
+		private String graphStoreProtocolEndpointPath = "/rdf-graph-store";
+		
+		private Set<String> endpoints = new HashSet<String>();
+		
+		/**
+		 * Adds a new SolRDF endpoint to this builder.
+		 * An endpoint is a running SolRDF node. For example http://127.0.0.1:8080/solr/store
+		 *  
+		 * @param endpoint the SolRDF endpoint.
+		 * @return this builder.
+		 */
+		public Builder withEndpoint(final String endpoint) {
+			endpoints.add(endpoint);
+			return this;
+		}
+		
+		/**
+		 * Sets the Graph Store Protocol Handler url path (e.g. /rdf-graph.store)
+		 * 
+		 * @param path the Graph Store Protocol Handler url path (e.g. /rdf-graph.store)
+		 * @return this builder.
+		 */
+		public Builder withGraphStoreProtocolEndpointPath(final String path) {
+			this.graphStoreProtocolEndpointPath = path;
+			return this;
+		}
+		
+		/**
+		 * Builds a new SolRDF proxy instance.
+		 * 
+		 * @return a new SolRDF proxy instance.
+		 * @throws IOException in case of I/O failure while connecting with SolRDF.
+		 */
+		public SolRDF build() throws IOException {
+			if (endpoints.isEmpty()) {
+				endpoints.add(DEFAULT_ENDPOINT);
+			}
+
+			// FIXME: for DatasetAccessor we also need something like LBHttpSolrServer
+			try {
+				return new SolRDF(
+						DatasetAccessorFactory.createHTTP(
+								endpoints.iterator().next() +
+								graphStoreProtocolEndpointPath),
+						(endpoints.size() == 1)
+							? new HttpSolrServer(endpoints.iterator().next())
+							: new LBHttpSolrServer(endpoints.toArray(new String[endpoints.size()])));
+			} catch (final Exception exception) {
+				throw new IOException(exception);
+			}	
+		}
 	}
+	
+	/**
+	 * Gets a static reference to 
+	 * @return
+	 */
+	public static Builder newBuilder() {
+		return new Builder();
+	}	
 	
 	/**
 	 * Builds a new SolRDF proxy with the given {@link DatasetAccessor}.
 	 * 
 	 * @param dataset the {@link DatasetAccessor} representing the remote endpoint.
+	 * @param 
 	 */
-	public SolRDF(final DatasetAccessor dataset) {
-		this.dataset = dataset;
-		this.memoryDataset = DatasetFactory.createMem();
+	SolRDF(final DatasetAccessor dataset, final SolrServer solr) {
+		this.remoteDataset = dataset;
+		this.localDataset = DatasetFactory.createMem();
+		this.solr = solr;
 	}
 
 	/**
@@ -50,7 +122,7 @@ public class SolRDF {
 	 * @param statements the list of statements.
 	 */
 	public void add(final List<Statement> statements) {
-		dataset.add(model().add(statements));
+		remoteDataset.add(model().add(statements));
 	}
 	
 	/**
@@ -60,7 +132,7 @@ public class SolRDF {
 	 * @param statements the list of statements.
 	 */
 	public void add(final String uri, final List<Statement> statements) {
-		dataset.add(uri, model(uri).add(statements));
+		remoteDataset.add(uri, model(uri).add(statements));
 	}
 	
 	/**
@@ -69,7 +141,7 @@ public class SolRDF {
 	 * @param statements the list of statements.
 	 */
 	public void add(final Statement [] statements) {
-		dataset.add(model().add(statements));
+		remoteDataset.add(model().add(statements));
 	}
 	
 	/**
@@ -79,7 +151,7 @@ public class SolRDF {
 	 * @param statements the list of statements.
 	 */
 	public void add(final String uri, final Statement [] statements) {
-		dataset.add(uri, model(uri).add(statements));
+		remoteDataset.add(uri, model(uri).add(statements));
 	}	
 	
 	/**
@@ -88,7 +160,7 @@ public class SolRDF {
 	 * @param statement the statement.
 	 */
 	public void add(final Statement statement) {
-		dataset.add(model().add(statement));
+		remoteDataset.add(model().add(statement));
 	}
 	
 	/**
@@ -98,7 +170,7 @@ public class SolRDF {
 	 * @param statement the statement.
 	 */
 	public void add(final String uri, final Statement statement) {
-		dataset.add(uri, model(uri).add(statement));
+		remoteDataset.add(uri, model(uri).add(statement));
 	}		
 
 	/**
@@ -106,8 +178,8 @@ public class SolRDF {
 	 * 
 	 * @param statement the statement.
 	 */
-	public void add(Resource subject, Property predicate, RDFNode object) {
-		dataset.add(model().add(subject, predicate, object));
+	public void add(final Resource subject, final Property predicate, final RDFNode object) {
+		remoteDataset.add(model().add(subject, predicate, object));
 	}	
 
 	/**
@@ -116,8 +188,8 @@ public class SolRDF {
 	 * @param uri the graph URI.
 	 * @param statement the statement.
 	 */
-	public void add(final String uri, Resource subject, Property predicate, RDFNode object) {
-		dataset.add(uri, model(uri).add(subject, predicate, object));
+	public void add(final String uri, final Resource subject, final Property predicate, final RDFNode object) {
+		remoteDataset.add(uri, model(uri).add(subject, predicate, object));
 	}		
 	
 	/**
@@ -127,7 +199,7 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final String url, final String lang) {
-		dataset.add(model().read(url, lang));
+		remoteDataset.add(model().read(url, lang));
 	}
 
 	/**
@@ -138,7 +210,7 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final String uri, final String url, final String lang) {
-		dataset.add(uri, model(uri).read(url, lang));
+		remoteDataset.add(uri, model(uri).read(url, lang));
 	}
 	
 	/**
@@ -148,7 +220,7 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final InputStream stream, final String lang) {
-		dataset.add(model().read(stream, null, lang));
+		remoteDataset.add(model().read(stream, null, lang));
 	}
 
 	/**
@@ -159,7 +231,7 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final String uri, final InputStream url, final String lang) {
-		dataset.add(uri, model(uri).read(url, null, lang));
+		remoteDataset.add(uri, model(uri).read(url, null, lang));
 	}	
 	
 	/**
@@ -169,7 +241,7 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final Reader stream, final String lang) {
-		dataset.add(model().read(stream, null, lang));
+		remoteDataset.add(model().read(stream, null, lang));
 	}
 
 	/**
@@ -180,8 +252,54 @@ public class SolRDF {
 	 * @param lang the source data format.
 	 */
 	public void add(final String uri, final Reader stream, final String lang) {
-		dataset.add(uri, model(uri).read(stream, null, lang));
+		remoteDataset.add(uri, model(uri).read(stream, null, lang));
 	}		
+
+	/**
+	 * Commits pending changes.
+	 * 
+	 * @throws UnableToCommitException in case of commit failure.
+	 */
+	public void commit() throws UnableToCommitException {
+		try {
+			solr.commit();
+		} catch (final Exception exception) {
+			throw new UnableToCommitException(exception);
+		}
+	}
+
+	/**
+	 * Commits pending changes.
+	 * 
+	 * @param waitFlush blocks until index changes are flushed to disk.
+	 * @param waitSearcher blocks until a new searcher is opened and registered as the main query searcher. 
+	 * @throws UnableToCommitException in case of commit failure.
+	 * @see SolrServer#commit(boolean, boolean)
+	 */
+	public void commit(final boolean waitFlush, final boolean waitSearcher) throws UnableToCommitException {
+		try {
+			solr.commit(waitFlush, waitSearcher);
+		} catch (final Exception exception) {
+			throw new UnableToCommitException(exception);
+		}
+	}
+
+	/**
+	 * Commits pending changes.
+	 * 
+	 * @param waitFlush blocks until index changes are flushed to disk.
+	 * @param waitSearcher blocks until a new searcher is opened and registered as the main query searcher. 
+	 * @param softCommit true for issuing a soft commit.
+	 * @throws UnableToCommitException in case of commit failure.
+	 * @see SolrServer#commit(boolean, boolean, boolean)
+	 */
+	public void commit(final boolean waitFlush, final boolean waitSearcher, final boolean softCommit) throws UnableToCommitException {
+		try {	
+			solr.commit(waitFlush, waitSearcher, softCommit);
+		} catch (final Exception exception) {
+			throw new UnableToCommitException(exception);
+		}
+	}
 
 	/**
 	 * Lazy loader for a named model.
@@ -190,10 +308,10 @@ public class SolRDF {
 	 * @return the named model associated with the given URI.
 	 */
 	Model model(final String uri) {
-		Model model = memoryDataset.getNamedModel(uri);
+		Model model = localDataset.getNamedModel(uri);
 		if (model == null) {
 			model = ModelFactory.createDefaultModel();
-			memoryDataset.addNamedModel(uri, model);
+			localDataset.addNamedModel(uri, model);
 		}
 		
 		return model;
@@ -205,6 +323,6 @@ public class SolRDF {
 	 * @return the a local default model.
 	 */
 	Model model() {
-		return memoryDataset.getDefaultModel();
+		return localDataset.getDefaultModel();
 	}
 }

@@ -1,15 +1,20 @@
 package org.gazzax.labs.solrdf.client;
 
+import static org.gazzax.labs.solrdf.client.TestUtility.invalidPath;
 import static org.gazzax.labs.solrdf.client.TestUtility.sampleSourceFile;
 import static org.gazzax.labs.solrdf.client.TestUtility.sampleStatements;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.URI;
 
+import org.apache.solr.client.solrj.SolrServer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +31,7 @@ import com.hp.hpl.jena.rdf.model.impl.StmtIteratorImpl;
 public class AddTestCase {
 	String uri;
 	DatasetAccessor dataset;
+	SolrServer solr;
 	SolRDF solrdf;
 
 	/**
@@ -36,7 +42,8 @@ public class AddTestCase {
 	@Before
 	public void setUp() throws Exception{
 		dataset = mock(DatasetAccessor.class);
-		solrdf = new SolRDF(dataset);
+		solr = mock(SolrServer.class);
+		solrdf = new SolRDF(dataset, solr);
 		uri = new URI("http://org.example.blablabla").toString();
 	}
 	
@@ -174,11 +181,27 @@ public class AddTestCase {
 	 * 
 	 * @throws Exception never otherwise the test will fail.
 	 */
+	@Test
 	public void loadNamedGraphFromURL() throws Exception {
 		solrdf.add(uri, sampleSourceFile().getAbsolutePath(), "N-TRIPLES");
 		
 		assertTrue(solrdf.model(uri).containsAll(new StmtIteratorImpl(sampleStatements().iterator())));
 		verify(dataset).add(uri, solrdf.model(uri));
+	}
+	
+	/**
+	 * In case the given URL is not valid then an exception must be thrown.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void invalidURL() throws Exception {
+		try {
+			solrdf.add(uri, invalidPath(), "N-TRIPLES");
+			fail();
+		} catch (final Exception expected) {
+			// FIXME: more specialised exception
+		}
 	}
 	
 	/**
@@ -232,4 +255,60 @@ public class AddTestCase {
 		assertTrue(solrdf.model(uri).containsAll(new StmtIteratorImpl(sampleStatements().iterator())));
 		verify(dataset).add(uri, solrdf.model(uri));		
 	}
+	
+	/**
+	 * SolRDF client API must allow explicit commit of pending changes.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void commit() throws Exception {
+		final boolean waitSearcher = true;
+		final boolean waitFlush = true;
+		final boolean softCommit = true;
+		
+		solrdf.commit();
+		verify(solr).commit();	
+		
+		solrdf.commit(waitFlush, waitSearcher);		
+		verify(solr).commit(waitFlush, waitSearcher);	
+		
+		solrdf.commit(waitFlush, waitSearcher, softCommit);		
+		verify(solr).commit(waitFlush, waitSearcher, softCommit);	
+	}
+	
+	/**
+	 * Any exception raised during a commit will be indicated by a thrown UnableToCommitException.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void commitWithFailure() throws Exception {
+		try {
+			when(solr.commit()).thenThrow(new IOException());
+			
+			solrdf.commit();
+			fail();
+		} catch (UnableToCommitException expected) {
+			// Nothing, this is the expected behaviour
+		}	
+		
+		try {
+			when(solr.commit(false, true)).thenThrow(new IOException());
+			
+			solrdf.commit(false, true);		
+			fail();
+		} catch (UnableToCommitException expected) {
+			// Nothing, this is the expected behaviour
+		}	
+		
+		try {
+			when(solr.commit(false, true, true)).thenThrow(new IOException());
+
+			solrdf.commit(false, true, true);		
+			fail();
+		} catch (UnableToCommitException expected) {
+			// Nothing, this is the expected behaviour
+		}	
+	}	
 }
