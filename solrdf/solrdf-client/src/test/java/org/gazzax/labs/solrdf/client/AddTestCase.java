@@ -311,4 +311,14 @@ public class AddTestCase {
 			// Nothing, this is the expected behaviour
 		}	
 	}	
+	 
+	public static void main(String[] args) throws Exception {
+		final SolRDF solrdf = SolRDF.newBuilder()
+				.withEndpoint("http://127.0.0.1:8080/solr/store")
+				.withGraphStoreProtocolEndpointPath("/rdf-graph-store")
+				.build();
+		solrdf.add(TestUtility.sampleStatements());
+		
+		solrdf.commit(true,true,true);
+	}
 }

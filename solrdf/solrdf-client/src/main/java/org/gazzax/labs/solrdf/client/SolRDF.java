@@ -1,6 +1,5 @@
 package org.gazzax.labs.solrdf.client;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashSet;
@@ -8,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 
@@ -33,7 +33,7 @@ public class SolRDF {
 	final Dataset localDataset;
 	
 	final SolrServer solr;
-	
+
 	/**
 	 * SolRDF proxy builder.
 	 * 
@@ -44,6 +44,8 @@ public class SolRDF {
 		
 		private final static String DEFAULT_ENDPOINT = "http://127.0.0.1:8080/solr/store";
 		private String graphStoreProtocolEndpointPath = "/rdf-graph-store";
+		
+		private String zkHost;
 		
 		private Set<String> endpoints = new HashSet<String>();
 		
@@ -56,6 +58,18 @@ public class SolRDF {
 		 */
 		public Builder withEndpoint(final String endpoint) {
 			endpoints.add(endpoint);
+			return this;
+		}
+		
+		/**
+		 * Sets the Zookeeper host(s) within the proxy that will be built.
+		 * As you can imagine, this will create a proxy for a SolRDF running in SolrCloud mode.
+		 *  
+		 * @param endpoint the SolRDF endpoint.
+		 * @return this builder.
+		 */
+		public Builder withZkHost(final String zkHost) {
+			this.zkHost = zkHost;
 			return this;
 		}
 		
@@ -74,9 +88,9 @@ public class SolRDF {
 		 * Builds a new SolRDF proxy instance.
 		 * 
 		 * @return a new SolRDF proxy instance.
-		 * @throws IOException in case of I/O failure while connecting with SolRDF.
+		 * @throws UnableToBuildSolRDFClientException in case of build failure.
 		 */
-		public SolRDF build() throws IOException {
+		public SolRDF build() throws UnableToBuildSolRDFClientException {
 			if (endpoints.isEmpty()) {
 				endpoints.add(DEFAULT_ENDPOINT);
 			}
@@ -87,18 +101,21 @@ public class SolRDF {
 						DatasetAccessorFactory.createHTTP(
 								endpoints.iterator().next() +
 								graphStoreProtocolEndpointPath),
-						(endpoints.size() == 1)
-							? new HttpSolrServer(endpoints.iterator().next())
-							: new LBHttpSolrServer(endpoints.toArray(new String[endpoints.size()])));
+						zkHost != null
+							? new CloudSolrServer(zkHost)
+							: (endpoints.size() == 1)
+								? new HttpSolrServer(endpoints.iterator().next())
+								: new LBHttpSolrServer(endpoints.toArray(new String[endpoints.size()])));
 			} catch (final Exception exception) {
-				throw new IOException(exception);
+				throw new UnableToBuildSolRDFClientException(exception);
 			}	
 		}
 	}
 	
 	/**
-	 * Gets a static reference to 
-	 * @return
+	 * Creates a new SolRDF proxy builder.
+	 * 
+	 * @return a new SolRDF proxy builder.
 	 */
 	public static Builder newBuilder() {
 		return new Builder();
@@ -108,7 +125,7 @@ public class SolRDF {
 	 * Builds a new SolRDF proxy with the given {@link DatasetAccessor}.
 	 * 
 	 * @param dataset the {@link DatasetAccessor} representing the remote endpoint.
-	 * @param 
+	 * @param solr the (remote) Solr proxy.
 	 */
 	SolRDF(final DatasetAccessor dataset, final SolrServer solr) {
 		this.remoteDataset = dataset;
@@ -120,9 +137,14 @@ public class SolRDF {
 	 * Adds a given set of statements to the unnamed graph.
 	 * 
 	 * @param statements the list of statements.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final List<Statement> statements) {
-		remoteDataset.add(model().add(statements));
+	public void add(final List<Statement> statements) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().add(statements));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 	
 	/**
@@ -130,18 +152,28 @@ public class SolRDF {
 	 * 
 	 * @param uri the graph URI.
 	 * @param statements the list of statements.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final List<Statement> statements) {
-		remoteDataset.add(uri, model(uri).add(statements));
+	public void add(final String uri, final List<Statement> statements) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).add(statements));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 	
 	/**
 	 * Adds a given set of statements to the unnamed graph.
 	 * 
 	 * @param statements the list of statements.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final Statement [] statements) {
-		remoteDataset.add(model().add(statements));
+	public void add(final Statement [] statements) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().add(statements));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 	
 	/**
@@ -149,18 +181,28 @@ public class SolRDF {
 	 * 
 	 * @param uri the graph URI.
 	 * @param statements the list of statements.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final Statement [] statements) {
-		remoteDataset.add(uri, model(uri).add(statements));
+	public void add(final String uri, final Statement [] statements) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).add(statements));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}	
 	
 	/**
 	 * Adds a statement to the unnamed graph.
 	 * 
 	 * @param statement the statement.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final Statement statement) {
-		remoteDataset.add(model().add(statement));
+	public void add(final Statement statement) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().add(statement));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 	
 	/**
@@ -168,18 +210,28 @@ public class SolRDF {
 	 * 
 	 * @param uri the graph URI.
 	 * @param statement the statement.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final Statement statement) {
-		remoteDataset.add(uri, model(uri).add(statement));
+	public void add(final String uri, final Statement statement) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).add(statement));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}		
 
 	/**
 	 * Adds a statement to the default graph.
 	 * 
 	 * @param statement the statement.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final Resource subject, final Property predicate, final RDFNode object) {
-		remoteDataset.add(model().add(subject, predicate, object));
+	public void add(final Resource subject, final Property predicate, final RDFNode object) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().add(subject, predicate, object));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}	
 
 	/**
@@ -187,9 +239,14 @@ public class SolRDF {
 	 * 
 	 * @param uri the graph URI.
 	 * @param statement the statement.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final Resource subject, final Property predicate, final RDFNode object) {
-		remoteDataset.add(uri, model(uri).add(subject, predicate, object));
+	public void add(final String uri, final Resource subject, final Property predicate, final RDFNode object) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).add(subject, predicate, object));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}		
 	
 	/**
@@ -197,9 +254,14 @@ public class SolRDF {
 	 * 
 	 * @param url the source URL.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String url, final String lang) {
-		remoteDataset.add(model().read(url, lang));
+	public void add(final String url, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().read(url, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 
 	/**
@@ -208,9 +270,14 @@ public class SolRDF {
 	 * @param uri the graph URI.
 	 * @param url the source URL.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final String url, final String lang) {
-		remoteDataset.add(uri, model(uri).read(url, lang));
+	public void add(final String uri, final String url, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).read(url, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 	
 	/**
@@ -218,9 +285,14 @@ public class SolRDF {
 	 * 
 	 * @param stream the source stream.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final InputStream stream, final String lang) {
-		remoteDataset.add(model().read(stream, null, lang));
+	public void add(final InputStream stream, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().read(stream, null, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 
 	/**
@@ -229,9 +301,14 @@ public class SolRDF {
 	 * @param uri the graph URI.
 	 * @param stream the source stream.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final InputStream url, final String lang) {
-		remoteDataset.add(uri, model(uri).read(url, null, lang));
+	public void add(final String uri, final InputStream url, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).read(url, null, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}	
 	
 	/**
@@ -239,9 +316,14 @@ public class SolRDF {
 	 * 
 	 * @param stream the source character stream.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final Reader stream, final String lang) {
-		remoteDataset.add(model().read(stream, null, lang));
+	public void add(final Reader stream, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().read(stream, null, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 
 	/**
@@ -250,9 +332,14 @@ public class SolRDF {
 	 * @param uri the graph URI.
 	 * @param stream the source character stream.
 	 * @param lang the source data format.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
 	 */
-	public void add(final String uri, final Reader stream, final String lang) {
-		remoteDataset.add(uri, model(uri).read(stream, null, lang));
+	public void add(final String uri, final Reader stream, final String lang) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).read(stream, null, lang));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}		
 
 	/**
