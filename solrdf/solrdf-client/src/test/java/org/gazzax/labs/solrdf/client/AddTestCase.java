@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -74,6 +74,33 @@ public class AddTestCase {
 	}	
 	
 	/**
+	 * If an add* method fails, a dedicated exception is raised.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void addListOfStatementsWithFailure() throws Exception {
+		doThrow(new RuntimeException()).when(dataset).add(solrdf.model());
+		try {
+			solrdf.add(sampleStatements());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}
+		
+		
+		doThrow(new RuntimeException()).when(dataset).add(uri, solrdf.model(uri));
+
+		try {
+			solrdf.add(uri, sampleStatements());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}		
+	}	
+	
+	
+	/**
 	 * SolRDF client API must allow to add an array of statements to the default graph.
 	 * 
 	 * @throws Exception never, otherwise the test fails.
@@ -97,6 +124,32 @@ public class AddTestCase {
 		
 		assertTrue(solrdf.model(uri).containsAll(new StmtIteratorImpl(sampleStatements().iterator())));
 		verify(dataset).add(uri, solrdf.model(uri));
+	}		
+	
+	/**
+	 * If an add* method fails, a dedicated exception is raised.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void addArrayOfStatementsWithFailure() throws Exception {
+		doThrow(new RuntimeException()).when(dataset).add(solrdf.model());
+		try {
+			solrdf.add(sampleStatements().toArray(new Statement[0]));
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}
+		
+		
+		doThrow(new RuntimeException()).when(dataset).add(uri, solrdf.model(uri));
+
+		try {
+			solrdf.add(uri, sampleStatements().toArray(new Statement[0]));
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}		
 	}		
 	
 	// TODO: in case of single statements, it would be great to have something like
@@ -127,6 +180,32 @@ public class AddTestCase {
 		assertTrue(solrdf.model(uri).contains(sampleStatements().iterator().next()));
 		verify(dataset).add(uri, solrdf.model(uri));
 	}		
+	
+	/**
+	 * If an add* method fails, a dedicated exception is raised.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void addStatementWithFailure() throws Exception {
+		doThrow(new RuntimeException()).when(dataset).add(solrdf.model());
+		try {
+			solrdf.add(sampleStatements().iterator().next());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}
+		
+		
+		doThrow(new RuntimeException()).when(dataset).add(uri, solrdf.model(uri));
+
+		try {
+			solrdf.add(uri, sampleStatements().iterator().next());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}		
+	}			
 	
 	/**
 	 * SolRDF client API must allow to add a single statement to the default graph.
@@ -164,6 +243,40 @@ public class AddTestCase {
 	}		
 	
 	/**
+	 * If an add* method fails, a dedicated exception is raised.
+	 * 
+	 * @throws Exception never otherwise the test will fail.
+	 */
+	@Test
+	public void addSPOWithFailure() throws Exception {
+		final Statement statement = sampleStatements().iterator().next();
+		doThrow(new RuntimeException()).when(dataset).add(solrdf.model());
+		try {
+			solrdf.add(
+					statement.getSubject(), 
+					statement.getPredicate(), 
+					statement.getObject());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}
+		
+		
+		doThrow(new RuntimeException()).when(dataset).add(uri, solrdf.model(uri));
+
+		try {
+			solrdf.add(
+					uri,
+					statement.getSubject(), 
+					statement.getPredicate(), 
+					statement.getObject());
+			fail();
+		} catch (final UnableToAddException expected) {
+			// NOthing to be done, this is the expected behaviour
+		}		
+	}	
+	
+	/**
 	 * SolRDF client API must allow to add the content taken from a URL to the default graph.
 	 * 
 	 * @throws Exception never otherwise the test will fail.
@@ -199,7 +312,7 @@ public class AddTestCase {
 		try {
 			solrdf.add(uri, invalidPath(), "N-TRIPLES");
 			fail();
-		} catch (final Exception expected) {
+		} catch (final UnableToAddException expected) {
 			// FIXME: more specialised exception
 		}
 	}
