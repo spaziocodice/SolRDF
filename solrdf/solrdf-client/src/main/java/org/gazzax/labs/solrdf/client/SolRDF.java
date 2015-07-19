@@ -15,6 +15,10 @@ import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -31,7 +35,7 @@ import com.hp.hpl.jena.rdf.model.Statement;
 public class SolRDF {
 	final DatasetAccessor remoteDataset;
 	final Dataset localDataset;
-	
+	final String sparqlEndpoint;
 	final SolrServer solr;
 
 	/**
@@ -44,6 +48,7 @@ public class SolRDF {
 		
 		private final static String DEFAULT_ENDPOINT = "http://127.0.0.1:8080/solr/store";
 		private String graphStoreProtocolEndpointPath = "/rdf-graph-store";
+		private String sparqlEndpointPath = "/sparql";
 		
 		private String zkHost;
 		
@@ -64,17 +69,19 @@ public class SolRDF {
 		/**
 		 * Sets the Zookeeper host(s) within the proxy that will be built.
 		 * As you can imagine, this will create a proxy for a SolRDF running in SolrCloud mode.
+		 * 
+		 * TODO: not yet implemented 
 		 *  
 		 * @param endpoint the SolRDF endpoint.
 		 * @return this builder.
 		 */
 		public Builder withZkHost(final String zkHost) {
 			this.zkHost = zkHost;
-			return this;
+			throw new UnsupportedOperationException("Not Yet Implemented!");
 		}
 		
 		/**
-		 * Sets the Graph Store Protocol Handler url path (e.g. /rdf-graph.store)
+		 * Sets the Graph Store Protocol Handler url path (defaults to /rdf-graph.store)
 		 * 
 		 * @param path the Graph Store Protocol Handler url path (e.g. /rdf-graph.store)
 		 * @return this builder.
@@ -83,6 +90,17 @@ public class SolRDF {
 			this.graphStoreProtocolEndpointPath = path;
 			return this;
 		}
+		
+		/**
+		 * Sets the SPARQL 1.1 Handler url path (defaults to /sparql)
+		 * 
+		 * @param path the SPARQL 1.1 Handler url path (defaults to /sparql)
+		 * @return this builder.
+		 */
+		public Builder withSPARQLEndpointPath(final String path) {
+			this.sparqlEndpointPath = path;
+			return this;
+		}		
 		
 		/**
 		 * Builds a new SolRDF proxy instance.
@@ -95,12 +113,14 @@ public class SolRDF {
 				endpoints.add(DEFAULT_ENDPOINT);
 			}
 
-			// FIXME: for DatasetAccessor we also need something like LBHttpSolrServer
+			// FIXME: for DatasetAccessor and (HTTP) query execution service we also need something like LBHttpSolrServer
+			final String firstEndpointAddress = endpoints.iterator().next();
 			try {
 				return new SolRDF(
 						DatasetAccessorFactory.createHTTP(
-								endpoints.iterator().next() +
+								firstEndpointAddress +
 								graphStoreProtocolEndpointPath),
+						firstEndpointAddress + sparqlEndpointPath,		
 						zkHost != null
 							? new CloudSolrServer(zkHost)
 							: (endpoints.size() == 1)
@@ -127,10 +147,14 @@ public class SolRDF {
 	 * @param dataset the {@link DatasetAccessor} representing the remote endpoint.
 	 * @param solr the (remote) Solr proxy.
 	 */
-	SolRDF(final DatasetAccessor dataset, final SolrServer solr) {
+	SolRDF(
+			final DatasetAccessor dataset, 
+			final String sparqlEndpointAddress,
+			final SolrServer solr) {
 		this.remoteDataset = dataset;
 		this.localDataset = DatasetFactory.createMem();
 		this.solr = solr;
+		this.sparqlEndpoint = sparqlEndpointAddress;
 	}
 
 	/**
@@ -343,6 +367,60 @@ public class SolRDF {
 	}		
 
 	/**
+	 * Executes a SPARQL SELECT.
+	 * 
+	 * @param query the SPARQL SELECT Query.
+	 * @return the {@link ResultSet} that includes matching bindings.
+	 * @throws UnableToExecuteQueryException in case of failure before, during or after the query execution.
+	 */
+	public ResultSet select(final String selectQuery) throws UnableToExecuteQueryException {
+		QueryExecution execution = null;
+		try {
+			return (execution = execution(selectQuery)).execSelect();
+		} catch (final Exception exception) {
+			throw new UnableToExecuteQueryException(exception);
+		} finally {
+			execution.close();
+		}
+	}
+	
+	/**
+	 * Executes a SPARQL CONSTRUCT.
+	 * 
+	 * @param query the SPARQL CONSTRUCT Query.
+	 * @return the {@link Model} that includes the CONSTRUCT result.
+	 * @throws UnableToExecuteQueryException in case of failure before, during or after the query execution.
+	 */
+	public Model construct(final String constructQuery) throws UnableToExecuteQueryException {
+		QueryExecution execution = null;
+		try {
+			return (execution = execution(constructQuery)).execConstruct();
+		} catch (final Exception exception) {
+			throw new UnableToExecuteQueryException(exception);
+		} finally {
+			execution.close();
+		}
+	}	
+	
+	/**
+	 * Executes a SPARQL DESCRIBDE.
+	 * 
+	 * @param query the SPARQL DESCRIBE Query.
+	 * @return the {@link Model} that includes the DESCRIBE result.
+	 * @throws UnableToExecuteQueryException in case of failure before, during or after the query execution.
+	 */
+	public Model describe(final String describeQuery) throws UnableToExecuteQueryException {
+		QueryExecution execution = null;
+		try {
+			return (execution = execution(describeQuery)).execDescribe();
+		} catch (final Exception exception) {
+			throw new UnableToExecuteQueryException(exception);
+		} finally {
+			execution.close();
+		}
+	}		
+	
+	/**
 	 * Commits pending changes.
 	 * 
 	 * @throws UnableToCommitException in case of commit failure.
@@ -354,7 +432,7 @@ public class SolRDF {
 			throw new UnableToCommitException(exception);
 		}
 	}
-
+	
 	/**
 	 * Commits pending changes.
 	 * 
@@ -387,7 +465,19 @@ public class SolRDF {
 			throw new UnableToCommitException(exception);
 		}
 	}
-
+	
+	/**
+	 * Returns the {@link QueryExecution} associated with the given query.
+	 * 
+	 * @param query the SPARQL query.
+	 * @return the {@link QueryExecution} associated with the given query.
+	 */
+	QueryExecution execution(final String query) {
+		return QueryExecutionFactory.sparqlService(
+				sparqlEndpoint, 
+				QueryFactory.create(QueryFactory.create(query)));
+	}
+	
 	/**
 	 * Lazy loader for a named model.
 	 * 

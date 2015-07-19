@@ -56,4 +56,13 @@ public class TestUtility {
 	public static String invalidPath() {
 		return String.valueOf(System.currentTimeMillis());
 	}
+	
+	/**
+	 * Returns a sample SPARQL query.
+	 * 
+	 * @return a sample SPARQL query.
+	 */
+	public static String sampleSparqlQuery() {
+		return "SELECT * FROM {?s ?p ?o } LIMIT 10";
+	}
 }
