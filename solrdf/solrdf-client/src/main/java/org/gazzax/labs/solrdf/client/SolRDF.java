@@ -18,6 +18,7 @@ import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -25,6 +26,7 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.sparql.engine.binding.Binding;
 
 /**
  * SolRDF is the facade class that proxies a remote SolRDF endpoint.
@@ -38,6 +40,69 @@ public class SolRDF {
 	final String sparqlEndpoint;
 	final SolrServer solr;
 
+	static class CloseableResultSet implements ResultSet {
+		
+		private final ResultSet resultset;
+		private final QueryExecution execution;
+		
+		/**
+		 * Builds a new {@link ResultSet} wrapping out the given data.
+		 * 
+		 * @param resultset the actual {@link ResultSet}.
+		 * @param execution the {@link QueryExecution} associated with the given {@link ResultSet}.
+		 */
+		public CloseableResultSet(
+				final ResultSet resultset, 
+				final QueryExecution execution) {
+			this.resultset = resultset;
+			this.execution = execution;
+		}
+		
+		@Override
+		public void remove() {
+			resultset.remove();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return resultset.hasNext();
+		}
+
+		@Override
+		public QuerySolution next() {
+			return resultset.next();
+		}
+
+		@Override
+		public QuerySolution nextSolution() {
+			return resultset.nextSolution();
+		}
+
+		@Override
+		public Binding nextBinding() {
+			return resultset.nextBinding();
+		}
+
+		@Override
+		public int getRowNumber() {
+			return resultset.getRowNumber();
+		}
+
+		@Override
+		public List<String> getResultVars() {
+			return resultset.getResultVars();
+		}
+
+		@Override
+		public Model getResourceModel() {
+			return resultset.getResourceModel();
+		}
+		
+		public void close() {
+			execution.close();
+		}
+	}
+	
 	/**
 	 * SolRDF proxy builder.
 	 * 
@@ -373,15 +438,18 @@ public class SolRDF {
 	 * @return the {@link ResultSet} that includes matching bindings.
 	 * @throws UnableToExecuteQueryException in case of failure before, during or after the query execution.
 	 */
-	public ResultSet select(final String selectQuery) throws UnableToExecuteQueryException {
+	public CloseableResultSet select(final String selectQuery) throws UnableToExecuteQueryException {
 		QueryExecution execution = null;
 		try {
-			return (execution = execution(selectQuery)).execSelect();
+			execution = execution(selectQuery);
+			return new CloseableResultSet(execution.execSelect(), execution);
 		} catch (final Exception exception) {
+			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+			if (execution != null) { 
+				execution.close();
+			}
 			throw new UnableToExecuteQueryException(exception);
-		} finally {
-			execution.close();
-		}
+		} 
 	}
 	
 	/**
