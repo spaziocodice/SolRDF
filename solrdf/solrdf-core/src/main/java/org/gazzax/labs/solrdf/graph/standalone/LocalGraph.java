@@ -255,7 +255,7 @@ public final class LocalGraph extends SolRDFGraph {
 	 * @param triple the triple (maybe a pattern?) that must be deleted.
 	 * @return a DELETE query.
 	 */
-	String deleteQuery(final Triple triple) {
+	public String deleteQuery(final Triple triple) {
 		final StringBuilder builder = new StringBuilder();
 		if (triple.getSubject().isConcrete()) {
 			builder

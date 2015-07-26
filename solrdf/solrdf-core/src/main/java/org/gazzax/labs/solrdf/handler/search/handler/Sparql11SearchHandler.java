@@ -1,5 +1,6 @@
 package org.gazzax.labs.solrdf.handler.search.handler;
 import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,12 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.handler.search.algebra.SolRDFStageGenerator;
+
+import com.hp.hpl.jena.query.ARQ;
+import com.hp.hpl.jena.sparql.engine.main.StageBuilder;
+import com.hp.hpl.jena.sparql.util.Context;
+import com.hp.hpl.jena.sparql.util.Symbol;
 
 /**
  * A RequestHandler that dispatches SPARQL 1.1 Query and Update requests across dedicated handlers.
@@ -55,6 +62,11 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 
 	@Override
 	public void handleRequestBody(final SolrQueryRequest request, final SolrQueryResponse response) throws Exception {
+		// TODO: better
+		Context ctx = ARQ.getContext();
+		ctx.set(Symbol.create("solrreq"), request);
+		StageBuilder.setGenerator(ctx, new SolRDFStageGenerator()) ;
+		
 		final SolrParams parameters = request.getParams();
 		if (isUsingGET(request)) {
 			if (containsQueryParameter(parameters)) {

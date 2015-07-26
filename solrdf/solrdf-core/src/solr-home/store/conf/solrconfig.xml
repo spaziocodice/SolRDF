@@ -52,7 +52,7 @@
 			addHttpRequestToContext="true"/>
 		<httpCaching never304="true" />
 	</requestDispatcher>
-	
+		
 	<!-- SPARQL 1.1 Graph Store protocol endpoint -->
 	<requestHandler name="/rdf-graph-store" class="org.gazzax.labs.solrdf.handler.Sparql11GraphStoreProtocolHandler" default="true">
 		<lst name="invariants">
