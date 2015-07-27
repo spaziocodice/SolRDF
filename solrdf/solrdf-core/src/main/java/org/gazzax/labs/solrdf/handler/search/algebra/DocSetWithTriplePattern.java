@@ -6,74 +6,99 @@ import org.apache.solr.search.DocSet;
 
 import com.hp.hpl.jena.graph.Triple;
 
+/**
+ * A simple {@link DocSet} wrapper that encapsulates a {@link DocSet} with a (source) {@link Triple}Pattern.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 public class DocSetWithTriplePattern implements DocSet {
-	private final DocSet wrapped;
+	private final DocSet delegate;
 	public final Triple pattern;
 	
-	DocSetWithTriplePattern(DocSet wrapped, Triple pattern) {
-		this.wrapped = wrapped;
+	/**
+	 * Builds a new {@link DocSetWithTriplePattern} with the given data.
+	 * 
+	 * @param docset the {@link DocSet}.
+	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
+	 */
+	DocSetWithTriplePattern(final DocSet docset, final Triple pattern) {
+		this.delegate = docset;
 		this.pattern = pattern;
 	}
-
-	public void add(int doc) {
-		wrapped.add(doc);
+	
+	@Override
+	public void add(final int doc) {
+		delegate.add(doc);
 	}
 
-	public void addUnique(int doc) {
-		wrapped.addUnique(doc);
+	@Override
+	public void addUnique(final int doc) {
+		delegate.addUnique(doc);
 	}
 
+	@Override
 	public int size() {
-		return wrapped.size();
+		return delegate.size();
 	}
 
-	public boolean exists(int docid) {
-		return wrapped.exists(docid);
+	@Override
+	public boolean exists(final int docid) {
+		return delegate.exists(docid);
 	}
 
+	@Override
 	public DocIterator iterator() {
-		return wrapped.iterator();
+		return delegate.iterator();
 	}
 
+	@Override
 	public long memSize() {
-		return wrapped.memSize();
+		return delegate.memSize();
 	}
 
-	public DocSet intersection(DocSet other) {
-		return wrapped.intersection(other);
+	@Override
+	public DocSet intersection(final DocSet other) {
+		return delegate.intersection(other);
 	}
 
-	public int intersectionSize(DocSet other) {
-		return wrapped.intersectionSize(other);
+	@Override
+	public int intersectionSize(final DocSet other) {
+		return delegate.intersectionSize(other);
 	}
 
-	public boolean intersects(DocSet other) {
-		return wrapped.intersects(other);
+	@Override
+	public boolean intersects(final DocSet other) {
+		return delegate.intersects(other);
 	}
 
-	public DocSet union(DocSet other) {
-		return wrapped.union(other);
+	@Override
+	public DocSet union(final DocSet other) {
+		return delegate.union(other);
 	}
 
-	public int unionSize(DocSet other) {
-		return wrapped.unionSize(other);
+	@Override
+	public int unionSize(final DocSet other) {
+		return delegate.unionSize(other);
 	}
 
-	public DocSet andNot(DocSet other) {
-		return wrapped.andNot(other);
+	@Override
+	public DocSet andNot(final DocSet other) {
+		return delegate.andNot(other);
 	}
 
-	public int andNotSize(DocSet other) {
-		return wrapped.andNotSize(other);
+	@Override
+	public int andNotSize(final DocSet other) {
+		return delegate.andNotSize(other);
 	}
 
+	@Override
 	public Filter getTopFilter() {
-		return wrapped.getTopFilter();
+		return delegate.getTopFilter();
 	}
 
-	public void addAllTo(DocSet target) {
-		wrapped.addAllTo(target);
-	}
-	
-	
+	@Override
+	public void addAllTo(final DocSet target) {
+		delegate.addAllTo(target);
+	}	
 }

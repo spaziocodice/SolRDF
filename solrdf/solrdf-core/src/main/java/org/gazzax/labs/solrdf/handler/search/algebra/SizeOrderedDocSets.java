@@ -7,7 +7,7 @@ import java.util.TreeSet;
 import org.apache.solr.search.DocSet;
 
 /**
- * A {@link SortedSet} of {@link DocSet} that orders its elements by their size (desc mode).
+ * A {@link SortedSet} of {@link DocSet} that orders its elements using the {@link DocSet} size (desc mode).
  * 
  * @author Andrea Gazzarini
  * @since 1.0
