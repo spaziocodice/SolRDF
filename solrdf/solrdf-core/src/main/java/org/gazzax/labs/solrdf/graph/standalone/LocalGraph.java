@@ -299,9 +299,8 @@ public final class LocalGraph extends SolRDFGraph {
 			}
 		}
 			
-		
+		builder.append(builder.length() != 0 ? " AND " : "");
 		return builder
-			.append(" AND ")
 			.append(Field.C)
 			.append(":\"")
 			.append(graphNodeStringified)

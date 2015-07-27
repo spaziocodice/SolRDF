@@ -63,7 +63,9 @@ public class QueryIterBlockTriples2 extends QueryIter1
 				collector.add(
 						new DocSetWithTriplePattern(
 								searcher.getDocSet(
-										QParser.getParser(graph.deleteQuery(triplePattern), "lucene", req).getQuery()),
+										QParser.getParser(
+												graph.deleteQuery(triplePattern), "lucene", req)
+										.getQuery()),
 								triplePattern));
 	        }
 		
