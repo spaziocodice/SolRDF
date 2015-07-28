@@ -52,7 +52,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.18.1</version>
 				<configuration>
-					<argLine>-XX:-UseSplitVerifier</argLine>
+					<argLine>-Xverify:none</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
