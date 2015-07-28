@@ -31,6 +31,25 @@
 			<url>http://it.linkedin.com/in/andreagazzarini</url>
 		</developer>
 	</developers>
+  	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.maven.plugin</groupId>
+				<artifactId>emma-maven-plugin</artifactId>
+				<version>2.0</version>
+				<configuration>
+					<executions>
+						<execution>
+							<phase>validate</phase>
+							<goals>
+								<goal>emma</goal>
+							</goals>
+						</execution>
+					</executions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	<reporting>
 		<plugins>
 			<plugin>
