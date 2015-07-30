@@ -12,7 +12,7 @@ import org.apache.solr.search.DocSet;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class SizeOrderedDocSets extends TreeSet<DocSet> {
+public class SizeOrderedDocSets extends TreeSet<PatternDocSet> {
 
 	private static final long serialVersionUID = -8542016212841190622L;
 

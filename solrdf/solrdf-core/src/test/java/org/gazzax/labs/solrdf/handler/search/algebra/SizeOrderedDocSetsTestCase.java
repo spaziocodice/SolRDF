@@ -21,11 +21,11 @@ public class SizeOrderedDocSetsTestCase {
 	 */
 	@Test
 	public void orderBySize() {
-		final DocSet _9 = mock(DocSet.class);
-		final DocSet _12 = mock(DocSet.class);
-		final DocSet _110 = mock(DocSet.class);
-		final DocSet _1090 = mock(DocSet.class);
-		final DocSet _10910 = mock(DocSet.class);
+		final PatternDocSet _9 = mock(PatternDocSet.class);
+		final PatternDocSet _12 = mock(PatternDocSet.class);
+		final PatternDocSet _110 = mock(PatternDocSet.class);
+		final PatternDocSet _1090 = mock(PatternDocSet.class);
+		final PatternDocSet _10910 = mock(PatternDocSet.class);
 		
 		when(_9.size()).thenReturn(9);
 		when(_12.size()).thenReturn(12);
@@ -40,7 +40,7 @@ public class SizeOrderedDocSetsTestCase {
 		docsets.add(_9);
 		docsets.add(_10910);
 		
-		final Iterator<DocSet> iterator = docsets.iterator();
+		final Iterator<PatternDocSet> iterator = docsets.iterator();
 		assertSame(_9, iterator.next());
 		assertSame(_12, iterator.next());
 		assertSame(_110, iterator.next());

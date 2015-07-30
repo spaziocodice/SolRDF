@@ -10,7 +10,6 @@ import com.hp.hpl.jena.sparql.engine.iterator.QueryIterRoot;
 import com.hp.hpl.jena.sparql.engine.main.StageBuilder;
 import com.hp.hpl.jena.sparql.engine.main.StageGenerator;
 import com.hp.hpl.jena.sparql.engine.optimizer.reorder.ReorderLib;
-import com.hp.hpl.jena.sparql.engine.optimizer.reorder.ReorderProc;
 import com.hp.hpl.jena.sparql.engine.optimizer.reorder.ReorderTransformation;
 import com.hp.hpl.jena.sparql.mgt.Explain;
 
@@ -43,29 +42,23 @@ public class SolRDFStageGenerator implements StageGenerator {
     		final ReorderTransformation reorder, 
     		final StageGenerator execution, 
     		QueryIterator input, 
-    		final ExecutionContext execCxt)
-    {
+    		final ExecutionContext execCxt) {
         Explain.explain(pattern, execCxt.getContext()) ;
 
-        if ( ! input.hasNext() )
-            return input ;
+        if (! input.hasNext() ) {
+        	return input ;
+        }
         
-        if ( reorder != null && pattern.size() >= 2 ) {
-            // If pattern size is 0 or one, nothing to do.
-            BasicPattern bgp2 = pattern ;
-
-            // Try to ground the pattern
-            if ( ! ( input instanceof QueryIterRoot ) ) {
+        if (reorder != null && pattern.size() >= 2) {
+            if (!(input instanceof QueryIterRoot)) {
                 final QueryIterPeek peek = QueryIterPeek.create(input, execCxt) ;
-                final Binding b = peek.peek() ;
+                final Binding binding = peek.peek() ;
                 
-                // And use this one
                 input = peek ;
-                bgp2 = Substitute.substitute(pattern, b) ;
                 
-                // ---- common
-                ReorderProc reorderProc = reorder.reorderIndexes(bgp2) ;
-                pattern = reorderProc.reorder(pattern) ;
+                pattern = reorder.reorderIndexes(
+                		Substitute.substitute(pattern, binding))
+                		.reorder(pattern) ;
 
             }
         }

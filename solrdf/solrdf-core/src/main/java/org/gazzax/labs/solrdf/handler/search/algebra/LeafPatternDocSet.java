@@ -5,26 +5,53 @@ import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocSet;
 
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.sparql.engine.binding.Binding;
 
 /**
  * A simple {@link DocSet} wrapper that encapsulates a {@link DocSet} with a (source) {@link Triple}Pattern.
+ * Each instance could also contains a binding, which is used for building the expected results. 
+ * In case that binding is null, the {@link LeafPatternDocSet} is supposed to be a top level {@link DocSet}.
  * 
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class DocSetWithTriplePattern implements DocSet {
+public class LeafPatternDocSet implements PatternDocSet {
 	private final DocSet delegate;
-	public final Triple pattern;
+	
+	private final Triple pattern;
+	private final Binding parentBinding;
 	
 	/**
-	 * Builds a new {@link DocSetWithTriplePattern} with the given data.
+	 * Builds a new top level {@link LeafPatternDocSet} with the given data.
+	 * 
+	 * @param docset the {@link DocSet}.
+	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
+	 * @param binding the parent {@link Binding}, null in case of top level {@link LeafPatternDocSet}.
+	 */
+	LeafPatternDocSet(final DocSet docset, final Triple pattern, final Binding binding) {
+		this.delegate = docset;
+		this.pattern = pattern;
+		this.parentBinding = binding;
+	}
+	
+	/**
+	 * Returns true if this is a top level {@link LeafPatternDocSet}.
+	 * That is, returns true if the parent binding member is null.
+	 * 
+	 * @return true if this is a top level {@link LeafPatternDocSet}.
+	 */
+	public boolean isTopLevel() {
+		return parentBinding == null;
+	}
+	
+	/**
+	 * Builds a new {@link LeafPatternDocSet} with the given data.
 	 * 
 	 * @param docset the {@link DocSet}.
 	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
 	 */
-	DocSetWithTriplePattern(final DocSet docset, final Triple pattern) {
-		this.delegate = docset;
-		this.pattern = pattern;
+	LeafPatternDocSet(final DocSet docset, final Triple pattern) {
+		this(docset, pattern, null);
 	}
 	
 	@Override
@@ -100,5 +127,25 @@ public class DocSetWithTriplePattern implements DocSet {
 	@Override
 	public void addAllTo(final DocSet target) {
 		delegate.addAllTo(target);
+	}
+
+	@Override
+	public Triple getTriplePattern() {
+		return pattern;
+	}
+
+	@Override
+	public Binding getParentBinding() {
+		return parentBinding;
 	}	
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof LeafPatternDocSet && pattern.equals(((LeafPatternDocSet)obj).pattern);
+	}
+	
+	@Override
+	public int hashCode() {
+		return pattern.hashCode();
+	}
 }
