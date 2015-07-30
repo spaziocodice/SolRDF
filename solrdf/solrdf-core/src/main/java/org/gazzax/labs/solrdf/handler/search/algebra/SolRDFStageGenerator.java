@@ -64,6 +64,6 @@ public class SolRDFStageGenerator implements StageGenerator {
         }
         
         Explain.explain("Reorder/generic", pattern, execCxt.getContext()) ;
-        return QueryIterBlockTriples2.create(input, pattern, execCxt) ;
+        return new QueryIterBasicGraphPattern(input, pattern, execCxt) ;
     }	
 }

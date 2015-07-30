@@ -209,7 +209,7 @@ public final class LocalGraph extends SolRDFGraph {
 	@Override
 	public void performDelete(final Triple triple) {
 		final DeleteUpdateCommand deleteCommand = new DeleteUpdateCommand(request);
-		deleteCommand.query = deleteQuery(triple);
+		deleteCommand.query = luceneQuery(triple);
 		try {
 			updateProcessor.processDelete(deleteCommand);
 		} catch (final Exception exception) {
@@ -255,7 +255,7 @@ public final class LocalGraph extends SolRDFGraph {
 	 * @param triple the triple (maybe a pattern?) that must be deleted.
 	 * @return a DELETE query.
 	 */
-	public String deleteQuery(final Triple triple) {
+	public String luceneQuery(final Triple triple) {
 		final StringBuilder builder = new StringBuilder();
 		if (triple.getSubject().isConcrete()) {
 			builder

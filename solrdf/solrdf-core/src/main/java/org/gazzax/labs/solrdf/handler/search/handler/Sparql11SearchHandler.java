@@ -62,9 +62,8 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 
 	@Override
 	public void handleRequestBody(final SolrQueryRequest request, final SolrQueryResponse response) throws Exception {
-		// TODO: better
-		Context ctx = ARQ.getContext();
-		ctx.set(Symbol.create("solrreq"), request);
+		final Context ctx = ARQ.getContext();
+		ctx.set(Names.SOLR_REQUEST_SYM, request);
 		StageBuilder.setGenerator(ctx, new SolRDFStageGenerator()) ;
 		
 		final SolrParams parameters = request.getParams();

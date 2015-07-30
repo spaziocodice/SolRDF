@@ -138,14 +138,4 @@ public class LeafPatternDocSet implements PatternDocSet {
 	public Binding getParentBinding() {
 		return parentBinding;
 	}	
-	
-	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof LeafPatternDocSet && pattern.equals(((LeafPatternDocSet)obj).pattern);
-	}
-	
-	@Override
-	public int hashCode() {
-		return pattern.hashCode();
-	}
 }

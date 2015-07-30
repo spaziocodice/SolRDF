@@ -1,5 +1,7 @@
 package org.gazzax.labs.solrdf;
 
+import com.hp.hpl.jena.sparql.util.Symbol;
+
 /**
  * Common names used across the project.
  * 
@@ -13,6 +15,8 @@ public interface Names {
 	
 	String HTTP_REQUEST_KEY = "httpRequest";
 	String SOLR_REQUEST = "solr.request";
+	Symbol SOLR_REQUEST_SYM = Symbol.create(SOLR_REQUEST);
+
 	String SOLR_RESPONSE = "solr.response";
 	String HYBRID_MODE = "hybrid.mode";
 	String NUM_FOUND = "num.found";
@@ -24,4 +28,6 @@ public interface Names {
 	String UPDATE_PARAMETER_NAME = "update";
 	String USING_NAMED_GRAPH_URI_PARAMETER_NAME = "using-named-graph-uri";
 	String USING_GRAPH_URI_PARAMETER_NAME = "using-graph-uri";
+	
+	String SOLR_QPARSER = "lucene";
 }

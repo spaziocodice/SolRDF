@@ -11,7 +11,14 @@ import org.apache.solr.search.DocSet;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 
+/**
+ * A compound {@link PatternDocSet} that encapsulates one or more {@link PatternDocSet}.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
 public class CompositePatternDocSet implements PatternDocSet {
+	private final static DocIterator EMPTY_DOC_ITERATOR = new EmptyDocSet().iterator();
 	private List<PatternDocSet> docsets = new ArrayList<PatternDocSet>();
 	private int size;
 	private int memSize;
@@ -19,6 +26,7 @@ public class CompositePatternDocSet implements PatternDocSet {
 	private Iterator<PatternDocSet> iterator;
 	private PatternDocSet currentDocSet;
 	
+	@Override
 	public Triple getTriplePattern() {
 		if (currentDocSet != null) {
 			return currentDocSet.getTriplePattern();
@@ -31,6 +39,7 @@ public class CompositePatternDocSet implements PatternDocSet {
 		}
 	}
 	
+	@Override
 	public Binding getParentBinding() {
 		if (currentDocSet != null) {
 			return currentDocSet.getParentBinding();
@@ -41,13 +50,6 @@ public class CompositePatternDocSet implements PatternDocSet {
 			}
 			return null;
 		}
-	}
-	
-	public Iterator<PatternDocSet> docSetIterator() {
-		if (iterator == null) {
-			iterator = docsets.iterator();
-		}
-		return iterator;
 	}
 	
 	@Override
@@ -76,12 +78,11 @@ public class CompositePatternDocSet implements PatternDocSet {
 			if (docSetIterator().hasNext()) {
 				currentDocSet = docSetIterator().next();
 			} else {
-				return null; // FIXME EMPTY ITERATOR
+				return EMPTY_DOC_ITERATOR;
 			}
 		} 
 		
 		return new DocIterator() {
-			
 			DocIterator currentDocSetIterator = currentDocSet.iterator();
 
 			@Override
@@ -173,4 +174,11 @@ public class CompositePatternDocSet implements PatternDocSet {
 	public void addAllTo(DocSet target) {
 		throw new UnsupportedOperationException();
 	}
+	
+	Iterator<PatternDocSet> docSetIterator() {
+		if (iterator == null) {
+			iterator = docsets.iterator();
+		}
+		return iterator;
+	}	
 }

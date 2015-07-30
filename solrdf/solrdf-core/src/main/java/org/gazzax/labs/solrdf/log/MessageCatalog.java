@@ -41,7 +41,9 @@ public interface MessageCatalog {
 	String _00112_GRAPHS_TOTAL_COUNT = PREFIX + "-00112> : SolRDF has %s graphs.";
 	String _00113_NWS_FAILURE = PREFIX + "-00113> : An error has been detected. See below for further details.";
 	String _00114_ADD_NOT_ALLOWED = PREFIX + "-00114> : Add operation not allowed as this is a read-only view of the underlying graph.";
-	String _00115_DELETE_NOT_ALLOWED = PREFIX + "-00114> : Delete operation not allowed as this is a read-only view of the underlying graph.";
-	String _00116_CLEAR_NOT_ALLOWED = PREFIX + "-00115> : Clear operation not allowed as this is a read-only view of the underlying graph.";
-	String _00117_UTF8_NOT_SUPPORTED = PREFIX + "-00116> : URL cannot be properly encoded using UTF-8. As consequence of that the system will use the default platform encoding.";
+	String _00115_DELETE_NOT_ALLOWED = PREFIX + "-00115> : Delete operation not allowed as this is a read-only view of the underlying graph.";
+	String _00116_CLEAR_NOT_ALLOWED = PREFIX + "-00116> : Clear operation not allowed as this is a read-only view of the underlying graph.";
+	String _00117_UTF8_NOT_SUPPORTED = PREFIX + "-00117> : URL cannot be properly encoded using UTF-8. As consequence of that the system will use the default platform encoding.";
+	String _00118_IO_FAILURE = PREFIX + "-00118> : An I/O error has been detected. See below for further details.";
+	String _00119_QUERY_PARSING_FAILURE = PREFIX + "-00119> : Query parser failure. See below for further details.";
 }

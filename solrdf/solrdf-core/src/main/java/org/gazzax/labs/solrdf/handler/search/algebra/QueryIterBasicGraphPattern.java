@@ -23,8 +23,13 @@ import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocSet;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.standalone.LocalGraph;
+import org.gazzax.labs.solrdf.log.Log;
+import org.gazzax.labs.solrdf.log.MessageCatalog;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -37,78 +42,70 @@ import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
 import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
 import com.hp.hpl.jena.sparql.engine.iterator.QueryIter1;
 import com.hp.hpl.jena.sparql.serializer.SerializationContext;
-import com.hp.hpl.jena.sparql.util.Symbol;
+import com.hp.hpl.jena.sparql.util.FmtUtils;
+import com.hp.hpl.jena.sparql.util.Utils;
 
-// FIXME : TBRENAMED
-public class QueryIterBlockTriples2 extends QueryIter1
-{
+/**
+ * A {@link QueryIterator} implementation for executing {@link BasicPattern}s.
+ * 
+ * @author Andrea Gazzarini
+ * @since 1.0
+ */
+public class QueryIterBasicGraphPattern extends QueryIter1 {
+	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern.class));
+	
 	final static List<Binding> EMPTY_BINDINGS = Collections.emptyList();
+	final static List<PatternDocSet> NULL_DOCSETS = new ArrayList<PatternDocSet>(2);
+	static {
+		NULL_DOCSETS.add(
+				new LeafPatternDocSet(
+						new EmptyDocSet(), 
+						Triple.create(Node.ANY, Node.ANY, Node.ANY)));
+		NULL_DOCSETS.add(
+				new LeafPatternDocSet(
+						new EmptyDocSet(), 
+						Triple.create(Node.ANY, Node.ANY, Node.ANY)));
+	}
 	
     private List<Binding> bindings = new ArrayList<Binding>();
-    private final Iterator<Binding> iterator;
+    private Iterator<Binding> iterator;
+    private final BasicPattern bgp;
     
-    public static QueryIterator create(final QueryIterator input,
-                                       final BasicPattern pattern , 
-                                       final ExecutionContext execContext) {
-        return new QueryIterBlockTriples2(input, pattern, execContext) ;
-    }
-    
-    private QueryIterBlockTriples2(
-    		QueryIterator input, 
-    		BasicPattern bgp, 
-    		ExecutionContext executionContext) {
-        super(input, executionContext) ;
-               
-        // FIXME: solrreq--> better handling (Constants)
-        final SolrQueryRequest req = (SolrQueryRequest)executionContext.getContext().get(Symbol.create("solrreq"));
-		final SolrIndexSearcher searcher = (SolrIndexSearcher) req.getSearcher();
-        final LocalGraph graph = (LocalGraph) executionContext.getActiveGraph() ;
-//		final SizeOrderedDocSets collector = new SizeOrderedDocSets();
-		final List<PatternDocSet> collector = new ArrayList<PatternDocSet>(bgp.size());
+    /**
+     * Builds a new iterator with the given data.
+     * 
+     * @param input the parent {@link QueryIterator}.
+     * @param bgp the Basic Graph Pattern.
+     * @param context the execution context.
+     */
+    QueryIterBasicGraphPattern(
+    		final QueryIterator input, 
+    		final BasicPattern bgp, 
+    		final ExecutionContext context) {
+        super(input, context) ;
+        
+        this.bgp = bgp;
+        final SolrQueryRequest request = (SolrQueryRequest)context.getContext().get(Names.SOLR_REQUEST_SYM);
+		final SolrIndexSearcher searcher = (SolrIndexSearcher) request.getSearcher();
+         
 		try {
-			for (final Triple triplePattern : bgp) {
-				collector.add(
-						new LeafPatternDocSet(
-								searcher.getDocSet(
-										QParser.getParser(
-												graph.deleteQuery(triplePattern), "lucene", req) // FIXME: graph.deleteQuery--> TBREnamed
-										.getQuery()),
-								triplePattern));
-	        }
-			
-			Collections.sort(collector, new Comparator<DocSet>() {
-				@Override
-				public int compare(final DocSet o1, final DocSet o2) {
-					return o1.size() - o2.size();
-				}
-			});
-			
 			final Set<String> alreadyCollectedVariables = new HashSet<String>();
-
-			// Special (simplest) case: one pattern.
-			if (collector.size() == 1) {
-				
-				final PatternDocSet docset = collector.iterator().next();
-				collectBindings(docset, searcher, alreadyCollectedVariables);
-				
-			} else if (collector.size() > 1){
-				
-				final Iterator<PatternDocSet> iterator = collector.iterator();
-				
-				// FIXME: appropriate naming
-				PatternDocSet previousTopLevelDocSet = iterator.next();
-				
-				while (iterator.hasNext()) {
-					final PatternDocSet nextTopLevelDocSet = iterator.next();	
-					previousTopLevelDocSet = collectBindings(previousTopLevelDocSet, nextTopLevelDocSet, searcher, alreadyCollectedVariables);
-				}
-				collectBindings(previousTopLevelDocSet, searcher, alreadyCollectedVariables);
-			}	
-		} catch (Exception exception) {
-			exception.printStackTrace();
+			final Iterator<PatternDocSet> iterator = docsets(bgp, request, (LocalGraph)context.getActiveGraph()).iterator();
+			
+			PatternDocSet pivot = iterator.next();
+			
+			while (iterator.hasNext()) {
+				final PatternDocSet subsequent = iterator.next();	
+				pivot = collectBindings(pivot, subsequent, searcher, alreadyCollectedVariables);
+			}
+			
+			collectBindings(pivot, searcher, alreadyCollectedVariables);
+			
+			this.iterator = bindings.iterator();
+		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			this.iterator = EMPTY_BINDINGS.iterator();
 		}
-		
-		this.iterator = bindings.iterator();
     }
 
 	void collectBindings(final PatternDocSet docset, final SolrIndexSearcher searcher, final Set<String> alreadyCollectedVariables) throws IOException {
@@ -133,7 +130,7 @@ public class QueryIterBlockTriples2 extends QueryIter1
 		}
 	}
 	
-	private PatternDocSet collectBindings(
+	PatternDocSet collectBindings(
 			final PatternDocSet first, 
 			final PatternDocSet second, 
 			final SolrIndexSearcher searcher, 
@@ -153,8 +150,10 @@ public class QueryIterBlockTriples2 extends QueryIter1
 			collectBinding(pattern.getObject(), second.getTriplePattern().getObject(), binding, alreadyCollectedVariables, localCollectedVariables, document, Field.O, query);
 			
 			// TODO: e se il binding vuoto???
-			// TODO: se il docset è vuoto non aggiungerlo
-			result.union(new LeafPatternDocSet(searcher.getDocSet(query, second), second.getTriplePattern(), binding));
+			final DocSet docset = searcher.getDocSet(query, second);
+			if (docset.size() > 0) {
+				result.union(new LeafPatternDocSet(docset, second.getTriplePattern(), binding));
+			}
 		}
 
 		alreadyCollectedVariables.addAll(localCollectedVariables);
@@ -194,36 +193,75 @@ public class QueryIterBlockTriples2 extends QueryIter1
 		}
 	}		
 	
+	/**
+	 * Returns the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
+	 * 
+	 * @param bgp the basic graph pattern.
+	 * @param request the current Solr request.
+	 * @param graph the active graph.
+	 * @return the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
+	 */
+	List<PatternDocSet> docsets(final BasicPattern bgp, final SolrQueryRequest request, final LocalGraph graph) {
+		try {
+			final List<PatternDocSet> collector = new ArrayList<PatternDocSet>(bgp.size());
+			for (final Triple triplePattern : bgp) {
+				final DocSet docset = request.getSearcher()
+						.getDocSet(
+								QParser.getParser(
+										graph.luceneQuery(triplePattern), Names.SOLR_QPARSER, request)
+								.getQuery());
+				
+				if (docset.size() == 0) {
+					return NULL_DOCSETS;
+				}
+				
+				collector.add(new LeafPatternDocSet(docset,triplePattern));
+	        }
+			
+			Collections.sort(collector, new Comparator<DocSet>() {
+				@Override
+				public int compare(final DocSet o1, final DocSet o2) {
+					return o1.size() - o2.size();
+				}
+			});		
+			
+			return collector;
+		} catch (final IOException exception) {
+			LOGGER.error(MessageCatalog._00118_IO_FAILURE, exception);
+			return NULL_DOCSETS;			
+		} catch (final SyntaxError exception) {
+			LOGGER.error(MessageCatalog._00119_QUERY_PARSING_FAILURE, exception);
+			return NULL_DOCSETS;
+		} catch (final Exception exception) {
+			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
+			return NULL_DOCSETS;
+		}
+	}
+	
     @Override
-    protected boolean hasNextBinding()
-    {
+    protected boolean hasNextBinding() {
         return iterator.hasNext();
     }
 
     @Override
-    protected Binding moveToNextBinding()
-    {
+    protected Binding moveToNextBinding() {
         return iterator.next();
     }
 
     @Override
-    protected void closeSubIterator()
-    {
+    protected void closeSubIterator() {
     }
     
     @Override
-    protected void requestSubCancel()
-    {
+    protected void requestSubCancel() {
     }
 
     @Override
-    
-    protected void details(IndentedWriter out, SerializationContext sCxt)
-    {
-//        out.print(Utils.className(this)) ;
-//        out.println() ;
-//        out.incIndent() ;
-//        FmtUtils.formatPattern(out, pattern, sCxt) ;
-//        out.decIndent() ;
+    protected void details(final IndentedWriter out, final SerializationContext context) {
+        out.print(Utils.className(this)) ;
+        out.println() ;
+        out.incIndent() ;
+        FmtUtils.formatPattern(out, bgp, context) ;
+        out.decIndent() ;
     }
 }
