@@ -28,7 +28,7 @@ public class LeafPatternDocSet implements PatternDocSet {
 	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
 	 * @param binding the parent {@link Binding}, null in case of top level {@link LeafPatternDocSet}.
 	 */
-	LeafPatternDocSet(final DocSet docset, final Triple pattern, final Binding binding) {
+	public LeafPatternDocSet(final DocSet docset, final Triple pattern, final Binding binding) {
 		this.delegate = docset;
 		this.pattern = pattern;
 		this.parentBinding = binding;

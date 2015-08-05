@@ -27,6 +27,7 @@ import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.standalone.LocalGraph;
+import org.gazzax.labs.solrdf.handler.search.algebra.tt.ExtendedQueryIterator;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ import com.hp.hpl.jena.sparql.util.Utils;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class QueryIterBasicGraphPattern extends QueryIter1 {
+public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQueryIterator {
 	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern.class));
 	
 	final static List<Binding> EMPTY_BINDINGS = Collections.emptyList();
@@ -70,6 +71,8 @@ public class QueryIterBasicGraphPattern extends QueryIter1 {
     private List<Binding> bindings = new ArrayList<Binding>();
     private Iterator<Binding> iterator;
     private final BasicPattern bgp;
+    
+    private PatternDocSet docset;
     
     /**
      * Builds a new iterator with the given data.
@@ -92,7 +95,7 @@ public class QueryIterBasicGraphPattern extends QueryIter1 {
 			final Set<String> alreadyCollectedVariables = new HashSet<String>();
 			final Iterator<PatternDocSet> iterator = docsets(bgp, request, (LocalGraph)context.getActiveGraph()).iterator();
 			
-			PatternDocSet pivot = iterator.next();
+			PatternDocSet pivot = input instanceof ExtendedQueryIterator ? ((ExtendedQueryIterator)input).patternDocSet() : iterator.next();
 			
 			while (iterator.hasNext()) {
 				final PatternDocSet subsequent = iterator.next();	
@@ -101,6 +104,7 @@ public class QueryIterBasicGraphPattern extends QueryIter1 {
 			
 			collectBindings(pivot, searcher, alreadyCollectedVariables);
 			
+			this.docset = pivot;
 			this.iterator = bindings.iterator();
 		} catch (final Exception exception) {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
@@ -108,6 +112,11 @@ public class QueryIterBasicGraphPattern extends QueryIter1 {
 		}
     }
 
+    @Override
+    public PatternDocSet patternDocSet() {
+    	return docset;
+    }
+    
 	void collectBindings(final PatternDocSet docset, final SolrIndexSearcher searcher, final Set<String> alreadyCollectedVariables) throws IOException {
 		if (docset == null) { 
 			bindings = EMPTY_BINDINGS;

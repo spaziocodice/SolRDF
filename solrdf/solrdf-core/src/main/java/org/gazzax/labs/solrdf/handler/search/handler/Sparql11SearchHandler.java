@@ -1,13 +1,18 @@
 package org.gazzax.labs.solrdf.handler.search.handler;
 import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
+import static org.gazzax.labs.solrdf.NTriples.asNode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jena.riot.WebContent;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.CommonParams;
@@ -21,14 +26,35 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.request.SolrRequestHandler;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.handler.search.algebra.CompositePatternDocSet;
+import org.gazzax.labs.solrdf.handler.search.algebra.LeafPatternDocSet;
+import org.gazzax.labs.solrdf.handler.search.algebra.PatternDocSet;
 import org.gazzax.labs.solrdf.handler.search.algebra.SolRDFStageGenerator;
+import org.gazzax.labs.solrdf.handler.search.algebra.tt.ExtendedQueryIterator;
 
+import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ARQ;
+import com.hp.hpl.jena.sparql.algebra.Op;
+import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
+import com.hp.hpl.jena.sparql.core.Var;
+import com.hp.hpl.jena.sparql.engine.ExecutionContext;
+import com.hp.hpl.jena.sparql.engine.QueryIterator;
+import com.hp.hpl.jena.sparql.engine.binding.Binding;
+import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
+import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
+import com.hp.hpl.jena.sparql.engine.iterator.QueryIterFilterExpr;
+import com.hp.hpl.jena.sparql.engine.main.OpExecutor;
+import com.hp.hpl.jena.sparql.engine.main.OpExecutorFactory;
+import com.hp.hpl.jena.sparql.engine.main.QC;
 import com.hp.hpl.jena.sparql.engine.main.StageBuilder;
+import com.hp.hpl.jena.sparql.expr.Expr;
+import com.hp.hpl.jena.sparql.expr.ExprList;
 import com.hp.hpl.jena.sparql.util.Context;
-import com.hp.hpl.jena.sparql.util.Symbol;
 
 /**
  * A RequestHandler that dispatches SPARQL 1.1 Query and Update requests across dedicated handlers.
@@ -65,6 +91,78 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		final Context ctx = ARQ.getContext();
 		ctx.set(Names.SOLR_REQUEST_SYM, request);
 		StageBuilder.setGenerator(ctx, new SolRDFStageGenerator()) ;
+		
+		// FIXME : Tutta questa roba non deve stare qua (semmai sia utile)
+		OpExecutorFactory factory = new OpExecutorFactory() {
+			
+			@Override
+			public OpExecutor create(ExecutionContext execCxt) {
+				return new OpExecutor(execCxt) {
+					@Override
+					protected QueryIterator execute(OpFilter opFilter, QueryIterator input) {
+						ExprList exprs = opFilter.getExprs() ;
+
+				        Op base = opFilter.getSubOp() ;
+				        QueryIterator qIter = exec(base, input) ;
+
+				        if (qIter instanceof ExtendedQueryIterator) {
+				        	PatternDocSet docSet = ((ExtendedQueryIterator)qIter).patternDocSet(); 
+				        	NumericRangeQuery<Double> query = NumericRangeQuery.newDoubleRange("o_n", null, 20d, true, true);
+				        	try {
+	        					PatternDocSet ds = new LeafPatternDocSet(
+	        							request.getSearcher().getDocSet(query, docSet), 
+	        							docSet.getTriplePattern(), 
+	        							docSet.getParentBinding());
+	        							
+					        	return new BindingsQueryIterator(ds, collectBindings(ds,request.getSearcher()));
+				        	} catch (Exception ex) {
+				        		ex.printStackTrace();
+				        		throw new RuntimeException(ex);
+				        	}
+				        } else {   
+					        for (Expr expr : exprs)
+					            qIter = new QueryIterFilterExpr(qIter, expr, execCxt) ;
+					        return qIter ;
+				        }
+					}
+					
+					List<Binding> collectBindings(final PatternDocSet docset, final SolrIndexSearcher searcher) throws IOException {
+						final CompositePatternDocSet result = new CompositePatternDocSet();
+						List<Binding> bindings = new ArrayList<Binding>();
+						if (docset == null) { 
+							return bindings;
+						}
+						
+						final Triple pattern = docset.getTriplePattern();
+						final DocIterator iterator = docset.iterator();
+						while (iterator.hasNext()) { 
+							final Document document = searcher.doc(iterator.nextDoc());
+							final BindingMap binding = BindingFactory.create(docset.getParentBinding());
+							
+							collectBinding(pattern.getSubject(), binding, document, Field.S);
+							collectBinding(pattern.getPredicate(), binding, document, Field.P);
+							collectBinding(pattern.getObject(), binding, document, Field.O);
+							
+							if (!binding.isEmpty()) {
+								bindings.add(binding);
+							}
+						}
+						return bindings;
+					}
+					
+					void collectBinding(
+							final Node member, 
+							final BindingMap binding,
+							final Document document, 
+							final String fieldName) {
+						if (member.isVariable()){
+							binding.add(Var.alloc(member), asNode(document.get(fieldName)));
+						}
+					}	
+				};
+			}
+		};
+		QC.setFactory(ARQ.getContext(), factory);
 		
 		final SolrParams parameters = request.getParams();
 		if (isUsingGET(request)) {
