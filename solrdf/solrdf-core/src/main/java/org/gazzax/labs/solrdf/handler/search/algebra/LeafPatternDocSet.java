@@ -50,7 +50,7 @@ public class LeafPatternDocSet implements PatternDocSet {
 	 * @param docset the {@link DocSet}.
 	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
 	 */
-	LeafPatternDocSet(final DocSet docset, final Triple pattern) {
+	public LeafPatternDocSet(final DocSet docset, final Triple pattern) {
 		this(docset, pattern, null);
 	}
 	
