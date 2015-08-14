@@ -46,4 +46,5 @@ public interface MessageCatalog {
 	String _00117_UTF8_NOT_SUPPORTED = PREFIX + "-00117> : URL cannot be properly encoded using UTF-8. As consequence of that the system will use the default platform encoding.";
 	String _00118_IO_FAILURE = PREFIX + "-00118> : An I/O error has been detected. See below for further details.";
 	String _00119_QUERY_PARSING_FAILURE = PREFIX + "-00119> : Query parser failure. See below for further details.";
+	String _00120_BGP_EXPLAIN = PREFIX + "-00120> : %s : pattern = %s, query = %s, matches = %s";
 }

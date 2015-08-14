@@ -26,4 +26,5 @@ public interface PatternDocSet extends DocSet {
 	 * @return the {@link Binding} associated with this {@link DocSet}.
 	 */
 	Binding getParentBinding();
+	
 }

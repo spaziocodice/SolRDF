@@ -12,7 +12,8 @@ ab:i0432
 
 ab:i8301  
    ab:firstName "Craig" ;
-   ab:lastName  "Ellis" ;
+   ab:lastName  "Ellis1" ;
+   ab:lastName  "Ellis2" ;
    ab:patient   ab:i9771 . 
 
 ab:i9771

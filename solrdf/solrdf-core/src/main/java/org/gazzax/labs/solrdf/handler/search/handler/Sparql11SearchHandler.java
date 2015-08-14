@@ -33,6 +33,7 @@ import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.handler.search.algebra.CompositePatternDocSet;
 import org.gazzax.labs.solrdf.handler.search.algebra.LeafPatternDocSet;
 import org.gazzax.labs.solrdf.handler.search.algebra.PatternDocSet;
+import org.gazzax.labs.solrdf.handler.search.algebra.QueryIterBasicGraphPattern;
 import org.gazzax.labs.solrdf.handler.search.algebra.SolRDFStageGenerator;
 import org.gazzax.labs.solrdf.handler.search.algebra.tt.ExtendedQueryIterator;
 
@@ -40,6 +41,7 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ARQ;
 import com.hp.hpl.jena.sparql.algebra.Op;
+import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
 import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
 import com.hp.hpl.jena.sparql.core.Var;
 import com.hp.hpl.jena.sparql.engine.ExecutionContext;
@@ -103,27 +105,34 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 						ExprList exprs = opFilter.getExprs() ;
 
 				        Op base = opFilter.getSubOp() ;
-				        QueryIterator qIter = exec(base, input) ;
-
-				        if (qIter instanceof ExtendedQueryIterator) {
-				        	PatternDocSet docSet = ((ExtendedQueryIterator)qIter).patternDocSet(); 
-				        	NumericRangeQuery<Double> query = NumericRangeQuery.newDoubleRange("o_n", null, 20d, true, true);
-				        	try {
-	        					PatternDocSet ds = new LeafPatternDocSet(
-	        							request.getSearcher().getDocSet(query, docSet), 
-	        							docSet.getTriplePattern(), 
-	        							docSet.getParentBinding());
-	        							
-					        	return new BindingsQueryIterator(ds, collectBindings(ds,request.getSearcher()));
-				        	} catch (Exception ex) {
-				        		ex.printStackTrace();
-				        		throw new RuntimeException(ex);
-				        	}
-				        } else {   
-					        for (Expr expr : exprs)
-					            qIter = new QueryIterFilterExpr(qIter, expr, execCxt) ;
-					        return qIter ;
-				        }
+				        
+				        // Assumiamo per il momento che si tratta di un OPBGP
+				        OpBGP opbgp = (OpBGP) base;
+				        return new QueryIterBasicGraphPattern(input, opbgp.getPattern(), execCxt, opFilter);
+				        
+				        
+//				        QueryIterator qIter = exec(base, input) ;
+				        
+//
+//				        if (qIter instanceof ExtendedQueryIterator) {
+//				        	PatternDocSet docSet = ((ExtendedQueryIterator)qIter).patternDocSet(); 
+//				        	NumericRangeQuery<Double> query = NumericRangeQuery.newDoubleRange("o_n", null, 20d, true, true);
+//				        	try {
+//	        					PatternDocSet ds = new LeafPatternDocSet(
+//	        							request.getSearcher().getDocSet(query, docSet), 
+//	        							docSet.getTriplePattern(), 
+//	        							docSet.getParentBinding());
+//	        							
+//					        	return new BindingsQueryIterator(ds, collectBindings(ds,request.getSearcher()));
+//				        	} catch (Exception ex) {
+//				        		ex.printStackTrace();
+//				        		throw new RuntimeException(ex);
+//				        	}
+//				        } else {   
+//					        for (Expr expr : exprs)
+//					            qIter = new QueryIterFilterExpr(qIter, expr, execCxt) ;
+//					        return qIter ;
+//				        }
 					}
 					
 					List<Binding> collectBindings(final PatternDocSet docset, final SolrIndexSearcher searcher) throws IOException {

@@ -127,7 +127,7 @@ public class BgpReducer implements Reducer<OpBGP> {
 			// TODO: e se il binding vuoto???
 			final DocSet docset = searcher.getDocSet(query, second);
 			if (docset.size() > 0) {
-				result.union(new LeafPatternDocSet(docset, second.getTriplePattern(), binding));
+				result.union(new LeafPatternDocSet(docset, second.getTriplePattern(), binding, null));
 			}
 		}
 
@@ -189,7 +189,7 @@ public class BgpReducer implements Reducer<OpBGP> {
 					return triplePatternDocSets;
 				}
 				
-				triplePatternDocSets.add(new LeafPatternDocSet(docset,triplePattern));
+				triplePatternDocSets.add(new LeafPatternDocSet(docset,triplePattern,null));
 	        }
 			
 			Collections.sort(triplePatternDocSets, new Comparator<DocSet>() {

@@ -2,18 +2,15 @@
 
 PREFIX ab: <http://learningsparql.com/ns/addressbook#> 
 
-SELECT ?doctorFirst ?doctorLast ?spouseFirst ?spouseLast
+SELECT ?doctorFirst ?spouseFirst ?doctorLast 
 WHERE 
 {
-   ?s ab:firstName "Cindy" ;
-      ab:lastName "Marshall" ;
-      ab:doctor ?doctor ;
-      ab:spouse ?spouse .  
 
 ?doctor ab:firstName ?doctorFirst ;
         ab:lastName ?doctorLast .
 
-?spouse ab:firstName ?spouseFirst ;
-        ab:lastName ?spouseLast .
+?spouse ab:firstName ?spouseFirst .
+        
+
 }
 

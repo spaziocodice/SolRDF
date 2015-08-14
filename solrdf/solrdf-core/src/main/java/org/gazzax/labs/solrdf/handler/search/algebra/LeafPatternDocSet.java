@@ -1,6 +1,7 @@
 package org.gazzax.labs.solrdf.handler.search.algebra;
 
 import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.Query;
 import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocSet;
 
@@ -20,6 +21,7 @@ public class LeafPatternDocSet implements PatternDocSet {
 	
 	private final Triple pattern;
 	private final Binding parentBinding;
+	private final Query query;
 	
 	/**
 	 * Builds a new top level {@link LeafPatternDocSet} with the given data.
@@ -28,10 +30,11 @@ public class LeafPatternDocSet implements PatternDocSet {
 	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
 	 * @param binding the parent {@link Binding}, null in case of top level {@link LeafPatternDocSet}.
 	 */
-	public LeafPatternDocSet(final DocSet docset, final Triple pattern, final Binding binding) {
+	public LeafPatternDocSet(final DocSet docset, final Triple pattern, final Binding binding, final Query query) {
 		this.delegate = docset;
 		this.pattern = pattern;
 		this.parentBinding = binding;
+		this.query = query;
 	}
 	
 	/**
@@ -50,8 +53,8 @@ public class LeafPatternDocSet implements PatternDocSet {
 	 * @param docset the {@link DocSet}.
 	 * @param pattern the {@link Triple}Pattern that originates the {@link DocSet} above.
 	 */
-	public LeafPatternDocSet(final DocSet docset, final Triple pattern) {
-		this(docset, pattern, null);
+	public LeafPatternDocSet(final DocSet docset, final Triple pattern, final Query query) {
+		this(docset, pattern, null, query);
 	}
 	
 	@Override
@@ -138,4 +141,8 @@ public class LeafPatternDocSet implements PatternDocSet {
 	public Binding getParentBinding() {
 		return parentBinding;
 	}	
+	
+	public Query getQuery() {
+		return query;
+	}
 }
