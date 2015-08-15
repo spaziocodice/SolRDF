@@ -23,6 +23,17 @@ public class LeafPatternDocSet implements PatternDocSet {
 	private final Binding parentBinding;
 	private final Query query;
 	
+	@Override
+	public String toString() {
+		return new StringBuilder()
+			.append(pattern)
+			.append(" (")
+			.append(query)
+			.append(") => ")
+			.append(delegate.size())
+			.toString();
+	}
+	
 	/**
 	 * Builds a new top level {@link LeafPatternDocSet} with the given data.
 	 * 

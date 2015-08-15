@@ -27,6 +27,19 @@ public class CompositePatternDocSet implements PatternDocSet {
 	private PatternDocSet currentDocSet;
 	
 	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("\n*** NEW COMPOSITE SET *** \n");
+		builder.append("SIZE: ").append(size).append("\n");
+		for (final PatternDocSet set : docsets) {
+			builder.append("\n\t");		
+			builder.append(set).append("\n");
+		}
+		
+		return builder.toString();
+	}
+	
+	@Override
 	public Triple getTriplePattern() {
 		if (currentDocSet != null) {
 			return currentDocSet.getTriplePattern();

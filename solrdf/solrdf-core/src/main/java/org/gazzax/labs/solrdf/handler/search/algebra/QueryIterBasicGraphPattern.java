@@ -3,15 +3,13 @@ package org.gazzax.labs.solrdf.handler.search.algebra;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static org.gazzax.labs.solrdf.NTriples.asNode;
+import static org.gazzax.labs.solrdf.NTriples.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.lucene.document.Document;
@@ -36,7 +34,6 @@ import org.gazzax.labs.solrdf.log.MessageCatalog;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
 import com.hp.hpl.jena.sparql.core.BasicPattern;
@@ -80,7 +77,6 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 	}
 	
-    private List<Binding> bindings = new ArrayList<Binding>();
     private Iterator<Binding> iterator;
     private final BasicPattern bgp;
     
@@ -108,29 +104,17 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 		final SolrIndexSearcher searcher = (SolrIndexSearcher) request.getSearcher();
          
 		try {
-			final Set<String> alreadyCollectedVariables = new HashSet<String>();
 			final List<PatternDocSet> docsets = docsets(bgp, request, (LocalGraph)context.getActiveGraph());
-			
-			if (LOGGER.isDebugEnabled()) {
-				final long tid = System.currentTimeMillis();
-				docsets.stream().forEach(
-						docset -> LOGGER.debug(
-									MessageCatalog._00120_BGP_EXPLAIN, 
-									tid, 
-									docset.getTriplePattern(), 
-									((LeafPatternDocSet)docset).getQuery(), 
-									docset.size()));
-			}
-			
+						
 			final Iterator<PatternDocSet> iterator = docsets.iterator();			
 			PatternDocSet pivot = input instanceof ExtendedQueryIterator ? ((ExtendedQueryIterator)input).patternDocSet() : iterator.next();
 			
 			while (iterator.hasNext()) {
 				final PatternDocSet subsequent = iterator.next();	
-				pivot = collectBindings(pivot, subsequent, searcher, alreadyCollectedVariables);
+				pivot = collectBindings(pivot, subsequent, searcher);
 			}
 			
-			collectBindings(pivot, searcher, alreadyCollectedVariables);
+			final List<Binding> bindings = collectBindings(pivot, searcher);
 			
 			this.docset = pivot;
 			this.iterator = bindings.iterator();
@@ -145,47 +129,45 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
     	return docset;
     }
     
-	void collectBindings(final PatternDocSet docset, final SolrIndexSearcher searcher, final Set<String> alreadyCollectedVariables) throws IOException {
-		if (docset == null) { 
-			bindings = EMPTY_BINDINGS;
-			return;
-		}
-		
-		final Triple pattern = docset.getTriplePattern();
+    List<Binding> collectBindings(
+			final PatternDocSet docset, 
+			final SolrIndexSearcher searcher) throws IOException {		
 		final DocIterator iterator = docset.iterator();
+		final List<Binding> bindings = new ArrayList<Binding>(docset.size());
+		
 		while (iterator.hasNext()) { 
 			final Document document = searcher.doc(iterator.nextDoc());
+			final Triple pattern = docset.getTriplePattern();
 			final BindingMap binding = BindingFactory.create(docset.getParentBinding());
 			
-			collectBinding(pattern.getSubject(), binding, alreadyCollectedVariables, document, Field.S);
-			collectBinding(pattern.getPredicate(), binding, alreadyCollectedVariables, document, Field.P);
-			collectBinding(pattern.getObject(), binding, alreadyCollectedVariables, document, Field.O);
+			collectBinding(pattern.getSubject(), binding, document, Field.S);
+			collectBinding(pattern.getPredicate(), binding, document, Field.P);
+			collectBinding(pattern.getObject(), binding, document, Field.O);
 			
 			if (!binding.isEmpty()) {
 				bindings.add(binding);
 			}
 		}
+		
+		return bindings;
 	}
 	
 	PatternDocSet collectBindings(
 			final PatternDocSet first, 
 			final PatternDocSet second, 
-			final SolrIndexSearcher searcher, 
-			final Set<String> alreadyCollectedVariables) throws IOException {
+			final SolrIndexSearcher searcher) throws IOException {
 		final CompositePatternDocSet result = new CompositePatternDocSet();
 		final DocIterator iterator = first.iterator();
-		final Set<String> localCollectedVariables = new HashSet<String>();
-		final Triple pattern = first.getTriplePattern();
 		
  		while (iterator.hasNext()) {
+ 			final Triple pattern = first.getTriplePattern();
 			final Document document = searcher.doc(iterator.nextDoc());
 			final BindingMap binding = BindingFactory.create(first.getParentBinding());
 			final BooleanQuery query = new BooleanQuery();
 			
-			collectBinding(pattern.getSubject(), second.getTriplePattern().getSubject(), binding, alreadyCollectedVariables, localCollectedVariables, document, Field.S, query);
-			collectBinding(pattern.getPredicate(), second.getTriplePattern().getPredicate(), binding, alreadyCollectedVariables, localCollectedVariables, document, Field.P, query);
-			collectBinding(pattern.getObject(), second.getTriplePattern().getObject(), binding, alreadyCollectedVariables, localCollectedVariables, document, Field.O, query);
-
+			collectBinding(pattern.getSubject(), second.getTriplePattern().getSubject(), binding, document, Field.S, query);
+			collectBinding(pattern.getPredicate(), second.getTriplePattern().getPredicate(), binding, document, Field.P, query);
+			collectBinding(pattern.getObject(), second.getTriplePattern().getObject(), binding, document, Field.O, query);
 			
 			result.union(
 					new LeafPatternDocSet(
@@ -197,18 +179,21 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 							query));
 		}
 
-		alreadyCollectedVariables.addAll(localCollectedVariables);
+ 		System.err.println(result);
+ 		
 		return result;		
 	}
 	
 	void collectBinding(
 			final Node member, 
 			final BindingMap binding,
-			final Set<String> alreadyCollectedVariables, 
 			final Document document, 
 			final String fieldName) {
-		if (member.isVariable() && !binding.contains(Var.alloc(member))) {
-			binding.add(Var.alloc(member), asNode(document.get(fieldName)));
+		if (member.isVariable()) {
+			final Var var = Var.alloc(member);
+			if (!binding.contains(var)) {
+				binding.add(var, asNode(document.get(fieldName)));
+			}
 		}
 	}	
 	
@@ -216,20 +201,20 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 			final Node memberOfTheFirstPattern, 
 			final Node memberOfTheSecondPattern, 
 			final BindingMap binding,
-			final Set<String> globalCollectedVariables, 
-			final Set<String> localCollectedVariables, 
 			final Document document, 
 			final String fieldName, 
 			final BooleanQuery query) {
 		if (memberOfTheFirstPattern.isVariable() || memberOfTheSecondPattern.isVariable()) {
 			final String value = document.get(fieldName);
-			if (memberOfTheFirstPattern.equals(memberOfTheSecondPattern) || binding.contains(Var.alloc(memberOfTheSecondPattern))) {
-				query.add(new TermQuery(new Term(fieldName, value)), Occur.MUST);
+			if ( (memberOfTheFirstPattern.isVariable() && memberOfTheFirstPattern.equals(memberOfTheSecondPattern))) {
+				query.add(new TermQuery(new Term(fieldName, value)), Occur.MUST);				
+			} else if (memberOfTheSecondPattern.isVariable() && binding.contains(Var.alloc(memberOfTheSecondPattern))) {
+				query.add(new TermQuery(new Term(fieldName, asNt(binding.get(Var.alloc(memberOfTheSecondPattern))))), Occur.MUST);
 			}
 			
-			if (!globalCollectedVariables.contains(memberOfTheFirstPattern.getName())) {
-				binding.add(Var.alloc(memberOfTheFirstPattern), asNode(value));
-				localCollectedVariables.add(memberOfTheFirstPattern.getName());
+			final Var var = Var.alloc(memberOfTheFirstPattern);
+			if (!binding.contains(var)) {
+				binding.add(var, asNode(value));
 			}
 		}
 	}		
@@ -243,10 +228,8 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 	 * @return the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
 	 */
 	List<PatternDocSet> docsets(final BasicPattern bgp, final SolrQueryRequest request, final LocalGraph graph) {
-		return bgp
-			.getList()
-			.parallelStream()
-			.map(triplePattern ->  {
+		final List<PatternDocSet> docsets = bgp.getList().parallelStream()
+				.map(triplePattern ->  {
 					try {
 						final BooleanQuery query = new BooleanQuery();
 						query.add(
@@ -257,7 +240,7 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 										.getQuery(), 
 								Occur.MUST);
 						
-						// TODO : To be removed
+						// TODO : To be removed. Expr can be more more complex. A general mapping between this and Solr is needed.
 						for (Iterator<Expr> expressions = filter.getExprs().iterator(); expressions.hasNext();) {
 							final Expr expression = expressions.next(); 
 							if (expression.isFunction()) {
@@ -295,6 +278,19 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 				})
 			.sorted(comparing(DocSet::size))	
 			.collect(toList());
+		
+		if (LOGGER.isDebugEnabled()) {
+			final long tid = System.currentTimeMillis();
+			docsets.stream().forEach(
+					docset -> LOGGER.debug(
+								MessageCatalog._00120_BGP_EXPLAIN, 
+								tid, 
+								docset.getTriplePattern(), 
+								((LeafPatternDocSet)docset).getQuery(), 
+								docset.size()));
+		}
+		
+		return (docsets.size() > 0 && docsets.iterator().next().size() > 0) ? docsets : NULL_DOCSETS;
 	}
 	
     @Override

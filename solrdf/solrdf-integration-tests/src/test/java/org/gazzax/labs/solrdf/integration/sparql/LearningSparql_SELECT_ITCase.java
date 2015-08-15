@@ -82,7 +82,7 @@ public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
 
 	@Test
 	public void selectFirstAndLastName() throws Exception {
-		selectTest(misteryGuest("ex047.rq", "ex012.ttl"));		
+		selectTest(misteryGuest("ex047.rq", "ex046.ttl"));		
 	}
 
 	@Test
