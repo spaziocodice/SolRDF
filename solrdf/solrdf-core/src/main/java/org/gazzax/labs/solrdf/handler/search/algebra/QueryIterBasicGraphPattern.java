@@ -212,9 +212,11 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 				query.add(new TermQuery(new Term(fieldName, asNt(binding.get(Var.alloc(memberOfTheSecondPattern))))), Occur.MUST);
 			}
 			
-			final Var var = Var.alloc(memberOfTheFirstPattern);
-			if (!binding.contains(var)) {
-				binding.add(var, asNode(value));
+			if (memberOfTheFirstPattern.isVariable()) {
+				final Var var = Var.alloc(memberOfTheFirstPattern);
+				if (!binding.contains(var)) {
+					binding.add(var, asNode(value));
+				}
 			}
 		}
 	}		
