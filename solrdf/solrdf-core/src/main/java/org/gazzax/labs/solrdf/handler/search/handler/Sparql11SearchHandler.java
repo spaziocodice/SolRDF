@@ -3,7 +3,7 @@ import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import static org.gazzax.labs.solrdf.Strings.*;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jena.riot.WebContent;
@@ -177,7 +177,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	 * @return true if the current request is using POST method and URL-encoded parameters.
 	 */
 	boolean isUsingURLEncodedParameters(final SolrQueryRequest request) {
-		return WebContent.contentTypeHTMLForm.equals(((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType());
+		return contentType(request).startsWith(WebContent.contentTypeHTMLForm);
 	}
 	
 	/**
@@ -187,7 +187,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	 * @return true if the current request has a "application/sparql-update" content type.
 	 */
 	boolean isSparqlUpdateContentType(final SolrQueryRequest request) {
-		return WebContent.contentTypeSPARQLUpdate.equals(((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType());
+		return contentType(request).startsWith(WebContent.contentTypeSPARQLUpdate);
 	}
 	
 	/**
@@ -197,7 +197,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	 * @return true if the current request has a "application/sparql-query" content type.
 	 */
 	boolean isSparqlQueryContentType(final SolrQueryRequest request) {
-		return WebContent.contentTypeSPARQLQuery.equals(((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType());
+		return contentType(request).startsWith(WebContent.contentTypeSPARQLQuery); 
 	}	
 	
 	/**
@@ -218,6 +218,17 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	 */
 	boolean containsUpdateParameter(final SolrParams parameters) {
 		return parameters.get(Names.UPDATE_PARAMETER_NAME) != null;
+	}
+	
+	/**
+	 * Returns the content type associated with the current request.
+	 * 
+	 * @param request the current request.
+	 * @return the content type associated with the current request or an empty string.
+	 */
+	String contentType(final SolrQueryRequest request) {
+		final String incomingContentType =  ((HttpServletRequest) request.getContext().get(Names.HTTP_REQUEST_KEY)).getContentType();
+		return isNotNullOrEmptyString(incomingContentType) ? incomingContentType : EMPTY_STRING;
 	}
 	
 	/**

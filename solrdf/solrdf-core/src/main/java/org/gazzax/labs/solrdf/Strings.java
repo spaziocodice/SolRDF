@@ -7,6 +7,8 @@ package org.gazzax.labs.solrdf;
  * @since 1.0
  */
 public abstract class Strings {
+	public final static String EMPTY_STRING = "";
+	
 	/**
 	 * Checks if the given string is not null or (not) empty string.
 	 * 

@@ -30,6 +30,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.request.SolrRequestHandler;
 import org.apache.solr.response.SolrQueryResponse;
 import org.gazzax.labs.solrdf.Names;
+import org.gazzax.labs.solrdf.Strings;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -84,6 +85,20 @@ public class Sparql11SearchHandlerTestCase {
 		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
 	} 		
 	
+	@Test
+	public void requestContainsContentType() {
+		final String contentType = randomString();
+		when(httpRequest.getContentType()).thenReturn(contentType);
+		
+		assertEquals(contentType, cut.contentType(request));
+	}
+	
+	@Test
+	public void requestDoesntContainsContentType() {
+		when(httpRequest.getContentType()).thenReturn(null);
+		assertEquals(Strings.EMPTY_STRING, cut.contentType(request));
+	}	
+	
 	@Test 
 	public void queryViaGETWithoutQuery() throws Exception {
 		final ModifiableSolrParams parameters = new ModifiableSolrParams();
@@ -130,7 +145,7 @@ public class Sparql11SearchHandlerTestCase {
 	} 
 	
 	@Test 
-	public void queryUsingPOSTWithURLEncodedParameters() throws Exception {
+	public void queryUsingPOSTWithURLEncodedParameters_I() throws Exception {
 		final ModifiableSolrParams parameters = new ModifiableSolrParams();
 		parameters.set(Names.QUERY, randomString());
 
@@ -142,6 +157,20 @@ public class Sparql11SearchHandlerTestCase {
 		
 		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
 	} 
+	
+	@Test 
+	public void queryUsingPOSTWithURLEncodedParameters_II() throws Exception {
+		final ModifiableSolrParams parameters = new ModifiableSolrParams();
+		parameters.set(Names.QUERY, randomString());
+
+		when(httpRequest.getMethod()).thenReturn("POST");
+		when(httpRequest.getContentType()).thenReturn(WebContent.contentTypeHTMLForm + ";charset=UTF-8");
+		when(request.getParams()).thenReturn(parameters);
+		
+		cut.handleRequestBody(request, response);
+		
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+	} 	
 	
 	@Test 
 	public void queryUsingPOSTWithURLEncodedParametersWithoutUpdateCommand() throws Exception {
