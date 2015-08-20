@@ -56,12 +56,12 @@ public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
 	}
 
 	@Test
-	public void multipleTriplePatterns_I() throws Exception {
+	public void twoTriplePatterns() throws Exception {
 		selectTest(misteryGuest("ex013.rq", "ex012.ttl"));		
 	}
 
 	@Test
-	public void multipleTriplePatterns_II() throws Exception {
+	public void threeTriplePatterns() throws Exception {
 		selectTest(misteryGuest("ex015.rq", "ex012.ttl"));		
 	}
 
