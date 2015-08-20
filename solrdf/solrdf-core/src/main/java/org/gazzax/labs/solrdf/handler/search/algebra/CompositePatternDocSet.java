@@ -156,10 +156,12 @@ public class CompositePatternDocSet implements PatternDocSet {
 	}
 
 	@Override
-	public DocSet union(DocSet other) {
-		docsets.add((LeafPatternDocSet) other);
-		size += other.size();
-		memSize += other.memSize();
+	public DocSet union(final DocSet other) {
+		if (other.size() != 0) {
+			docsets.add((LeafPatternDocSet) other);
+			size += other.size();
+			memSize += other.memSize();
+		}
 		return this;
 	}
 

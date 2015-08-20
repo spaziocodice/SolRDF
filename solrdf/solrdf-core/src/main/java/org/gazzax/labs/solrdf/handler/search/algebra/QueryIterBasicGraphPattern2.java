@@ -57,32 +57,24 @@ import com.hp.hpl.jena.sparql.util.Utils;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQueryIterator {
-	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern.class));
+public class QueryIterBasicGraphPattern2 extends QueryIter1 {
+	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern2.class));
 	final static OpFilter NULL_FILTER = OpFilter.filter(null);
 	
 	final static List<Binding> EMPTY_BINDINGS = Collections.emptyList();
-	final static PatternDocSet EMPTY_DOCSET = new LeafPatternDocSet(
-			new EmptyDocSet(), 
-			Triple.create(Node.ANY, Node.ANY, Node.ANY), 
-			new Query() {
-				@Override
-				public String toString(String field) {
-					return "NaQ";
-				}
-			});
-	final static List<PatternDocSet> NULL_DOCSETS = new ArrayList<PatternDocSet>(2);
+	final static DocSetAndTriplePattern EMPTY_DOCSET = new DocSetAndTriplePattern(new EmptyDocSet(), null);
+	final static List<DocSetAndTriplePattern> NULL_DOCSETS = new ArrayList<DocSetAndTriplePattern>(2);
 	static {
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 	}
 	
-    private Iterator<Binding> iterator;
     private final BasicPattern bgp;
-    
-    private PatternDocSet docset;
-    
     private OpFilter filter = NULL_FILTER;
+    
+    private final DocSetAndTriplePattern master;
+    private final DocIterator masterIterator;
+    private final List<DocSetAndTriplePattern> subsequents;
     
     /**
      * Builds a new iterator with the given data.
@@ -91,7 +83,7 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
      * @param bgp the Basic Graph Pattern.
      * @param context the execution context.
      */
-    public QueryIterBasicGraphPattern(
+    public QueryIterBasicGraphPattern2(
     		final QueryIterator input, 
     		final BasicPattern bgp, 
     		final ExecutionContext context,
@@ -104,32 +96,60 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 		final SolrIndexSearcher searcher = (SolrIndexSearcher) request.getSearcher();
          
 		try {
-			final List<PatternDocSet> docsets = docsets(bgp, request, (LocalGraph)context.getActiveGraph());
-						
-			final Iterator<PatternDocSet> iterator = docsets.iterator();			
-			PatternDocSet pivot = input instanceof ExtendedQueryIterator ? ((ExtendedQueryIterator)input).patternDocSet() : iterator.next();
+			final List<DocSetAndTriplePattern> docsets = docsets(bgp, request, (LocalGraph)context.getActiveGraph());
+			master = docsets.get(0);
+			masterIterator = master.children.iterator();
+			subsequents = docsets.subList(1, docsets.size());
 			
-			while (iterator.hasNext()) {
-				final PatternDocSet subsequent = iterator.next();	
-				pivot = collectBindings(pivot, subsequent, searcher);
-			}
+			/*
+			1 --> 
+				Q ---> 2 
+					Q --->
+			*/
+//			NodeDocSet pivot = iterator.next();
 			
-			final List<Binding> bindings = collectBindings(pivot, searcher);
+//			PatternDocSet pivot = input instanceof ExtendedQueryIterator ? ((ExtendedQueryIterator)input).patternDocSet() : iterator.next();
 			
-			this.docset = pivot;
-			this.iterator = bindings.iterator();
+//			while (iterator.hasNext()) {
+//				final PatternDocSet subsequent = iterator.next();	
+//				pivot = collectBindings(pivot, subsequent, searcher);
+//			}
+//			
+//			final List<Binding> bindings = collectBindings(pivot, searcher);
+//			
+//			this.docset = pivot;
+//			this.iterator = bindings.iterator();
 		} catch (final Exception exception) {
 			LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
-			this.iterator = EMPTY_BINDINGS.iterator();
+			// FIXME : NULL OBJECTS
 		}
     }
+    	
+	void collectBindings(
+			final Binding parent,
+			final int docId,
+			final DocSetAndTriplePattern second, 
+			final SolrIndexSearcher searcher) throws IOException {
+		
+		final Triple pattern = master.pattern;
+		final Document document = searcher.doc(docId);
+		final BindingMap binding = BindingFactory.create(parent);
+		final BooleanQuery query = new BooleanQuery();
+			
+		collectBinding(pattern.getSubject(), second.pattern.getSubject(), binding, document, Field.S, query);
+		collectBinding(pattern.getPredicate(), second.pattern.getPredicate(), binding, document, Field.P, query);
+		collectBinding(pattern.getObject(), second.pattern.getObject(), binding, document, Field.O, query);
+				
+		final DocSet docset = query.clauses().isEmpty() 
+			? second.children 
+			: searcher.getDocSet(query, second.children); 
+		
 
-    @Override
-    public PatternDocSet patternDocSet() {
-    	return docset;
-    }
-    
-    List<Binding> collectBindings(
+	}
+
+
+
+	List<Binding> collectBindings(
 			final PatternDocSet docset, 
 			final SolrIndexSearcher searcher) throws IOException {		
 		final DocIterator iterator = docset.iterator();
@@ -150,38 +170,6 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 		}
 		
 		return bindings;
-	}
-	
-	PatternDocSet collectBindings(
-			final PatternDocSet first, 
-			final PatternDocSet second, 
-			final SolrIndexSearcher searcher) throws IOException {
-		final CompositePatternDocSet result = new CompositePatternDocSet();
-		final DocIterator iterator = first.iterator();
-		
- 		while (iterator.hasNext()) {
- 			final Triple pattern = first.getTriplePattern();
-			final Document document = searcher.doc(iterator.nextDoc());
-			final BindingMap binding = BindingFactory.create(first.getParentBinding());
-			final BooleanQuery query = new BooleanQuery();
-			
-			collectBinding(pattern.getSubject(), second.getTriplePattern().getSubject(), binding, document, Field.S, query);
-			collectBinding(pattern.getPredicate(), second.getTriplePattern().getPredicate(), binding, document, Field.P, query);
-			collectBinding(pattern.getObject(), second.getTriplePattern().getObject(), binding, document, Field.O, query);
-						
-			result.union(
-					new LeafPatternDocSet(
-							query.clauses().isEmpty() 
-								? second 
-								: searcher.getDocSet(query, second), 
-							second.getTriplePattern(), 
-							binding, 
-							query));
-		}
-
- 		System.err.println(result);
- 		
-		return result;		
 	}
 	
 	void collectBinding(
@@ -229,8 +217,8 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 	 * @param graph the active graph.
 	 * @return the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
 	 */
-	List<PatternDocSet> docsets(final BasicPattern bgp, final SolrQueryRequest request, final LocalGraph graph) {
-		final List<PatternDocSet> docsets = bgp.getList().parallelStream()
+	List<DocSetAndTriplePattern> docsets(final BasicPattern bgp, final SolrQueryRequest request, final LocalGraph graph) {
+		final List<DocSetAndTriplePattern> docsets = bgp.getList().parallelStream()
 				.map(triplePattern ->  {
 					try {
 						final BooleanQuery query = new BooleanQuery();
@@ -257,47 +245,51 @@ public class QueryIterBasicGraphPattern extends QueryIter1 implements ExtendedQu
 										query.add(NumericRangeQuery.newDoubleRange("o_n", null, vNode.getConstant().getDouble(), true, false), Occur.MUST);
 									} else {
 										query.add(new TermQuery(new Term("o_s", vNode.getConstant().asUnquotedString())), Occur.MUST); 
-										expressions.remove();
 									}
 								}
 							}
 						}
 						
-						return new LeafPatternDocSet(
-								request.getSearcher().getDocSet(query),
-								triplePattern, 
-								query);
+						return new DocSetAndTriplePattern(request.getSearcher().getDocSet(query), triplePattern);
 					} catch (final IOException exception) {
 						LOGGER.error(MessageCatalog._00118_IO_FAILURE, exception);
-						return EMPTY_DOCSET;			
+						return new DocSetAndTriplePattern(new EmptyDocSet(), triplePattern);
 					} catch (final SyntaxError exception) {
 						LOGGER.error(MessageCatalog._00119_QUERY_PARSING_FAILURE, exception);
-						return EMPTY_DOCSET;
+						return new DocSetAndTriplePattern(new EmptyDocSet(), triplePattern);
 					} catch (final Exception exception) {
 						LOGGER.error(MessageCatalog._00113_NWS_FAILURE, exception);
-						return EMPTY_DOCSET;
+						return new DocSetAndTriplePattern(new EmptyDocSet(), triplePattern);
 					}										
 				})
-			.sorted(comparing(DocSet::size))	
+			.sorted(comparing(DocSetAndTriplePattern::size))	
 			.collect(toList());
 		
-		if (LOGGER.isDebugEnabled()) {
-			final long tid = System.currentTimeMillis();
-			docsets.stream().forEach(
-					docset -> LOGGER.debug(
-								MessageCatalog._00120_BGP_EXPLAIN, 
-								tid, 
-								docset.getTriplePattern(), 
-								((LeafPatternDocSet)docset).getQuery(), 
-								docset.size()));
-		}
+//		if (LOGGER.isDebugEnabled()) {
+//			final long tid = System.currentTimeMillis();
+//			docsets.stream().forEach(
+//					docset -> LOGGER.debug(
+//								MessageCatalog._00120_BGP_EXPLAIN, 
+//								tid, 
+//								docset.getTriplePattern(), 
+//								((LeafPatternDocSet)docset).getQuery(), 
+//								docset.size()));
+//		}
 		
 		return (docsets.size() > 0 && docsets.iterator().next().size() > 0) ? docsets : NULL_DOCSETS;
 	}
 	
+	// Per gestire i prodotti cartesiani senza dover ricordarmi che non devo fare next sull'iteratore
+	private List<Binding> preparedBindings;
+	
     @Override
     protected boolean hasNextBinding() {
-        return iterator.hasNext();
+        while (masterIterator.hasNext()) {
+        	final int docId = masterIterator.next();
+        	final Triple mainPattern = master.pattern;
+        	
+        	
+        }
     }
 
     @Override

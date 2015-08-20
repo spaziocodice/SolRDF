@@ -1,18 +1,53 @@
-Exection Plan:
+Execution Plan:
 
 ?doctor ab:firstName ?doctorFirst => 1,4 (2)
 ?spouse ab:firstName ?spouseFirst => 1,4 (2)
 ?doctor ab:lastName ?doctorLast   => 2,5,6 (3)
 
-1
-	1
-		2
-	4
-		2
-4
-	1
-		5
-		6
-	4	
-		5
-		6
+1 :x :name "Andrea" 
+2 :y :name "Giorgio"
+3 :z :name "Louise"
+
+4 :x :surname "Gazzarini"
+5 :z :surname "Blanc"
+
+6 :z :mob 73728288
+7 :z :home 82382828
+8 :z :home 83892111
+
+SELECT ?name ?surname ?mob ?home WHERE { ?s :name ?name . ?s :surname ?surname . OPTIONAL { ?s :mob ?mob . ?s :home ?home } }
+											
+											?s		?name		?surname		?mob		?home
+1	?s :name ?name 
+	4	?s :surname ?surname
+									|-->	:x		"Andrea"	"Gazzarini"								 
+3	?s :name ?name 
+	5	?s :surname ?surname
+									|-->	:z		"Louise"	"Blanc"								 
+6	?s :mob ?mob
+	7	?s :home ?home
+									|-->	:x									9382973		82382828
+	8	?s :home ?home
+									|-->	:z									9382973		82382111
+
+Una volta selezionati i docset corrispondenti ai vari tp, la costruzione dei binding (e le join tra i docset) potrebbe essere fatta on-demand, 
+mantendendo un iteratore per ogni docset da analizzare. Più che sul BGP questo calcolo potrebbe essere fatto da un componente a parte dove dovrebbero confluire tutti 
+i docset selezionati (optional e required). Oppure forse anche a livello BGP potrebbe funzionare. Se ho un conditional tra 2 BGP
+
+- il primo crea la struttura ad albero (come sopra -occhio che oggi 1 e 4 me li perdo, cioè alla fine il CompositePatternDocset risultante ha solamente gli ultimi docset, 
+i legami con le precedenti join li mantengo sui binding che però dovrei creare in modalità "lazy")
+- il secondo crea anch'esso la sua struttura.
+- il conditional itera il primo e va in join sul secondo
+
++ efficiente? boh 
+ 										
+
+1 docset --> facet.field=?s
+:x	1
+:y	1
+:z	1
+
+2 docset --> facet.field=?s
+:x	1
+:z	1
+
