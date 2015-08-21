@@ -4,13 +4,13 @@ package org.gazzax.labs.solrdf.handler.search.algebra;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.gazzax.labs.solrdf.NTriples.asNode;
-import static org.gazzax.labs.solrdf.NTriples.asNt;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.lucene.document.Document;
@@ -26,6 +26,7 @@ import org.apache.solr.search.QParser;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SyntaxError;
 import org.gazzax.labs.solrdf.Field;
+import org.gazzax.labs.solrdf.NTriples;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.graph.standalone.LocalGraph;
 import org.gazzax.labs.solrdf.log.Log;
@@ -116,35 +117,66 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
     
 	void join(
 			final Binding parentBinding,
-			final int parent,
-			final DocSetAndTriplePattern data, 
+			final int docId,
+			final Triple currentTriplePattern,
+			final DocSetAndTriplePattern beforeJoin, 
 			final SolrIndexSearcher searcher) throws IOException {
 		
-		final Triple masterSourcePattern = master.pattern;
-		final Document triple = searcher.doc(parent);
 		final BindingMap binding = parentBinding != null 
 				? BindingFactory.create(parentBinding) 
 				: BindingFactory.create();
-
-		final BooleanQuery query = new BooleanQuery();
-			
-		collectBinding(masterSourcePattern.getSubject(), data.pattern.getSubject(), binding, triple, Field.S, query);
-		collectBinding(masterSourcePattern.getPredicate(), data.pattern.getPredicate(), binding, triple, Field.P, query);
-		collectBinding(masterSourcePattern.getObject(), data.pattern.getObject(), binding, triple, Field.O, query);
-				
-		final DocSet result = query.clauses().isEmpty() 
-			? data.children
-			: searcher.getDocSet(query, data.children); 
 		
-		final DocIterator iterator = result.iterator();
+		final Document triple = searcher.doc(docId);
+		collectBinding(currentTriplePattern.getSubject(), binding, triple, Field.S);
+		collectBinding(currentTriplePattern.getPredicate(), binding, triple, Field.P);
+		collectBinding(currentTriplePattern.getObject(), binding, triple, Field.O);
 		
-		while (iterator.hasNext()) {
-			if (dstpIterator.hasNext()) {
-				join(binding, iterator.nextDoc(), dstpIterator.next(), searcher);				
-			} else {
-				join(binding, iterator.nextDoc(), data.pattern, searcher);
+		
+		final BooleanQuery query = query(beforeJoin.pattern, binding);
+		final DocIterator iterator = 
+				query.clauses().isEmpty() 
+					? beforeJoin.children.iterator() 
+					: searcher.getDocSet(query, beforeJoin.children).iterator();
+		
+		if (dstpIterator.hasNext()) {
+			final DocSetAndTriplePattern next = dstpIterator.next();
+			while (iterator.hasNext()) {
+				join(binding, iterator.nextDoc(), beforeJoin.pattern, next, searcher);				
+			}
+		} else {
+			while (iterator.hasNext()) {
+				join(binding, iterator.nextDoc(), beforeJoin.pattern, searcher);
 			}
 		}
+	}
+	
+	BooleanQuery query(final Triple pattern, final Binding binding) {
+		final BooleanQuery query = new BooleanQuery();
+		if (pattern.getSubject().isVariable() 
+				&& binding.contains(Var.alloc(pattern.getSubject()))) {
+			query.add(new TermQuery(
+					new Term(
+							Field.S, 
+							NTriples.asNt(binding.get(Var.alloc(pattern.getSubject()))))), Occur.MUST);		
+		}
+		
+		if (pattern.getPredicate().isVariable() 
+				&& binding.contains(Var.alloc(pattern.getPredicate()))) {
+			query.add(new TermQuery(
+					new Term(
+							Field.P, 
+							NTriples.asNt(binding.get(Var.alloc(pattern.getPredicate()))))), Occur.MUST);		
+		}
+
+		if (pattern.getObject().isVariable() 
+				&& binding.contains(Var.alloc(pattern.getObject()))) {
+			query.add(new TermQuery(
+					new Term(
+							Field.O, 
+							NTriples.asNt(binding.get(Var.alloc(pattern.getObject()))))), Occur.MUST);		
+		}
+		
+		return query;
 	}
 	
 	void join(
@@ -158,49 +190,25 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 				? BindingFactory.create(parentBinding) 
 				: BindingFactory.create();
 
-		collectLeafBinding(pattern.getSubject(), binding, triple, Field.S);
-		collectLeafBinding(pattern.getPredicate(), binding, triple, Field.P);
-		collectLeafBinding(pattern.getObject(), binding, triple, Field.O);
+		collectBinding(pattern.getSubject(), binding, triple, Field.S);
+		collectBinding(pattern.getPredicate(), binding, triple, Field.P);
+		collectBinding(pattern.getObject(), binding, triple, Field.O);
 		
 		bindings.add(binding);
 	}
 	
-	void collectLeafBinding(
+	void collectBinding(
 			final Node member, 
 			final BindingMap binding,
-			final Document document, 
+			final Document triple, 
 			final String fieldName) {
 		if (member.isVariable()) {
 			final Var var = Var.alloc(member);
 			if (!binding.contains(var)) {
-				binding.add(var, asNode(document.get(fieldName)));
+				binding.add(var, asNode(triple.get(fieldName)));
 			}
 		}
 	}	
-	
-	void collectBinding(
-			final Node memberOfTheFirstPattern, 
-			final Node memberOfTheSecondPattern, 
-			final BindingMap binding,
-			final Document document, 
-			final String fieldName, 
-			final BooleanQuery query) {
-		if (memberOfTheFirstPattern.isVariable() || memberOfTheSecondPattern.isVariable()) {
-			final String value = document.get(fieldName);
-			if ( (memberOfTheFirstPattern.isVariable() && memberOfTheFirstPattern.equals(memberOfTheSecondPattern))) {
-				query.add(new TermQuery(new Term(fieldName, value)), Occur.MUST);				
-			} else if (memberOfTheSecondPattern.isVariable() && binding.contains(Var.alloc(memberOfTheSecondPattern))) {
-				query.add(new TermQuery(new Term(fieldName, asNt(binding.get(Var.alloc(memberOfTheSecondPattern))))), Occur.MUST);
-			}
-			
-			if (memberOfTheFirstPattern.isVariable()) {
-				final Var var = Var.alloc(memberOfTheFirstPattern);
-				if (!binding.contains(var)) {
-					binding.add(var, asNode(value));
-				}
-			}
-		}
-	}		
 	
 	/**
 	 * Returns the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
@@ -285,11 +293,13 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 	        while (masterIterator.hasNext()) {
 	        	bindings.clear();
 	        	final int docId = masterIterator.next();
+	        	dstpIterator = subsequents.iterator(); 
 	        	if (dstpIterator.hasNext()) {   
-	        		join(null, docId, dstpIterator.next(), searcher);
+	        		join(null, docId, master.pattern, dstpIterator.next(), searcher);
 	        	} else {
 	        		join(null, docId, master.pattern, searcher);
 	        	}
+	        	
 	        	if (!bindings.isEmpty()) {
 	    	        bindingsIterator = bindings.iterator();	        		
 	    	        return true;
