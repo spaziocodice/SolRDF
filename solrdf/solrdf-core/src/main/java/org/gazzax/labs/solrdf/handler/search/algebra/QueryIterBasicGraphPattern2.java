@@ -10,15 +10,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocSet;
@@ -43,13 +42,10 @@ import com.hp.hpl.jena.sparql.engine.QueryIterator;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
 import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIter1;
+import com.hp.hpl.jena.sparql.engine.iterator.QueryIter;
 import com.hp.hpl.jena.sparql.expr.Expr;
 import com.hp.hpl.jena.sparql.expr.ExprFunction;
 import com.hp.hpl.jena.sparql.expr.ExprVar;
-import com.hp.hpl.jena.sparql.serializer.SerializationContext;
-import com.hp.hpl.jena.sparql.util.FmtUtils;
-import com.hp.hpl.jena.sparql.util.Utils;
 
 /**
  * A {@link QueryIterator} implementation for executing {@link BasicPattern}s.
@@ -57,7 +53,7 @@ import com.hp.hpl.jena.sparql.util.Utils;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class QueryIterBasicGraphPattern2 extends QueryIter1 {
+public class QueryIterBasicGraphPattern2 extends QueryIter {
 	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern2.class));
 	final static OpFilter NULL_FILTER = OpFilter.filter(null);
 	
@@ -69,7 +65,6 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 	}
 	
-    private final BasicPattern bgp;
     private OpFilter filter = NULL_FILTER;
     
     private DocSetAndTriplePattern master;
@@ -77,25 +72,41 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
     private List<DocSetAndTriplePattern> subsequents;
     private Iterator<DocSetAndTriplePattern> dstpIterator;
     
+    List<DocSetAndTriplePattern> docsets;
+    
+    // FIXME: MUNNEZZ
+    public QueryIterBasicGraphPattern2 mergeWith(final QueryIterBasicGraphPattern2 next) {
+    	if (next.docsets == null || next.docsets.isEmpty() || next.docsets.iterator().next().size() == 0) {
+    		docsets = NULL_DOCSETS;
+    	}
+    	
+    	docsets.addAll(next.docsets);
+    	docsets = docsets.stream().sorted(comparing(DocSetAndTriplePattern::size)).collect(toList());
+    	
+    	master = docsets.get(0);
+		masterIterator = master.children.iterator();
+		subsequents = docsets.subList(1, docsets.size());
+		dstpIterator = subsequents.iterator();
+		
+    	return this;
+    }
+    
     /**
      * Builds a new iterator with the given data.
      * 
-     * @param input the parent {@link QueryIterator}.
      * @param bgp the Basic Graph Pattern.
      * @param context the execution context.
      */
     public QueryIterBasicGraphPattern2(
-    		final QueryIterator input, 
     		final BasicPattern bgp, 
     		final ExecutionContext context,
     		final OpFilter filter) {
-        super(input, context) ;
+        super(context) ;
         
         this.filter = filter != null ? filter : NULL_FILTER;
-        this.bgp = bgp;
          
 		try {
-			final List<DocSetAndTriplePattern> docsets = docsets(
+			docsets = docsets(
 					bgp, 
 					(SolrQueryRequest)context.getContext().get(Names.SOLR_REQUEST_SYM),
 					(LocalGraph)context.getActiveGraph());
@@ -115,11 +126,22 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
     private List<Binding> bindings = new ArrayList<Binding>();
     private Iterator<Binding> bindingsIterator;
     
+    
+    /**
+     * Executes a join between the given {@link Document} identifier and a {@link DocSet}.
+     * 
+     * @param parentBinding the parent binding (null in case of root binding).
+     * @param docId the {@link Document} identifier.
+     * @param currentTriplePattern the current {@link Triple} pattern.
+     * @param rawDataBeforeJoin the target {@link DocSet}.
+     * @param searcher the Solr searcher.
+     * @throws IOException in case of I/O exception.
+     */
 	void join(
 			final Binding parentBinding,
 			final int docId,
 			final Triple currentTriplePattern,
-			final DocSetAndTriplePattern beforeJoin, 
+			final DocSetAndTriplePattern rawDataBeforeJoin, 
 			final SolrIndexSearcher searcher) throws IOException {
 		
 		final BindingMap binding = parentBinding != null 
@@ -127,59 +149,85 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 				: BindingFactory.create();
 		
 		final Document triple = searcher.doc(docId);
-		collectBinding(currentTriplePattern.getSubject(), binding, triple, Field.S);
-		collectBinding(currentTriplePattern.getPredicate(), binding, triple, Field.P);
-		collectBinding(currentTriplePattern.getObject(), binding, triple, Field.O);
 		
+		bind(currentTriplePattern.getSubject(), binding, triple, Field.S);
+		bind(currentTriplePattern.getPredicate(), binding, triple, Field.P);
+		bind(currentTriplePattern.getObject(), binding, triple, Field.O);
 		
-		final BooleanQuery query = query(beforeJoin.pattern, binding);
+		final BooleanQuery query = buildJoinQuery(rawDataBeforeJoin.pattern, binding);
 		final DocIterator iterator = 
 				query.clauses().isEmpty() 
-					? beforeJoin.children.iterator() 
-					: searcher.getDocSet(query, beforeJoin.children).iterator();
+					? rawDataBeforeJoin.children.iterator() 
+					: searcher.getDocSet(query, rawDataBeforeJoin.children).iterator();
 		
 		if (dstpIterator.hasNext()) {
 			final DocSetAndTriplePattern next = dstpIterator.next();
 			while (iterator.hasNext()) {
-				join(binding, iterator.nextDoc(), beforeJoin.pattern, next, searcher);				
+				join(binding, iterator.nextDoc(), rawDataBeforeJoin.pattern, next, searcher);				
 			}
 		} else {
 			while (iterator.hasNext()) {
-				join(binding, iterator.nextDoc(), beforeJoin.pattern, searcher);
+				bindings.add(
+						leafBinding(
+								binding, 
+								iterator.nextDoc(), 
+								rawDataBeforeJoin.pattern, 
+								searcher));
 			}
 		}
 	}
 	
-	BooleanQuery query(final Triple pattern, final Binding binding) {
+	/**
+	 * Builds the query needed to join and refine the next triple pattern {@link DocSet}.
+	 * 
+	 * @param pattern the triple pattern.
+	 * @param binding the current binding.
+	 * @return the query needed to join and refine the next triple pattern {@link DocSet}.
+	 */
+	BooleanQuery buildJoinQuery(final Triple pattern, final Binding binding) {
 		final BooleanQuery query = new BooleanQuery();
-		if (pattern.getSubject().isVariable() 
-				&& binding.contains(Var.alloc(pattern.getSubject()))) {
-			query.add(new TermQuery(
-					new Term(
-							Field.S, 
-							NTriples.asNt(binding.get(Var.alloc(pattern.getSubject()))))), Occur.MUST);		
-		}
-		
-		if (pattern.getPredicate().isVariable() 
-				&& binding.contains(Var.alloc(pattern.getPredicate()))) {
-			query.add(new TermQuery(
-					new Term(
-							Field.P, 
-							NTriples.asNt(binding.get(Var.alloc(pattern.getPredicate()))))), Occur.MUST);		
-		}
-
-		if (pattern.getObject().isVariable() 
-				&& binding.contains(Var.alloc(pattern.getObject()))) {
-			query.add(new TermQuery(
-					new Term(
-							Field.O, 
-							NTriples.asNt(binding.get(Var.alloc(pattern.getObject()))))), Occur.MUST);		
-		}
-		
+		addClause(pattern.getSubject(), query, binding, Field.S);
+		addClause(pattern.getPredicate(), query, binding, Field.P);
+		addClause(pattern.getObject(), query, binding, Field.O);
 		return query;
 	}
 	
-	void join(
+	/**
+	 * Adds a mandtory clause to the incoming query (depending on the input node and binding).
+	 * If the incoming node is a variable and the binding already contains a value for that variable, then
+	 * a new (mandatory) clause will be added to the given {@link BooleanQuery}.
+	 * 
+	 * @param member the current {@link Node}, which is a member of the current {@link Triple} pattern.
+	 * @param query the {@link BooleanQuery} that needs to collect clauses.
+	 * @param binding the current binding.
+	 * @param fieldName the {@link SolrDocument} field name that corresponds to the given member.
+	 */
+	void addClause(final Node member, final BooleanQuery query, final Binding binding, final String fieldName) {
+		if (member.isVariable()) {
+			final Var var = Var.alloc(member);
+			if (binding.contains(var)) {
+				query.add(
+						new TermQuery(
+							new Term(
+									Field.S, 
+									NTriples.asNt(binding.get(var)))), Occur.MUST);		
+			}
+		}
+	}
+	
+	/**
+	 * Creates a leaf binding.
+	 * A leaf binding is the last ring of the binding chain, and therefore, it will be returned 
+	 * to the client, as product of the {@link QueryIterator} interface.
+	 * 
+	 * @param parentBinding the parent binding in this execution chain.
+	 * @param current the identifier of the current {@link Document} (representing a {@link Triple}).
+	 * @param pattern the {@link Triple} pattern that originated the current {@link Document} identifier.
+	 * @param searcher the Solr searcher.
+	 * @throws IOException in case of I/O failure.
+	 * @return a leaf {@link Binding}.
+	 */
+	Binding leafBinding(
 			final Binding parentBinding,
 			final int current,
 			final Triple pattern,
@@ -190,14 +238,14 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 				? BindingFactory.create(parentBinding) 
 				: BindingFactory.create();
 
-		collectBinding(pattern.getSubject(), binding, triple, Field.S);
-		collectBinding(pattern.getPredicate(), binding, triple, Field.P);
-		collectBinding(pattern.getObject(), binding, triple, Field.O);
+		bind(pattern.getSubject(), binding, triple, Field.S);
+		bind(pattern.getPredicate(), binding, triple, Field.P);
+		bind(pattern.getObject(), binding, triple, Field.O);
 		
-		bindings.add(binding);
+		return binding;
 	}
 	
-	void collectBinding(
+	void bind(
 			final Node member, 
 			final BindingMap binding,
 			final Document triple, 
@@ -297,7 +345,7 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 	        	if (dstpIterator.hasNext()) {   
 	        		join(null, docId, master.pattern, dstpIterator.next(), searcher);
 	        	} else {
-	        		join(null, docId, master.pattern, searcher);
+	        		bindings.add(leafBinding(null, docId, master.pattern, searcher));
 	        	}
 	        	
 	        	if (!bindings.isEmpty()) {
@@ -316,20 +364,14 @@ public class QueryIterBasicGraphPattern2 extends QueryIter1 {
         return bindingsIterator.next();
     }
 
-    @Override
-    protected void closeSubIterator() {
-    }
-    
-    @Override
-    protected void requestSubCancel() {
-    }
-
-    @Override
-    protected void details(final IndentedWriter out, final SerializationContext context) {
-        out.print(Utils.className(this)) ;
-        out.println() ;
-        out.incIndent() ;
-        FmtUtils.formatPattern(out, bgp, context) ;
-        out.decIndent() ;
-    }
+	@Override
+	protected void closeIterator() {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	protected void requestCancel() {
+		// TODO Auto-generated method stub
+		
+	}
 }

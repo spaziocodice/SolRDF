@@ -23,13 +23,14 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.gazzax.labs.solrdf.Names;
-import org.gazzax.labs.solrdf.handler.search.algebra.QueryIterBasicGraphPattern;
+import org.gazzax.labs.solrdf.handler.search.algebra.QueryIterBasicGraphPattern2;
 import org.gazzax.labs.solrdf.handler.search.algebra.SolRDFStageGenerator;
 
 import com.hp.hpl.jena.query.ARQ;
 import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
 import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
+import com.hp.hpl.jena.sparql.algebra.op.OpSequence;
 import com.hp.hpl.jena.sparql.engine.ExecutionContext;
 import com.hp.hpl.jena.sparql.engine.QueryIterator;
 import com.hp.hpl.jena.sparql.engine.main.OpExecutor;
@@ -86,10 +87,20 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 				        // Assumiamo per il momento che si tratta di un OPBGP
 				        if (base instanceof OpBGP) {
 				        	OpBGP opbgp = (OpBGP) base;
-				        	return new QueryIterBasicGraphPattern(input, opbgp.getPattern(), execCxt, opFilter);
+				        	return new QueryIterBasicGraphPattern2(opbgp.getPattern(), execCxt, opFilter);
 				        } else {
 				        	return super.execute(opFilter, input);
 				        }
+					}
+					
+					@Override
+					protected QueryIterator execute(final OpSequence sequence, final QueryIterator input) {
+						return sequence
+								.getElements()
+								.stream()
+								.map(op -> exec(op, input))
+								.reduce((iterator1, iterator2) -> ((QueryIterBasicGraphPattern2)iterator1).mergeWith((QueryIterBasicGraphPattern2)iterator2))
+								.get();
 					}
 				};
 			}
