@@ -79,17 +79,16 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		OpExecutorFactory factory = new OpExecutorFactory() {
 			
 			@Override
-			public OpExecutor create(ExecutionContext execCxt) {
-				return new OpExecutor(execCxt) {
+			public OpExecutor create(final ExecutionContext executionContext) {
+				return new OpExecutor(executionContext) {
 					@Override
-					protected QueryIterator execute(OpFilter opFilter, QueryIterator input) {
-				        Op base = opFilter.getSubOp() ;
-				        // Assumiamo per il momento che si tratta di un OPBGP
+					protected QueryIterator execute(final OpFilter filter, final QueryIterator input) {
+				        final Op base = filter.getSubOp() ;
 				        if (base instanceof OpBGP) {
-				        	OpBGP opbgp = (OpBGP) base;
-				        	return new QueryIterBasicGraphPattern2(opbgp.getPattern(), execCxt, opFilter);
+				        	final OpBGP opbgp = (OpBGP) base;
+				        	return new QueryIterBasicGraphPattern2(opbgp.getPattern(), executionContext, filter);
 				        } else {
-				        	return super.execute(opFilter, input);
+				        	return super.execute(filter, input);
 				        }
 					}
 					
