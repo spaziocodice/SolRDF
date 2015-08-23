@@ -24,15 +24,18 @@ import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.handler.search.algebra.QueryIterBasicGraphPattern2;
+import org.gazzax.labs.solrdf.handler.search.algebra.QueryIteratorOptional;
 import org.gazzax.labs.solrdf.handler.search.algebra.SolRDFStageGenerator;
 
 import com.hp.hpl.jena.query.ARQ;
 import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
+import com.hp.hpl.jena.sparql.algebra.op.OpConditional;
 import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
 import com.hp.hpl.jena.sparql.algebra.op.OpSequence;
 import com.hp.hpl.jena.sparql.engine.ExecutionContext;
 import com.hp.hpl.jena.sparql.engine.QueryIterator;
+import com.hp.hpl.jena.sparql.engine.iterator.QueryIteratorCaching;
 import com.hp.hpl.jena.sparql.engine.main.OpExecutor;
 import com.hp.hpl.jena.sparql.engine.main.OpExecutorFactory;
 import com.hp.hpl.jena.sparql.engine.main.QC;
@@ -90,6 +93,24 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 				        } else {
 				        	return super.execute(filter, input);
 				        }
+					}
+					
+					@Override
+					protected QueryIterator execute(OpConditional opCondition, QueryIterator input) {
+						final Op left = opCondition.getLeft();
+						final Op right = opCondition.getRight();
+						
+						// FIXME
+						if ((left instanceof OpBGP || left instanceof OpFilter) && (right instanceof OpBGP || right instanceof OpFilter)) {
+							final QueryIterator iterator1 = exec(left, input);
+							
+							final QueryIterator bgp2 = exec(right, input);
+							final QueryIterator iterator2 = new QueryIteratorCaching(bgp2);
+							
+							return new QueryIteratorOptional(iterator1, iterator2, executionContext);
+						}
+						
+						return super.execute(opCondition, input);
 					}
 					
 					@Override
