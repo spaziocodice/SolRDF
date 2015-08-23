@@ -17,6 +17,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.DocIterator;
@@ -43,6 +44,8 @@ import com.hp.hpl.jena.sparql.engine.binding.Binding;
 import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
 import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
 import com.hp.hpl.jena.sparql.engine.iterator.QueryIter;
+import com.hp.hpl.jena.sparql.expr.E_Lang;
+import com.hp.hpl.jena.sparql.expr.E_LangMatches;
 import com.hp.hpl.jena.sparql.expr.Expr;
 import com.hp.hpl.jena.sparql.expr.ExprFunction;
 import com.hp.hpl.jena.sparql.expr.ExprVar;
@@ -279,21 +282,36 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
 										.getQuery(), 
 								Occur.MUST);
 						
-						// TODO : To be removed. Expr can be more more complex. A general mapping between this and Solr is needed.
+						// TODO : To be removed. Expr can be more more complex. A general bridge between this and Solr is needed.
 						for (Iterator<Expr> expressions = filter.getExprs().iterator(); expressions.hasNext();) {
 							final Expr expression = expressions.next(); 
 							if (expression.isFunction()) {
-								ExprFunction function = (ExprFunction) expression;
-								ExprVar exvar = (ExprVar) function.getArg(1);
-								Var var = exvar.asVar();
-								if (triplePattern.getObject().isVariable() && triplePattern.getObject().equals(var)) {
-									final Expr vNode = function.getArg(2);
-									if (">".equals(function.getOpName())){
-										query.add(NumericRangeQuery.newDoubleRange("o_n", vNode.getConstant().getDouble(), null, false, true), Occur.MUST);
-									} else if ("<".equals(function.getOpName())){
-										query.add(NumericRangeQuery.newDoubleRange("o_n", null, vNode.getConstant().getDouble(), true, false), Occur.MUST);
-									} else {
-										query.add(new TermQuery(new Term("o_s", vNode.getConstant().asUnquotedString())), Occur.MUST); 
+								if (expression instanceof E_LangMatches) {
+									final E_LangMatches matches = (E_LangMatches)expression;
+									E_Lang langCostraint = (E_Lang) matches.getArg1();
+									Expr expr = langCostraint.getArg();
+									Var var = expr.asVar();
+									if (triplePattern.getObject().isVariable() && triplePattern.getObject().getName().equals(var.getName())) {
+										final String criterion = matches.getArg2().getConstant().asUnquotedString();
+										query.add(
+												new WildcardQuery(
+															new Term(
+																Field.LANG, 
+																"*".equals(criterion) ? criterion : criterion + "*")), Occur.MUST);
+									}
+								} else {
+									ExprFunction function = (ExprFunction) expression;
+									ExprVar exvar = (ExprVar) function.getArg(1);
+									Var var = exvar.asVar();
+									if (triplePattern.getObject().isVariable() && triplePattern.getObject().equals(var)) {
+										final Expr vNode = function.getArg(2);
+										if (">".equals(function.getOpName())){
+											query.add(NumericRangeQuery.newDoubleRange("o_n", vNode.getConstant().getDouble(), null, false, true), Occur.MUST);
+										} else if ("<".equals(function.getOpName())){
+											query.add(NumericRangeQuery.newDoubleRange("o_n", null, vNode.getConstant().getDouble(), true, false), Occur.MUST);
+										} else {
+											query.add(new TermQuery(new Term("o_s", vNode.getConstant().asUnquotedString())), Occur.MUST); 
+										}
 									}
 								}
 							}
