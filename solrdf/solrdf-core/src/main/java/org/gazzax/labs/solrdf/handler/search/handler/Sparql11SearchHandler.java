@@ -31,8 +31,6 @@ import com.hp.hpl.jena.query.ARQ;
 import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
 import com.hp.hpl.jena.sparql.algebra.op.OpConditional;
-import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
-import com.hp.hpl.jena.sparql.algebra.op.OpSequence;
 import com.hp.hpl.jena.sparql.engine.ExecutionContext;
 import com.hp.hpl.jena.sparql.engine.QueryIterator;
 import com.hp.hpl.jena.sparql.engine.iterator.QueryIteratorCaching;
@@ -85,14 +83,8 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 			public OpExecutor create(final ExecutionContext executionContext) {
 				return new OpExecutor(executionContext) {
 					@Override
-					protected QueryIterator execute(final OpFilter filter, final QueryIterator input) {
-				        final Op base = filter.getSubOp() ;
-				        if (base instanceof OpBGP) {
-				        	final OpBGP opbgp = (OpBGP) base;
-				        	return new QueryIterBasicGraphPattern2(opbgp.getPattern(), executionContext, filter);
-				        } else {
-				        	return super.execute(filter, input);
-				        }
+					protected QueryIterator execute(final OpBGP opBGP, final QueryIterator input) {
+						return new QueryIterBasicGraphPattern2(input, opBGP.getPattern(), executionContext);
 					}
 					
 					@Override
@@ -101,7 +93,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 						final Op right = opCondition.getRight();
 						
 						// FIXME
-						if ((left instanceof OpBGP || left instanceof OpFilter) && (right instanceof OpBGP || right instanceof OpFilter)) {
+						if (left instanceof OpBGP && right instanceof OpBGP) {
 							final QueryIterator iterator1 = exec(left, input);
 							
 							final QueryIterator bgp2 = exec(right, input);
@@ -111,16 +103,6 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 						}
 						
 						return super.execute(opCondition, input);
-					}
-					
-					@Override
-					protected QueryIterator execute(final OpSequence sequence, final QueryIterator input) {
-						return sequence
-								.getElements()
-								.stream()
-								.map(op -> exec(op, input))
-								.reduce((iterator1, iterator2) -> ((QueryIterBasicGraphPattern2)iterator1).mergeWith((QueryIterBasicGraphPattern2)iterator2))
-								.get();
 					}
 				};
 			}

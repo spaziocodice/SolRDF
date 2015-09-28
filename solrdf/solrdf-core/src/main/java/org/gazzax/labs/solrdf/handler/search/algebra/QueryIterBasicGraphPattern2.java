@@ -10,14 +10,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.WildcardQuery;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.DocIterator;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
 import com.hp.hpl.jena.sparql.core.BasicPattern;
 import com.hp.hpl.jena.sparql.core.Var;
 import com.hp.hpl.jena.sparql.engine.ExecutionContext;
@@ -43,12 +41,7 @@ import com.hp.hpl.jena.sparql.engine.QueryIterator;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
 import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIter;
-import com.hp.hpl.jena.sparql.expr.E_Lang;
-import com.hp.hpl.jena.sparql.expr.E_LangMatches;
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.expr.ExprFunction;
-import com.hp.hpl.jena.sparql.expr.ExprVar;
+import com.hp.hpl.jena.sparql.engine.iterator.QueryIter1;
 
 /**
  * A {@link QueryIterator} implementation for executing {@link BasicPattern}s.
@@ -56,9 +49,8 @@ import com.hp.hpl.jena.sparql.expr.ExprVar;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public class QueryIterBasicGraphPattern2 extends QueryIter {
+public class QueryIterBasicGraphPattern2 extends QueryIter1 {
 	private final static Log LOGGER = new Log(LoggerFactory.getLogger(QueryIterBasicGraphPattern2.class));
-	final static OpFilter NULL_FILTER = OpFilter.filter(null);
 	
 	final static List<Binding> EMPTY_BINDINGS = Collections.emptyList();
 	final static DocSetAndTriplePattern EMPTY_DOCSET = new DocSetAndTriplePattern(new EmptyDocSet(), null, null);
@@ -67,8 +59,6 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 		NULL_DOCSETS.add(EMPTY_DOCSET);
 	}
-	
-    private OpFilter filter = NULL_FILTER;
     
     private DocSetAndTriplePattern master;
     private DocIterator masterIterator;
@@ -76,6 +66,7 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
     private Iterator<DocSetAndTriplePattern> dstpIterator;
     
     List<DocSetAndTriplePattern> docsets;
+    BasicPattern bgp;
     
     // FIXME: MUNNEZZ
     public QueryIterBasicGraphPattern2 mergeWith(final QueryIterBasicGraphPattern2 next) {
@@ -101,16 +92,22 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
      * @param context the execution context.
      */
     public QueryIterBasicGraphPattern2(
+    		final QueryIterator input,
     		final BasicPattern bgp, 
-    		final ExecutionContext context,
-    		final OpFilter filter) {
-        super(context) ;
-        
-        this.filter = filter != null ? filter : NULL_FILTER;
-         
+    		final ExecutionContext context) {
+        super(input, context) ;
+        this.bgp = bgp;
 		try {
+			final List<Triple> patterns = 
+					input instanceof QueryIterBasicGraphPattern2 
+						? Stream.concat(
+								bgp.getList().stream(), 
+								((QueryIterBasicGraphPattern2)input).bgp.getList().stream())
+							.collect(toList())
+						: bgp.getList();	
+					
 			docsets = docsets(
-					bgp, 
+					patterns, 
 					(SolrQueryRequest)context.getContext().get(Names.SOLR_REQUEST_SYM),
 					(LocalGraph)context.getActiveGraph());
 			master = docsets.get(0);
@@ -128,7 +125,6 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
     	
     private List<Binding> bindings = new ArrayList<Binding>();
     private Iterator<Binding> bindingsIterator;
-    
     
     /**
      * Executes a join between the given {@link Document} identifier and a {@link DocSet}.
@@ -245,6 +241,14 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
 		bind(pattern.getPredicate(), binding, triple, Field.P);
 		bind(pattern.getObject(), binding, triple, Field.O);
 		
+		System.out.println("*******************");
+		Iterator<Var> iterator = binding.vars();
+		while (iterator.hasNext()) {
+			Var var = iterator.next();
+			System.out.println(var.getName() + " = " + binding.get(var));
+		}
+		
+		
 		return binding;
 	}
 	
@@ -269,8 +273,8 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
 	 * @param graph the active graph.
 	 * @return the list of {@link PatternDocSet} coming from the execution of all triple patterns with the BGP.
 	 */
-	List<DocSetAndTriplePattern> docsets(final BasicPattern bgp, final SolrQueryRequest request, final LocalGraph graph) {
-		final List<DocSetAndTriplePattern> docsets = bgp.getList().parallelStream()
+	List<DocSetAndTriplePattern> docsets(final List<Triple> patterns, final SolrQueryRequest request, final LocalGraph graph) {
+		final List<DocSetAndTriplePattern> docsets = patterns.parallelStream()
 				.map(triplePattern ->  {
 					try {
 						final BooleanQuery query = new BooleanQuery();
@@ -281,41 +285,6 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
 										request)
 										.getQuery(), 
 								Occur.MUST);
-						
-						// TODO : To be removed. Expr can be more more complex. A general bridge between this and Solr is needed.
-						for (Iterator<Expr> expressions = filter.getExprs().iterator(); expressions.hasNext();) {
-							final Expr expression = expressions.next(); 
-							if (expression.isFunction()) {
-								if (expression instanceof E_LangMatches) {
-									final E_LangMatches matches = (E_LangMatches)expression;
-									E_Lang langCostraint = (E_Lang) matches.getArg1();
-									Expr expr = langCostraint.getArg();
-									Var var = expr.asVar();
-									if (triplePattern.getObject().isVariable() && triplePattern.getObject().getName().equals(var.getName())) {
-										final String criterion = matches.getArg2().getConstant().asUnquotedString();
-										query.add(
-												new WildcardQuery(
-															new Term(
-																Field.LANG, 
-																"*".equals(criterion) ? criterion : criterion + "*")), Occur.MUST);
-									}
-								} else {
-									ExprFunction function = (ExprFunction) expression;
-									ExprVar exvar = (ExprVar) function.getArg(1);
-									Var var = exvar.asVar();
-									if (triplePattern.getObject().isVariable() && triplePattern.getObject().equals(var)) {
-										final Expr vNode = function.getArg(2);
-										if (">".equals(function.getOpName())){
-											query.add(NumericRangeQuery.newDoubleRange("o_n", vNode.getConstant().getDouble(), null, false, true), Occur.MUST);
-										} else if ("<".equals(function.getOpName())){
-											query.add(NumericRangeQuery.newDoubleRange("o_n", null, vNode.getConstant().getDouble(), true, false), Occur.MUST);
-										} else {
-											query.add(new TermQuery(new Term("o_s", vNode.getConstant().asUnquotedString())), Occur.MUST); 
-										}
-									}
-								}
-							}
-						}
 						
 						return new DocSetAndTriplePattern(request.getSearcher().getDocSet(query), triplePattern, query);
 					} catch (final IOException exception) {
@@ -383,13 +352,12 @@ public class QueryIterBasicGraphPattern2 extends QueryIter {
     }
 
 	@Override
-	protected void closeIterator() {
+	protected void requestSubCancel() {
 		// TODO Auto-generated method stub
-		
 	}
+
 	@Override
-	protected void requestCancel() {
+	protected void closeSubIterator() {
 		// TODO Auto-generated method stub
-		
 	}
 }

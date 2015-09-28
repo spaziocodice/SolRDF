@@ -2,7 +2,7 @@
 
 PREFIX e: <http://learningsparql.com/ns/expenses#> 
 
-SELECT ?mealCode ?amount 
+SELECT ?meal ?mealCode ?amount 
 WHERE
 {
   {
@@ -16,3 +16,10 @@ WHERE
   }
 }
 
+#(project (?mealCode ?amount)
+#  (sequence
+#    (project (?meal ?mealCode)
+#      (extend ((?mealCode (ucase (substr ?/description 1 3))))
+#        (bgp (triple ?meal <http://learningsparql.com/ns/expenses#description> ?/description))))
+#    (project (?meal ?amount)
+#      (bgp (triple ?meal <http://learningsparql.com/ns/expenses#amount> ?amount)))))
