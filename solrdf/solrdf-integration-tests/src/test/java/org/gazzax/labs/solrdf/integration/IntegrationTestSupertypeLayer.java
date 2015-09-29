@@ -14,20 +14,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.impl.XMLResponseParser;
-import org.apache.solr.client.solrj.request.UpdateRequest;
-import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.util.NamedList;
-import org.apache.solr.common.util.SimpleOrderedMap;
 import org.gazzax.labs.solrdf.MisteryGuest;
+import org.gazzax.labs.solrdf.client.SolRDF;
+import org.gazzax.labs.solrdf.client.UnableToBuildSolRDFClientException;
 import org.gazzax.labs.solrdf.log.Log;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -37,8 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -62,21 +52,28 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected final Log log = new Log(LoggerFactory.getLogger(getClass()));
 	
 	protected static HttpSolrServer solr;
-	protected QueryExecution execution;
+//	protected QueryExecution execution;
 	protected QueryExecution inMemoryExecution;
 	protected Dataset memoryDataset;
-	protected static DatasetAccessor DATASET;
+//	protected static DatasetAccessor DATASET;
+	
+	protected static SolRDF SOLRDF;
 	
 	/**
 	 * Initilisation procedure for this test case.
-	 * 
-	 * @throws Exception hopefully never.
+	 * @throws UnableToBuildSolRDFClientException in case the client cannot be built.
 	 */
 	@BeforeClass
-	public static void initClient() {
+	public static void initClient() throws UnableToBuildSolRDFClientException {
+		SOLRDF = SolRDF.newBuilder()
+	              .withEndpoint("http://127.0.0.1:8080/solr/store")
+	              .withGraphStoreProtocolEndpointPath("/rdf-graph-store")
+	              .withSPARQLEndpointPath("/sparql")
+	              .build();
+		
 		solr = new HttpSolrServer(SOLR_URI);
-		resetSolRDFXmlResponseParser();
-		DATASET = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
+//		resetSolRDFXmlResponseParser();
+//		DATASET = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
 	}
 	
 	/**
@@ -87,7 +84,8 @@ public abstract class IntegrationTestSupertypeLayer {
 	@AfterClass
 	public static void shutdownClient() throws Exception {
 		clearData();
-		solr.shutdown();		
+		SOLRDF.done();
+		solr.shutdown();
 	}
 	
 	/**
@@ -105,10 +103,7 @@ public abstract class IntegrationTestSupertypeLayer {
 	 */
 	@After
 	public void tearDown() throws Exception {
-		if (execution != null) {
-			execution.close();
-		}
-		
+		clearDatasets();
 		if (inMemoryExecution != null) {
 			inMemoryExecution.close();
 		}
@@ -136,95 +131,97 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @throws Exception hopefully never.
 	 */
 	protected static void clearData() throws Exception {
-		solr.setParser(new XMLResponseParser());
-		solr.deleteByQuery("*:*");
-		commitChanges();
-		resetSolRDFXmlResponseParser();	
+//		solr.setParser(new XMLResponseParser());
+		SOLRDF.clear();
+		SOLRDF.commit();
+//		solr.deleteByQuery("*:*");
+//		commitChanges();
+//		resetSolRDFXmlResponseParser();	
 	}
 	
-	/**
-	 * Commits changes on Solr.
-	 * 
-	 * @throws SolrServerException in case of a Solr failure.
-	 * @throws IOException in case of I/O failure.
-	 */
-	protected static void commitChanges() throws SolrServerException, IOException {
-		solr.setParser(new XMLResponseParser());	
-		
-		final UpdateRequest req = new UpdateRequest();
-		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, false);
-		req.setParam("openSearcher", "true");
-		req.process(solr);  
-		  
-		resetSolRDFXmlResponseParser();
-	}	
+//	/**
+//	 * Commits changes on Solr.
+//	 * 
+//	 * @throws SolrServerException in case of a Solr failure.
+//	 * @throws IOException in case of I/O failure.
+//	 */
+//	protected static void commitChanges() throws SolrServerException, IOException {
+//		solr.setParser(new XMLResponseParser());	
+//		
+//		final UpdateRequest req = new UpdateRequest();
+//		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, false);
+//		req.setParam("openSearcher", "true");
+//		req.process(solr);  
+//		  
+//		resetSolRDFXmlResponseParser();
+//	}	
 	
-	protected static void resetSolRDFXmlResponseParser() {
-		solr.setParser(new XMLResponseParser() {
-			  @Override
-			  public String getContentType() {
-			    return "text/xml";
-			  }
-			  
-			  @Override
-			  protected SolrDocumentList readDocuments(final XMLStreamReader parser) throws XMLStreamException {
-				  return new SolrDocumentList();
-			  }
-			  
-			  protected NamedList<Object> readNamedList(final XMLStreamReader parser) throws XMLStreamException {
-				  if( XMLStreamConstants.START_ELEMENT != parser.getEventType()) {
-					  throw new RuntimeException("must be start element, not: " + parser.getEventType());
-				  }
-
-				  final StringBuilder builder = new StringBuilder();
-				  final NamedList<Object> nl = new SimpleOrderedMap<>();
-				  KnownType type = null;
-				  String name = null;
-			    
-				  int depth = 0;
-				  while( true ) {
-					  switch (parser.next()) {
-					  case XMLStreamConstants.START_ELEMENT:
-						  depth++;
-						  builder.setLength( 0 ); 
-						  type = KnownType.get( parser.getLocalName() );
-						  if( type == null ) {
-							  continue;
-						  }
-						  
-						  name = null;
-						  int cnt = parser.getAttributeCount();
-						  for( int i=0; i<cnt; i++ ) {
-							  if( "name".equals( parser.getAttributeLocalName( i ) ) ) {
-								  name = parser.getAttributeValue( i );
-								  break;
-							  }
-						  }
-						  if (type == KnownType.LST) {
-							  nl.add( name, readNamedList( parser ) ); depth--; continue;
-						  } else if (type == KnownType.ARR) {
-							  nl.add( name, readArray(     parser ) ); depth--; continue;
-						  }
-						  break;
-					  case XMLStreamConstants.END_ELEMENT:
-						  if( --depth < 0 ) {
-							  return nl;
-						  }
-						  
-						  if (type != null) {
-							  nl.add( name, type.read( builder.toString().trim() ) );
-						  }
-						  break;
-					  case XMLStreamConstants.SPACE:
-					  case XMLStreamConstants.CDATA:
-					  case XMLStreamConstants.CHARACTERS:
-						  builder.append(parser.getText());
-						  break;
-					  }
-				  }
-			  }			  
-		});		
-	}
+//	protected static void resetSolRDFXmlResponseParser() {
+//		solr.setParser(new XMLResponseParser() {
+//			  @Override
+//			  public String getContentType() {
+//			    return "text/xml";
+//			  }
+//			  
+//			  @Override
+//			  protected SolrDocumentList readDocuments(final XMLStreamReader parser) throws XMLStreamException {
+//				  return new SolrDocumentList();
+//			  }
+//			  
+//			  protected NamedList<Object> readNamedList(final XMLStreamReader parser) throws XMLStreamException {
+//				  if( XMLStreamConstants.START_ELEMENT != parser.getEventType()) {
+//					  throw new RuntimeException("must be start element, not: " + parser.getEventType());
+//				  }
+//
+//				  final StringBuilder builder = new StringBuilder();
+//				  final NamedList<Object> nl = new SimpleOrderedMap<>();
+//				  KnownType type = null;
+//				  String name = null;
+//			    
+//				  int depth = 0;
+//				  while( true ) {
+//					  switch (parser.next()) {
+//					  case XMLStreamConstants.START_ELEMENT:
+//						  depth++;
+//						  builder.setLength( 0 ); 
+//						  type = KnownType.get( parser.getLocalName() );
+//						  if( type == null ) {
+//							  continue;
+//						  }
+//						  
+//						  name = null;
+//						  int cnt = parser.getAttributeCount();
+//						  for( int i=0; i<cnt; i++ ) {
+//							  if( "name".equals( parser.getAttributeLocalName( i ) ) ) {
+//								  name = parser.getAttributeValue( i );
+//								  break;
+//							  }
+//						  }
+//						  if (type == KnownType.LST) {
+//							  nl.add( name, readNamedList( parser ) ); depth--; continue;
+//						  } else if (type == KnownType.ARR) {
+//							  nl.add( name, readArray(     parser ) ); depth--; continue;
+//						  }
+//						  break;
+//					  case XMLStreamConstants.END_ELEMENT:
+//						  if( --depth < 0 ) {
+//							  return nl;
+//						  }
+//						  
+//						  if (type != null) {
+//							  nl.add( name, type.read( builder.toString().trim() ) );
+//						  }
+//						  break;
+//					  case XMLStreamConstants.SPACE:
+//					  case XMLStreamConstants.CDATA:
+//					  case XMLStreamConstants.CHARACTERS:
+//						  builder.append(parser.getText());
+//						  break;
+//					  }
+//				  }
+//			  }			  
+//		});		
+//	}
 	
 	/**
 	 * Reads a query from the file associated with this test and builds a query string.
@@ -267,14 +264,12 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected void askTest(final MisteryGuest data) throws Exception {
 		load(data);
 		
-		final Query query = QueryFactory.create(queryString(data.query));
-		execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
-		inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
+		inMemoryExecution = QueryExecutionFactory.create(QueryFactory.create(queryString(data.query)), memoryDataset);
 			
 		assertEquals(
 				Arrays.toString(data.datasets) + ", " + data.query,
 				inMemoryExecution.execAsk(),
-				execution.execAsk());
+				SOLRDF.ask(queryString(data.query)));
 	}
 		
 	/**
@@ -288,20 +283,18 @@ public abstract class IntegrationTestSupertypeLayer {
 		
 		final Query query = QueryFactory.create(queryString(data.query));
 		try {
-			execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
 			inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
 			
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
-					inMemoryExecution.execDescribe().isIsomorphicWith(execution.execDescribe()));
+					inMemoryExecution.execDescribe().isIsomorphicWith(
+							SOLRDF.describe(queryString(data.query))));
 		} catch (final Throwable error) {
-			QueryExecution debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
 			StringWriter writer = new StringWriter();
-			RDFDataMgr.write(writer, debugExecution.execDescribe(), RDFFormat.NTRIPLES);
+			RDFDataMgr.write(writer, SOLRDF.describe(queryString(data.query)), RDFFormat.NTRIPLES);
 			log.debug("JNS\n" + writer);
 			
-			debugExecution.close();
-			debugExecution = QueryExecutionFactory.create(query, memoryDataset);
+			QueryExecution debugExecution = QueryExecutionFactory.create(query, memoryDataset);
 			writer = new StringWriter();
 			RDFDataMgr.write(writer, debugExecution.execDescribe(), RDFFormat.NTRIPLES);
 			
@@ -321,22 +314,22 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected void constructTest(final MisteryGuest data) throws Exception {
 		load(data);
 		
-		final Query query = QueryFactory.create(queryString(data.query));
 		try {
-			execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
-			inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset);
+			inMemoryExecution = QueryExecutionFactory.create(
+					QueryFactory.create(queryString(data.query)), memoryDataset);
 			
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
-					inMemoryExecution.execConstruct().isIsomorphicWith(execution.execConstruct()));
+					inMemoryExecution.execConstruct().isIsomorphicWith(
+							SOLRDF.construct(queryString(data.query))));
 		} catch (final Throwable error) {
-			QueryExecution debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query);
 			StringWriter writer = new StringWriter();
-			RDFDataMgr.write(writer, debugExecution.execConstruct(), RDFFormat.NTRIPLES);
+			RDFDataMgr.write(writer, SOLRDF.construct(queryString(data.query)), RDFFormat.NTRIPLES);
 			log.debug("JNS\n" + writer);
 			
-			debugExecution.close();
-			debugExecution = QueryExecutionFactory.create(query, memoryDataset);
+			QueryExecution debugExecution = QueryExecutionFactory.create(
+					QueryFactory.create(queryString(data.query)), memoryDataset);
+			
 			writer = new StringWriter();
 			RDFDataMgr.write(writer, debugExecution.execConstruct(), RDFFormat.NTRIPLES);
 			
@@ -356,21 +349,22 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected void selectTest(final MisteryGuest data) throws Exception {
 		load(data);
 		
-		final Query query = QueryFactory.create(queryString(data.query));
 		try {
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
 					ResultSetCompare.isomorphic(
-							(execution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect(),
-							(inMemoryExecution = QueryExecutionFactory.create(query, memoryDataset)).execSelect()));
+							SOLRDF.select(queryString(data.query)),
+							(inMemoryExecution = QueryExecutionFactory.create(
+									QueryFactory.create(queryString(data.query)), 
+									memoryDataset)).execSelect()));
 		} catch (final Throwable error) {
-			QueryExecution debugExecution = null;
-			log.debug("JNS\n" + ResultSetFormatter.asText(
-					(debugExecution = QueryExecutionFactory.sparqlService(SPARQL_ENDPOINT_URI, query)).execSelect()));
+			log.debug("JNS\n" + ResultSetFormatter.asText(SOLRDF.select(queryString(data.query))));
 			
-			debugExecution.close();
+			QueryExecution debugExecution = null;
 			log.debug("MEM\n" + ResultSetFormatter.asText(
-					(debugExecution = (QueryExecutionFactory.create(query, memoryDataset))).execSelect()));
+					(debugExecution = (QueryExecutionFactory.create(
+							QueryFactory.create(queryString(data.query)), 
+							memoryDataset))).execSelect()));
 			
 			debugExecution.close();
 			throw error;
@@ -400,12 +394,12 @@ public abstract class IntegrationTestSupertypeLayer {
 		}  
   
 		if (data.graphURI != null) {
-			DATASET.add(data.graphURI, memoryModel);
+			SOLRDF.add(data.graphURI, memoryModel.listStatements());
 		} else {
-			DATASET.add(memoryModel);
+			SOLRDF.add(memoryModel.listStatements());
 		}
 		
-		commitChanges();
+		SOLRDF.commit();
 		
 		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();
 		if (nodes != null) {
@@ -413,15 +407,14 @@ public abstract class IntegrationTestSupertypeLayer {
 				final Node graphNode = nodes.next();
 				final String graphUri = graphNode.getURI();
 				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
-				assertIsomorphic(inMemoryNamedModel, DATASET.getModel(graphUri), graphUri);		
+				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
 			}
 		}
 		
-		final Model model = (data.graphURI != null) ? DATASET.getModel(data.graphURI) : DATASET.getModel();
+		final Model model = (data.graphURI != null) ? SOLRDF.getNamedModel(data.graphURI) : SOLRDF.getDefaultModel();
 		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
 		assertIsomorphic(memoryModel, model, null);
 	} 
-	
 	
 	protected abstract String examplesDirectory();
 	

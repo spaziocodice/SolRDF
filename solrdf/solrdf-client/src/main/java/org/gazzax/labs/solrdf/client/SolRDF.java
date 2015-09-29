@@ -26,6 +26,7 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 
 /**
@@ -220,6 +221,80 @@ public class SolRDF {
 		this.localDataset = DatasetFactory.createMem();
 		this.solr = solr;
 		this.sparqlEndpoint = sparqlEndpointAddress;
+	}
+	
+	/**
+	 * Clears the default model on SolRDF.
+	 * 
+	 * @throws UnableToDeleteException in case the deletion is not possible.
+	 */
+	public void deleteDefaultGraph() throws UnableToDeleteException {
+		try {
+			remoteDataset.deleteDefault();
+		} catch(final Exception exception) {
+			throw new UnableToDeleteException(exception);
+		}
+	}
+
+	/**
+	 * Clears the whole data on SolRDF.
+	 * 
+	 * @throws UnableToDeleteException in case the deletion is not possible.
+	 */
+	public void clear() throws UnableToDeleteException {
+		try {
+			solr.deleteByQuery("*:*");
+		} catch(final Exception exception) {
+			throw new UnableToDeleteException(exception);
+		}
+	}
+
+	/**
+	 * Clears the default model on SolRDF.
+	 * 
+	 * @throws UnableToDeleteException in case the deletion is not possible.
+	 */
+	public void deleteNamedGraph(final String ... graphURIs) throws UnableToDeleteException {
+		if (graphURIs == null) {
+			return;
+		}
+		
+		try {
+			for (final String graphURI : graphURIs) {
+				remoteDataset.deleteModel(graphURI);
+			}
+		} catch(final Exception exception) {
+			throw new UnableToDeleteException(exception);
+		}
+	}
+
+	/**
+	 * Adds a given set of statements to the unnamed graph.
+	 * 
+	 * @param iterator the statements iterator.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
+	 */
+	public void add(final StmtIterator iterator) throws UnableToAddException {
+		try {
+			remoteDataset.add(model().add(iterator));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
+	}
+	
+	/**
+	 * Adds a given set of statements to a named graph.
+	 * 
+	 * @param uri the graph URI.
+	 * @param iterator the statements iterator.
+	 * @throws UnableToAddException in case of add (local or remote) failure.
+	 */
+	public void add(final String uri, final StmtIterator iterator) throws UnableToAddException {
+		try {
+			remoteDataset.add(uri, model(uri).add(iterator));
+		} catch (final Exception exception) {
+			throw new UnableToAddException(exception);
+		}
 	}
 
 	/**
@@ -430,7 +505,25 @@ public class SolRDF {
 			throw new UnableToAddException(exception);
 		}
 	}		
-
+	
+	/**
+	 * Executes a SPARQL ASK.
+	 * 
+	 * @param query the ASK SELECT Query.
+	 * @return the {@link ResultSet} that includes matching bindings.
+	 * @throws UnableToExecuteQueryException in case of failure before, during or after the query execution.
+	 */
+	public boolean ask(final String askQuery) throws UnableToExecuteQueryException {
+		QueryExecution execution = null;
+		try {
+			return (execution = execution(askQuery)).execAsk();
+		} catch (final Exception exception) {
+			throw new UnableToExecuteQueryException(exception);
+		} finally {
+			execution.close();
+		}
+	}
+	
 	/**
 	 * Executes a SPARQL SELECT.
 	 * 
@@ -444,7 +537,6 @@ public class SolRDF {
 			execution = execution(selectQuery);
 			return new CloseableResultSet(execution.execSelect(), execution);
 		} catch (final Exception exception) {
-			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 			if (execution != null) { 
 				execution.close();
 			}
@@ -489,6 +581,25 @@ public class SolRDF {
 	}		
 	
 	/**
+	 * Returns the {@link Model} representation associated with the graph associated with the given URI.
+	 * 
+	 * @param graphUri the graph URI.
+	 * @return the {@link Model} representation associated with the graph associated with the given URI.
+	 */
+	public Model getNamedModel(final String graphUri) {
+		return remoteDataset.getModel(graphUri);
+	}
+
+	/**
+	 * Returns the {@link Model} representation associated with the default graph.
+	 * 
+	 * @return the {@link Model} representation associated with the default graph.
+	 */
+	public Model getDefaultModel() {
+		return remoteDataset.getModel();
+	}
+	
+	/**
 	 * Commits pending changes.
 	 * 
 	 * @throws UnableToCommitException in case of commit failure.
@@ -517,6 +628,13 @@ public class SolRDF {
 		}
 	}
 
+	/**
+	 * The caller does no longer need this client.
+	 */
+	public void done() {
+		solr.shutdown();
+	}
+	
 	/**
 	 * Commits pending changes.
 	 * 
@@ -558,7 +676,7 @@ public class SolRDF {
 			model = ModelFactory.createDefaultModel();
 			localDataset.addNamedModel(uri, model);
 		}
-		
+		model.removeAll();
 		return model;
 	}
 	
@@ -568,6 +686,6 @@ public class SolRDF {
 	 * @return the a local default model.
 	 */
 	Model model() {
-		return localDataset.getDefaultModel();
+		return localDataset.getDefaultModel().removeAll();
 	}
 }

@@ -5,9 +5,10 @@ import static org.gazzax.labs.solrdf.client.TestUtility.sampleSourceFile;
 import static org.gazzax.labs.solrdf.client.TestUtility.sampleStatements;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import java.io.FileInputStream;
 import java.io.FileReader;

@@ -7,12 +7,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.util.NamedList;
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
 import org.junit.Before;
@@ -37,21 +35,18 @@ public abstract class FacetTestSupertypeLayer extends IntegrationTestSupertypeLa
 	
 	/**
 	 * Loads all triples found in the datafile associated with the given name.
-	 * @throws IOException 
-	 * @throws SolrServerException 
 	 * 
 	 * @throws Exception hopefully never, otherwise the test fails.
 	 */
 	@BeforeClass
-	public final static void loadSampleData() throws SolrServerException, IOException {
+	public final static void loadSampleData() throws Exception {
 		final Model memoryModel = ModelFactory.createDefaultModel();
 		memoryModel.read(TEST_DATA_URI, DUMMY_BASE_URI, "N-TRIPLES");
   
-		DATASET.add(memoryModel);
+		SOLRDF.add(memoryModel.listStatements());
+		SOLRDF.commit();
 		
-		commitChanges();
-		
-		final Model model = DATASET.getModel();
+		final Model model = SOLRDF.getDefaultModel();
 		  
 		assertFalse(model.isEmpty());
 		assertTrue(model.isIsomorphicWith(memoryModel));
