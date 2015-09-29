@@ -16,13 +16,18 @@
 		<dependency>
 			<groupId>org.gazzax.labs</groupId>
 			<artifactId>solrdf-core</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr</artifactId>
 			<version>${solr.version}</version>
 			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>org.gazzax.labs</groupId>
+			<artifactId>solrdf-client</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 	<profiles>

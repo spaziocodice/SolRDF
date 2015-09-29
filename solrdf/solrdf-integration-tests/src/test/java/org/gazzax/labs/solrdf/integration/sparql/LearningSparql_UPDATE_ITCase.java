@@ -48,7 +48,7 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 		final String updateCommandString = readFile(data.query);
 		UpdateExecutionFactory.createRemote(UpdateFactory.create(updateCommandString), SPARQL_ENDPOINT_URI).execute();
 
-		commitChanges();
+		SOLRDF.commit();
 
 		UpdateAction.parseExecute(updateCommandString, memoryDataset.asDatasetGraph());
 		
@@ -58,11 +58,11 @@ public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
 				final Node graphNode = nodes.next();
 				final String graphUri = graphNode.getURI();
 				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
-				assertIsomorphic(inMemoryNamedModel, DATASET.getModel(graphUri), graphUri);		
+				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
 			}
 		}
 		
-		assertIsomorphic(memoryDataset.getDefaultModel(), DATASET.getModel(), null);			
+		assertIsomorphic(memoryDataset.getDefaultModel(), SOLRDF.getDefaultModel(), null);			
 	}
 	
 	@Test

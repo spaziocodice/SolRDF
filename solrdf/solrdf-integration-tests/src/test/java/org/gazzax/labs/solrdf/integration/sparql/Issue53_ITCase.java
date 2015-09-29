@@ -17,7 +17,6 @@ package org.gazzax.labs.solrdf.integration.sparql;
 import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
 
 import org.gazzax.labs.solrdf.integration.IntegrationTestSupertypeLayer;
-import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -29,16 +28,6 @@ import org.junit.Test;
  */  
 public class Issue53_ITCase extends IntegrationTestSupertypeLayer {
 	protected final static String EXAMPLES_DIR = "src/test/resources/sample_data";
-	
-	/** 
-	 * Shutdown procedure for this test.
-	 * 
-	 * @throws Exception hopefully never.
-	 */
-	@After
-	public void tearDown() throws Exception {
-		clearDatasets();
-	}
 	
 	@Test
 	public void diacriticsInWhereCondition() throws Exception {
