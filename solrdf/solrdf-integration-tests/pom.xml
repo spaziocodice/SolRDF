@@ -120,7 +120,7 @@
 							<deployables>
 								<deployable>
 									<groupId>org.gazzax.labs</groupId>
-									<artifactId>solrdf</artifactId>
+									<artifactId>solrdf-integration-tests</artifactId>
 									<type>war</type>
 									<properties>
 										<context>/solr</context>
