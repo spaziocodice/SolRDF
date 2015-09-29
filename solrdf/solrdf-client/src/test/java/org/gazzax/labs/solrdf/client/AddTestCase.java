@@ -17,6 +17,7 @@ import java.net.URI;
 
 import org.apache.solr.client.solrj.SolrServer;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hp.hpl.jena.query.DatasetAccessor;
@@ -29,6 +30,7 @@ import com.hp.hpl.jena.rdf.model.impl.StmtIteratorImpl;
  * @author Andrea Gazzarini
  * @since 1.0
  */
+@Ignore
 public class AddTestCase {
 	String uri;
 	DatasetAccessor dataset;
