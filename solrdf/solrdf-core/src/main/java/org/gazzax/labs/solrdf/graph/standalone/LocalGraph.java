@@ -385,7 +385,7 @@ public final class LocalGraph extends SolRDFGraph {
 				registry.get(
 						dataType != null 
 							? dataType.getURI() 
-							: null).addFilterConstraint(filters, literalValue);
+							: null).addFilterConstraint(filters, literalValue, request);
 			} else {
 				filters.add(new TermQuery(new Term(Field.TEXT_OBJECT, asNt(o))));		
 			}

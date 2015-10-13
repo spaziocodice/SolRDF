@@ -16,16 +16,7 @@ package org.gazzax.labs.solrdf.integration.sparql;
 
 import static org.gazzax.labs.solrdf.MisteryGuest.misteryGuest;
 
-import java.util.Iterator;
-
-import org.gazzax.labs.solrdf.MisteryGuest;
 import org.junit.Test;
-
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.update.UpdateAction;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateFactory;
 
 /**
  * SPARQL Update Integration tests using examples taken from LearningSPARQL book.
@@ -35,36 +26,6 @@ import com.hp.hpl.jena.update.UpdateFactory;
  * @see http://learningsparql.com
  */  
 public class LearningSparql_UPDATE_ITCase extends LearningSparqlSupertypeLayer {
-	
-	/**
-	 * Executes a given update command both on remote and local model.
-	 * 
-	 * @param data the object holding test data (i.e. commands, queries, datafiles).
-	 * @throws Exception hopefully never otherwise the corresponding test fails.
-	 */
-	void executeUpdate(final MisteryGuest data) throws Exception {
-		load(data);
-		
-		final String updateCommandString = readFile(data.query);
-		UpdateExecutionFactory.createRemote(UpdateFactory.create(updateCommandString), SPARQL_ENDPOINT_URI).execute();
-
-		SOLRDF.commit();
-
-		UpdateAction.parseExecute(updateCommandString, memoryDataset.asDatasetGraph());
-		
-		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();
-		if (nodes != null) {
-			while (nodes.hasNext()) {
-				final Node graphNode = nodes.next();
-				final String graphUri = graphNode.getURI();
-				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
-				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
-			}
-		}
-		
-		assertIsomorphic(memoryDataset.getDefaultModel(), SOLRDF.getDefaultModel(), null);			
-	}
-	
 	@Test
 	public void insertData() throws Exception {
 		executeUpdate(misteryGuest("ex312.ru"));

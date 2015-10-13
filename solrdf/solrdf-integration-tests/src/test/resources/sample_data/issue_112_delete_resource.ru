@@ -1,0 +1,1 @@
+DELETE WHERE { <http://example.org/book1> ?x ?y }

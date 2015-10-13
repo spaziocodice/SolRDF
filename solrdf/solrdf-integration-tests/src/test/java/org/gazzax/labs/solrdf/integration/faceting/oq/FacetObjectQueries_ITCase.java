@@ -19,6 +19,7 @@ import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
 import org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent;
 import org.gazzax.labs.solrdf.handler.search.faceting.oq.FacetObjectQuery;
 import org.gazzax.labs.solrdf.integration.faceting.FacetTestSupertypeLayer;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -31,6 +32,7 @@ import org.junit.Test;
  * @author Andrea Gazzarini
  * @since 1.0
  */  
+@Ignore
 public class FacetObjectQueries_ITCase extends FacetTestSupertypeLayer {	
 	private final String publisherQuery = "p:<http\\://purl.org/dc/elements/1.1/publisher>";
 	private final String reviewedQuery = "p:<http\\://example.org/ns#reviewed>";

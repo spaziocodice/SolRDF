@@ -3,6 +3,8 @@ package org.gazzax.labs.solrdf.graph.standalone;
 import static org.gazzax.labs.solrdf.F.fq;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,8 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.QParser;
 import org.gazzax.labs.solrdf.Field;
 import org.gazzax.labs.solrdf.log.Log;
 import org.gazzax.labs.solrdf.log.MessageCatalog;
@@ -33,11 +37,9 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 class FieldInjectorRegistry {
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(LocalGraph.class));
 	
-	private ThreadLocal<DateTimeFormatter> isoFormatterCache = new ThreadLocal<DateTimeFormatter>()
-	{
+	private static ThreadLocal<DateTimeFormatter> isoFormatterCache = new ThreadLocal<DateTimeFormatter>() {
 		@Override
-		protected DateTimeFormatter initialValue()
-		{
+		protected DateTimeFormatter initialValue() {
 			return new DateTimeFormatterBuilder()
 				.append(DateTimeFormat.forPattern("yyyy-MM-dd"))                                            
 				.appendOptional(
@@ -81,7 +83,7 @@ class FieldInjectorRegistry {
 		 * @param filters the filter list.
 		 * @param value the new constraint value. 
 		 */
-		void addFilterConstraint(List<Query> filters, String value);
+		void addFilterConstraint(List<Query> filters, String value, SolrQueryRequest request);
 		
 		/**
 		 * Appends to a given {@link StringBuilder}, and additional AND clause with the given value.
@@ -99,7 +101,7 @@ class FieldInjectorRegistry {
 		}
 
 		@Override
-		public void addFilterConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value, SolrQueryRequest request) {
 			filters.add(new TermQuery(new Term(Field.BOOLEAN_OBJECT, value.substring(0,1).toUpperCase())));
 		}
 		
@@ -116,7 +118,7 @@ class FieldInjectorRegistry {
 		}
 		
 		@Override
-		public void addFilterConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value, SolrQueryRequest request) {
 			final Double number = Double.valueOf(value);
 			filters.add(NumericRangeQuery.newDoubleRange(Field.NUMERIC_OBJECT, number, number, true, true));
 		}		
@@ -130,15 +132,24 @@ class FieldInjectorRegistry {
 	final FieldInjector dateTimeFieldInjector = new FieldInjector() {
 		@Override
 		public void inject(final SolrInputDocument document, final Object value) {
-			document.setField(Field.DATE_OBJECT, ((XSDDateTime)value).asCalendar().getTime());
+			final Calendar calendar = ((XSDDateTime)value).asCalendar();
+			final long millis = calendar.getTimeInMillis();
+			document.setField(
+					Field.DATE_OBJECT, 
+					new Date(millis + calendar.getTimeZone().getOffset(millis)));
 		}
 		
 		@Override
-		public void addFilterConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value, SolrQueryRequest request) {
 			try {
-				final long millisecs = isoFormatterCache.get().parseMillis(value);
-				filters.add(NumericRangeQuery.newLongRange(Field.DATE_OBJECT, millisecs, millisecs, true, true));
-			} catch (final IllegalArgumentException exception) {
+				filters.add(QParser.getParser(
+								new StringBuilder()
+									.append(Field.DATE_OBJECT)
+									.append(": \"")
+									.append(format(value))
+									.append("\"")
+									.toString(), "lucene", request).getQuery());
+			} catch (final Exception exception) {
 				LOGGER.error(MessageCatalog._00110_INVALID_DATE_VALUE, exception, value);
 				throw new IllegalArgumentException(exception);
 			}
@@ -146,8 +157,27 @@ class FieldInjectorRegistry {
 
 		@Override
 		public void addConstraint(final StringBuilder builder, final String value) {
-			builder.append(Field.DATE_OBJECT).append(":").append(value);
-		}		
+			try {
+				builder
+					.append(Field.DATE_OBJECT)
+					.append(": \"")
+					.append(format(value))
+					.append("\"");
+			} catch (final IllegalArgumentException exception) {
+				LOGGER.error(MessageCatalog._00110_INVALID_DATE_VALUE, exception, value);
+				throw new IllegalArgumentException(exception);
+			}
+			
+		}	
+		
+		protected String format(final String value) {
+			return new StringBuilder()
+					.append(
+							isoFormatterCache.get()
+								.parseLocalDateTime(value)
+								.toString("yyyy-MM-dd'T'HH:mm:ss")+"Z")
+					.toString();
+		}
 	};
 	
 	final FieldInjector catchAllFieldInjector = new FieldInjector() {
@@ -157,7 +187,7 @@ class FieldInjectorRegistry {
 		}
 
 		@Override
-		public void addFilterConstraint(final List<Query> filters, final String value) {
+		public void addFilterConstraint(final List<Query> filters, final String value, SolrQueryRequest request) {
 			final PhraseQuery query = new PhraseQuery();
 			query.add(new Term(Field.TEXT_OBJECT, value));
 			filters.add(query);

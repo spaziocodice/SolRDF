@@ -1,0 +1,1 @@
+DELETE WHERE { ?s <http://purl.org/dc/elements/1.1/date> ?o }

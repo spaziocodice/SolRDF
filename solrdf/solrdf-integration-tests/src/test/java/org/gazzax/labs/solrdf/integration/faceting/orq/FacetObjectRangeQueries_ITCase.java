@@ -21,6 +21,7 @@ import org.gazzax.labs.solrdf.handler.search.faceting.FacetQuery;
 import org.gazzax.labs.solrdf.handler.search.faceting.RDFacetComponent;
 import org.gazzax.labs.solrdf.handler.search.faceting.rq.FacetRangeQuery;
 import org.gazzax.labs.solrdf.integration.faceting.FacetTestSupertypeLayer;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -33,6 +34,7 @@ import org.junit.Test;
  * @author Andrea Gazzarini
  * @since 1.0
  */  
+@Ignore
 public class FacetObjectRangeQueries_ITCase extends FacetTestSupertypeLayer {
 	private final String _0 = "0";
 	private final String _10 = "10";	

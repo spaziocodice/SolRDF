@@ -37,6 +37,9 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.sparql.resultset.ResultSetCompare;
+import com.hp.hpl.jena.update.UpdateAction;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateFactory;
 
 /**
  * Supertype layer for all integration tests.
@@ -52,10 +55,8 @@ public abstract class IntegrationTestSupertypeLayer {
 	protected final Log log = new Log(LoggerFactory.getLogger(getClass()));
 	
 	protected static HttpSolrServer solr;
-//	protected QueryExecution execution;
 	protected QueryExecution inMemoryExecution;
 	protected Dataset memoryDataset;
-//	protected static DatasetAccessor DATASET;
 	
 	protected static SolRDF SOLRDF;
 	
@@ -72,8 +73,6 @@ public abstract class IntegrationTestSupertypeLayer {
 	              .build();
 		
 		solr = new HttpSolrServer(SOLR_URI);
-//		resetSolRDFXmlResponseParser();
-//		DATASET = DatasetAccessorFactory.createHTTP(GRAPH_STORE_ENDPOINT_URI);
 	}
 	
 	/**
@@ -131,97 +130,9 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @throws Exception hopefully never.
 	 */
 	protected static void clearData() throws Exception {
-//		solr.setParser(new XMLResponseParser());
 		SOLRDF.clear();
 		SOLRDF.commit();
-//		solr.deleteByQuery("*:*");
-//		commitChanges();
-//		resetSolRDFXmlResponseParser();	
 	}
-	
-//	/**
-//	 * Commits changes on Solr.
-//	 * 
-//	 * @throws SolrServerException in case of a Solr failure.
-//	 * @throws IOException in case of I/O failure.
-//	 */
-//	protected static void commitChanges() throws SolrServerException, IOException {
-//		solr.setParser(new XMLResponseParser());	
-//		
-//		final UpdateRequest req = new UpdateRequest();
-//		req.setAction(UpdateRequest.ACTION.COMMIT, true, true, false);
-//		req.setParam("openSearcher", "true");
-//		req.process(solr);  
-//		  
-//		resetSolRDFXmlResponseParser();
-//	}	
-	
-//	protected static void resetSolRDFXmlResponseParser() {
-//		solr.setParser(new XMLResponseParser() {
-//			  @Override
-//			  public String getContentType() {
-//			    return "text/xml";
-//			  }
-//			  
-//			  @Override
-//			  protected SolrDocumentList readDocuments(final XMLStreamReader parser) throws XMLStreamException {
-//				  return new SolrDocumentList();
-//			  }
-//			  
-//			  protected NamedList<Object> readNamedList(final XMLStreamReader parser) throws XMLStreamException {
-//				  if( XMLStreamConstants.START_ELEMENT != parser.getEventType()) {
-//					  throw new RuntimeException("must be start element, not: " + parser.getEventType());
-//				  }
-//
-//				  final StringBuilder builder = new StringBuilder();
-//				  final NamedList<Object> nl = new SimpleOrderedMap<>();
-//				  KnownType type = null;
-//				  String name = null;
-//			    
-//				  int depth = 0;
-//				  while( true ) {
-//					  switch (parser.next()) {
-//					  case XMLStreamConstants.START_ELEMENT:
-//						  depth++;
-//						  builder.setLength( 0 ); 
-//						  type = KnownType.get( parser.getLocalName() );
-//						  if( type == null ) {
-//							  continue;
-//						  }
-//						  
-//						  name = null;
-//						  int cnt = parser.getAttributeCount();
-//						  for( int i=0; i<cnt; i++ ) {
-//							  if( "name".equals( parser.getAttributeLocalName( i ) ) ) {
-//								  name = parser.getAttributeValue( i );
-//								  break;
-//							  }
-//						  }
-//						  if (type == KnownType.LST) {
-//							  nl.add( name, readNamedList( parser ) ); depth--; continue;
-//						  } else if (type == KnownType.ARR) {
-//							  nl.add( name, readArray(     parser ) ); depth--; continue;
-//						  }
-//						  break;
-//					  case XMLStreamConstants.END_ELEMENT:
-//						  if( --depth < 0 ) {
-//							  return nl;
-//						  }
-//						  
-//						  if (type != null) {
-//							  nl.add( name, type.read( builder.toString().trim() ) );
-//						  }
-//						  break;
-//					  case XMLStreamConstants.SPACE:
-//					  case XMLStreamConstants.CDATA:
-//					  case XMLStreamConstants.CHARACTERS:
-//						  builder.append(parser.getText());
-//						  break;
-//					  }
-//				  }
-//			  }			  
-//		});		
-//	}
 	
 	/**
 	 * Reads a query from the file associated with this test and builds a query string.
@@ -372,6 +283,35 @@ public abstract class IntegrationTestSupertypeLayer {
 	}
 	
 	/**
+	 * Executes a given update command both on remote and local model.
+	 * 
+	 * @param data the object holding test data (i.e. commands, queries, datafiles).
+	 * @throws Exception hopefully never otherwise the corresponding test fails.
+	 */
+	protected void executeUpdate(final MisteryGuest data) throws Exception {
+		load(data);
+		
+		final String updateCommandString = readFile(data.query);
+		UpdateExecutionFactory.createRemote(UpdateFactory.create(updateCommandString), SPARQL_ENDPOINT_URI).execute();
+
+		SOLRDF.commit();
+
+		UpdateAction.parseExecute(updateCommandString, memoryDataset.asDatasetGraph());
+		
+		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();
+		if (nodes != null) {
+			while (nodes.hasNext()) {
+				final Node graphNode = nodes.next();
+				final String graphUri = graphNode.getURI();
+				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
+				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
+			}
+		}
+		
+		assertIsomorphic(memoryDataset.getDefaultModel(), SOLRDF.getDefaultModel(), null);			
+	}
+	
+	/**
 	 * Loads all triples found in the datafile associated with the given name.
 	 * 
 	 * @param datafileName the name of the datafile.
@@ -389,7 +329,11 @@ public abstract class IntegrationTestSupertypeLayer {
 				 
 		for (final String datafileName : data.datasets) {
 			final String dataURL = source(datafileName).toString();
-			final String lang = datafileName.endsWith("ttl") ? "TTL" : null;
+			final String lang = datafileName.endsWith("ttl") 
+					? "TTL" 
+					: datafileName.endsWith("nt") 
+						? "N-TRIPLES" 
+						: null;
 			memoryModel.read(dataURL, DUMMY_BASE_URI, lang);
 		}  
   

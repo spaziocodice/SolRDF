@@ -1,0 +1,1 @@
+DELETE WHERE { ?l ?x "2000-12-31"^^<http://www.w3.org/2001/XMLSchema#date> }
