@@ -47,6 +47,12 @@ public class Issue112_ITCase extends IntegrationTestSupertypeLayer {
 		executeUpdate(misteryGuest("issue_112_delete_with_a_date_selector.ru", "faceting_test_dataset.nt"));	
 	}
 	
+	@Test
+	public void insertDateTimeAndDeleteEverything() throws Exception {
+		executeUpdate(misteryGuest("issue_112_insert_with_datetime.ru"));
+		executeUpdate(misteryGuest("issue_112_delete_all.ru"));
+	}
+	
 	@Override
 	protected String examplesDirectory() {
 		return "src/test/resources/sample_data";

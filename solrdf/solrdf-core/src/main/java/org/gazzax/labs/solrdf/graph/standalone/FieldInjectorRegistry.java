@@ -171,6 +171,9 @@ class FieldInjectorRegistry {
 		}	
 		
 		protected String format(final String value) {
+			if (value.endsWith("Z")) {
+				return value;
+			}
 			return new StringBuilder()
 					.append(
 							isoFormatterCache.get()
