@@ -8,9 +8,9 @@ import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.SolrInputDocument;
@@ -39,7 +39,7 @@ public final class CloudGraph extends SolRDFGraph {
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(CloudGraph.class));
 	
 	final FieldInjectorRegistry registry = new FieldInjectorRegistry();
-	final SolrServer cloud;
+	final SolrClient cloud;
 
 	private SolrQuery graphSizeQuery;
 	
@@ -55,7 +55,7 @@ public final class CloudGraph extends SolRDFGraph {
 	 */
 	CloudGraph(
 		final Node graphNode, 
-		final SolrServer cloud, 
+		final SolrClient cloud, 
 		final int fetchSize, 
 		final GraphEventConsumer consumer) {
 		super(graphNode, consumer, fetchSize);

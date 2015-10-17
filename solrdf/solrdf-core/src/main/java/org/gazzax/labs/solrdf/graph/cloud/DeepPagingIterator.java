@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -37,7 +37,7 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 
 	protected static final Triple DUMMY_TRIPLE = new Triple(Node.ANY, Node.ANY, Node.ANY);
 	
-	final SolrServer cloud; 
+	final SolrClient cloud; 
 	final SolrQuery query;
 	final GraphEventConsumer consumer;
 	private SolrDocumentList page;
@@ -178,7 +178,7 @@ public class DeepPagingIterator extends UnmodifiableIterator<Triple> {
 	 * @param consumer the Graph event consumer that will be notified on relevant events.
 	 */
 	DeepPagingIterator(
-			final SolrServer cloud, 
+			final SolrClient cloud, 
 			final SolrQuery query, 
 			final GraphEventConsumer consumer) {
 		this.cloud = cloud;

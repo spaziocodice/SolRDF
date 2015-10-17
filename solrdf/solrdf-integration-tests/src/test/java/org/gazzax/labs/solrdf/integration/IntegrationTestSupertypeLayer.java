@@ -1,9 +1,6 @@
 package org.gazzax.labs.solrdf.integration;
 
 import static org.gazzax.labs.solrdf.TestUtility.DUMMY_BASE_URI;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +11,18 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.apache.http.HttpHost;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.SchemePortResolver;
+import org.apache.http.conn.UnsupportedSchemeException;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.DefaultRoutePlanner;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.SolrJettyTestBase;
+import org.apache.solr.client.solrj.embedded.JettyConfig;
+import org.apache.solr.client.solrj.embedded.JettySolrRunner;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.gazzax.labs.solrdf.MisteryGuest;
 import org.gazzax.labs.solrdf.client.SolRDF;
 import org.gazzax.labs.solrdf.client.UnableToBuildSolRDFClientException;
@@ -27,6 +33,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
+import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
@@ -47,32 +54,65 @@ import com.hp.hpl.jena.update.UpdateFactory;
  * @author Andrea Gazzarini
  * @since 1.0
  */
-public abstract class IntegrationTestSupertypeLayer {
+@ThreadLeakScope(ThreadLeakScope.Scope.NONE)
+public abstract class IntegrationTestSupertypeLayer extends SolrJettyTestBase {
 	protected static final String SOLR_URI = "http://127.0.0.1:8080/solr/store";
 	protected static final String SPARQL_ENDPOINT_URI = SOLR_URI + "/sparql";
 	protected static final String GRAPH_STORE_ENDPOINT_URI = SOLR_URI + "/rdf-graph-store";
 	
 	protected final Log log = new Log(LoggerFactory.getLogger(getClass()));
 	
-	protected static HttpSolrServer solr;
+	protected static HttpSolrClient PLAIN_SOLR_CLIENT;
 	protected QueryExecution inMemoryExecution;
 	protected Dataset memoryDataset;
 	
-	protected static SolRDF SOLRDF;
+	protected static SolRDF SOLRDF_CLIENT;
+	protected static JettySolrRunner SOLR;
 	
 	/**
 	 * Initilisation procedure for this test case.
+	 * 
 	 * @throws UnableToBuildSolRDFClientException in case the client cannot be built.
+	 * @throws Exception in case of Solr startup failure.
 	 */
 	@BeforeClass
-	public static void initClient() throws UnableToBuildSolRDFClientException {
-		SOLRDF = SolRDF.newBuilder()
-	              .withEndpoint("http://127.0.0.1:8080/solr/store")
-	              .withGraphStoreProtocolEndpointPath("/rdf-graph-store")
-	              .withSPARQLEndpointPath("/sparql")
-	              .build();
-		
-		solr = new HttpSolrServer(SOLR_URI);
+	public static void initITTest() {
+		System.setProperty("tests.asserts", "false");	
+		System.setProperty("jetty.port", "8080");
+		System.setProperty("solr.core.name", "store");
+		System.setProperty("solr.data.dir", initCoreDataDir.getAbsolutePath());
+			
+		try {
+			SOLR = createJetty(
+					"/work/workspaces/solrdf/solrdf/solrdf/solrdf-core/src/solr-home",
+					JettyConfig.builder()
+						.setPort(8080)
+						.setContext("/solr")
+						.stopAtShutdown(true)
+						.build());		
+			
+			final HttpClient httpClient = HttpClientBuilder.create()
+					.setRoutePlanner(
+							new DefaultRoutePlanner(
+									new SchemePortResolver() {
+										@Override
+										public int resolve(final HttpHost host) throws UnsupportedSchemeException {
+											return SOLR.getLocalPort();
+										}
+									})).build();
+			
+			
+			SOLRDF_CLIENT = SolRDF.newBuilder()
+		              .withEndpoint("http://127.0.0.1:8080/solr/store")
+		              .withGraphStoreProtocolEndpointPath("/rdf-graph-store")
+		              .withHttpClient(httpClient)
+		              .withSPARQLEndpointPath("/sparql")
+		              .build();
+			
+			PLAIN_SOLR_CLIENT = new HttpSolrClient(SOLR_URI);
+		} catch (final Exception exception) {
+			throw new RuntimeException(exception);
+		}
 	}
 	
 	/**
@@ -81,10 +121,10 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @throws Exception hopefully never.
 	 */
 	@AfterClass
-	public static void shutdownClient() throws Exception {
+	public static void shutdown() throws Exception {
 		clearData();
-		SOLRDF.done();
-		solr.shutdown();
+		SOLRDF_CLIENT.done();
+		PLAIN_SOLR_CLIENT.close();
 	}
 	
 	/**
@@ -92,6 +132,7 @@ public abstract class IntegrationTestSupertypeLayer {
 	 */
 	@Before
 	public void setUp() throws Exception {
+		super.setUp();
 		memoryDataset = DatasetFactory.createMem();
 	}
 	 
@@ -102,6 +143,7 @@ public abstract class IntegrationTestSupertypeLayer {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		super.tearDown();
 		clearDatasets();
 		if (inMemoryExecution != null) {
 			inMemoryExecution.close();
@@ -130,8 +172,8 @@ public abstract class IntegrationTestSupertypeLayer {
 	 * @throws Exception hopefully never.
 	 */
 	protected static void clearData() throws Exception {
-		SOLRDF.clear();
-		SOLRDF.commit();
+		SOLRDF_CLIENT.clear();
+		SOLRDF_CLIENT.commit();
 	}
 	
 	/**
@@ -180,7 +222,7 @@ public abstract class IntegrationTestSupertypeLayer {
 		assertEquals(
 				Arrays.toString(data.datasets) + ", " + data.query,
 				inMemoryExecution.execAsk(),
-				SOLRDF.ask(queryString(data.query)));
+				SOLRDF_CLIENT.ask(queryString(data.query)));
 	}
 		
 	/**
@@ -199,10 +241,10 @@ public abstract class IntegrationTestSupertypeLayer {
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
 					inMemoryExecution.execDescribe().isIsomorphicWith(
-							SOLRDF.describe(queryString(data.query))));
+							SOLRDF_CLIENT.describe(queryString(data.query))));
 		} catch (final Throwable error) {
 			StringWriter writer = new StringWriter();
-			RDFDataMgr.write(writer, SOLRDF.describe(queryString(data.query)), RDFFormat.NTRIPLES);
+			RDFDataMgr.write(writer, SOLRDF_CLIENT.describe(queryString(data.query)), RDFFormat.NTRIPLES);
 			log.debug("JNS\n" + writer);
 			
 			QueryExecution debugExecution = QueryExecutionFactory.create(query, memoryDataset);
@@ -232,10 +274,10 @@ public abstract class IntegrationTestSupertypeLayer {
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
 					inMemoryExecution.execConstruct().isIsomorphicWith(
-							SOLRDF.construct(queryString(data.query))));
+							SOLRDF_CLIENT.construct(queryString(data.query))));
 		} catch (final Throwable error) {
 			StringWriter writer = new StringWriter();
-			RDFDataMgr.write(writer, SOLRDF.construct(queryString(data.query)), RDFFormat.NTRIPLES);
+			RDFDataMgr.write(writer, SOLRDF_CLIENT.construct(queryString(data.query)), RDFFormat.NTRIPLES);
 			log.debug("JNS\n" + writer);
 			
 			QueryExecution debugExecution = QueryExecutionFactory.create(
@@ -264,12 +306,12 @@ public abstract class IntegrationTestSupertypeLayer {
 			assertTrue(
 					Arrays.toString(data.datasets) + ", " + data.query,
 					ResultSetCompare.isomorphic(
-							SOLRDF.select(queryString(data.query)),
+							SOLRDF_CLIENT.select(queryString(data.query)),
 							(inMemoryExecution = QueryExecutionFactory.create(
 									QueryFactory.create(queryString(data.query)), 
 									memoryDataset)).execSelect()));
 		} catch (final Throwable error) {
-			log.debug("JNS\n" + ResultSetFormatter.asText(SOLRDF.select(queryString(data.query))));
+			log.debug("JNS\n" + ResultSetFormatter.asText(SOLRDF_CLIENT.select(queryString(data.query))));
 			
 			QueryExecution debugExecution = null;
 			log.debug("MEM\n" + ResultSetFormatter.asText(
@@ -294,7 +336,7 @@ public abstract class IntegrationTestSupertypeLayer {
 		final String updateCommandString = readFile(data.query);
 		UpdateExecutionFactory.createRemote(UpdateFactory.create(updateCommandString), SPARQL_ENDPOINT_URI).execute();
 
-		SOLRDF.commit();
+		SOLRDF_CLIENT.commit();
 
 		UpdateAction.parseExecute(updateCommandString, memoryDataset.asDatasetGraph());
 		
@@ -304,11 +346,11 @@ public abstract class IntegrationTestSupertypeLayer {
 				final Node graphNode = nodes.next();
 				final String graphUri = graphNode.getURI();
 				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
-				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
+				assertIsomorphic(inMemoryNamedModel, SOLRDF_CLIENT.getNamedModel(graphUri), graphUri);		
 			}
 		}
 		
-		assertIsomorphic(memoryDataset.getDefaultModel(), SOLRDF.getDefaultModel(), null);			
+		assertIsomorphic(memoryDataset.getDefaultModel(), SOLRDF_CLIENT.getDefaultModel(), null);			
 	}
 	
 	/**
@@ -338,12 +380,12 @@ public abstract class IntegrationTestSupertypeLayer {
 		}  
   
 		if (data.graphURI != null) {
-			SOLRDF.add(data.graphURI, memoryModel.listStatements());
+			SOLRDF_CLIENT.add(data.graphURI, memoryModel.listStatements());
 		} else {
-			SOLRDF.add(memoryModel.listStatements());
+			SOLRDF_CLIENT.add(memoryModel.listStatements());
 		}
 		
-		SOLRDF.commit();
+		SOLRDF_CLIENT.commit();
 		
 		final Iterator<Node> nodes = memoryDataset.asDatasetGraph().listGraphNodes();
 		if (nodes != null) {
@@ -351,11 +393,11 @@ public abstract class IntegrationTestSupertypeLayer {
 				final Node graphNode = nodes.next();
 				final String graphUri = graphNode.getURI();
 				final Model inMemoryNamedModel = memoryDataset.getNamedModel(graphUri);
-				assertIsomorphic(inMemoryNamedModel, SOLRDF.getNamedModel(graphUri), graphUri);		
+				assertIsomorphic(inMemoryNamedModel, SOLRDF_CLIENT.getNamedModel(graphUri), graphUri);		
 			}
 		}
 		
-		final Model model = (data.graphURI != null) ? SOLRDF.getNamedModel(data.graphURI) : SOLRDF.getDefaultModel();
+		final Model model = (data.graphURI != null) ? SOLRDF_CLIENT.getNamedModel(data.graphURI) : SOLRDF_CLIENT.getDefaultModel();
 		assertFalse(Arrays.toString(data.datasets) + ", " + data.query, model.isEmpty());
 		assertIsomorphic(memoryModel, model, null);
 	} 

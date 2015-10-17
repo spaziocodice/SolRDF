@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrException;
@@ -36,7 +36,7 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 public class CloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	static final Log LOGGER = new Log(LoggerFactory.getLogger(CloudDatasetGraph.class));
 	
-	protected CloudSolrServer cloud;
+	protected CloudSolrClient cloud;
 	
 	final static SolrQuery LIST_GRAPHS_QUERY = new SolrQuery("*:*");
 	static {
@@ -55,7 +55,7 @@ public class CloudDatasetGraph extends DatasetGraphSupertypeLayer {
 	public CloudDatasetGraph(
 			final SolrQueryRequest request, 
 			final SolrQueryResponse response,
-			final CloudSolrServer server) {
+			final CloudSolrClient server) {
 		super(request, response, null, NULL_GRAPH_EVENT_CONSUMER);
 		this.cloud = server;
 	}	

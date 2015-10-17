@@ -81,11 +81,24 @@ public class LocalDatasetGraph extends DatasetGraphSupertypeLayer {
 	    final SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
 	    try {
 			request.getSearcher().search(result, GET_GRAPH_NODES_QUERY);
-		    final SimpleFacets facets = new SimpleFacets(
+			final SimpleFacets facets = new SimpleFacets(
 		    		request, 
 		    		result.getDocSet(), 
 		    		GET_GRAPH_NODES_QUERY_PARAMS);
-			final NamedList<Integer> list = facets.getTermCounts(Field.C, result.getDocSet());
+			
+			final NamedList<Integer> list = facets.getFacetTermEnumCounts(
+					request.getSearcher(), 
+					result.getDocSet(),
+					Field.C,
+					0,
+					-1,
+					1,
+					false,
+					"count"
+					,null,
+					null,
+					false,
+					null);
 			final List<Node> graphs = new ArrayList<Node>();
 			for (final Entry<String, Integer> entry : list) {
 				if (!SolRDFGraph.UNNAMED_GRAPH_PLACEHOLDER.equals(entry.getKey())) {

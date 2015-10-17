@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.http.client.HttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -116,7 +117,7 @@ public class SolRDF {
 		private final static String DEFAULT_ENDPOINT = "http://127.0.0.1:8080/solr/store";
 		private String graphStoreProtocolEndpointPath = "/rdf-graph-store";
 		private String sparqlEndpointPath = "/sparql";
-		
+		private HttpClient httpClient;
 		private String zkHost;
 		
 		private Set<String> endpoints = new HashSet<String>();
@@ -169,6 +170,11 @@ public class SolRDF {
 			return this;
 		}		
 		
+		public Builder withHttpClient(final HttpClient httpClient) {
+			this.httpClient = httpClient;
+			return this;
+		}
+		
 		/**
 		 * Builds a new SolRDF proxy instance.
 		 * 
@@ -191,8 +197,8 @@ public class SolRDF {
 						zkHost != null
 							? new CloudSolrClient(zkHost)
 							: (endpoints.size() == 1)
-								? new HttpSolrClient(endpoints.iterator().next())
-								: new LBHttpSolrClient(endpoints.toArray(new String[endpoints.size()])));
+								? new HttpSolrClient(endpoints.iterator().next(), httpClient)
+								: new LBHttpSolrClient(httpClient, endpoints.toArray(new String[endpoints.size()])));
 			} catch (final Exception exception) {
 				throw new UnableToBuildSolRDFClientException(exception);
 			}	

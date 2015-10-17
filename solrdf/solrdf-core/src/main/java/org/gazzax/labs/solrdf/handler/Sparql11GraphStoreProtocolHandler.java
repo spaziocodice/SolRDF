@@ -68,11 +68,12 @@ public class Sparql11GraphStoreProtocolHandler extends RequestHandlerBase {
 				throw new SolrException(ErrorCode.BAD_REQUEST, "Empty RDF Payload");
 			}
 			
-			request.setParams(
-					new ModifiableSolrParams(parameters).add(
-							Names.GRAPH_URI_ATTRIBUTE_NAME, 
-							graphUri));
-			
+			if (graphUri != null) {
+				request.setParams(
+						new ModifiableSolrParams(parameters).add(
+								Names.GRAPH_URI_ATTRIBUTE_NAME, 
+								graphUri));
+			}			
 			forward(request, response, BULK_UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_BULK_UPDATE_HANDLER_NAME);
 		} else if ("PUT".equals(method)) {
 			// Unfortunately we never fall within this case (see class comments)

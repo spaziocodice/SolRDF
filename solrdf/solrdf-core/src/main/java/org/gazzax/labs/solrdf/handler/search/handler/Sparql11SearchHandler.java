@@ -1,9 +1,13 @@
 package org.gazzax.labs.solrdf.handler.search.handler;
 import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
+
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import static org.gazzax.labs.solrdf.Strings.*;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jena.riot.WebContent;
@@ -21,6 +25,7 @@ import org.apache.solr.request.SolrRequestHandler;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.util.RTimer;
 import org.gazzax.labs.solrdf.Names;
 
 /**
@@ -307,6 +312,26 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		@Override
 		public void close() {
 			request.close();
+		}
+
+		@Override
+		public RTimer getRequestTimer() {
+			return request.getRequestTimer();
+		}
+
+		@Override
+		public Map<String, Object> getJSON() {
+			return request.getJSON();
+		}
+
+		@Override
+		public void setJSON(final Map<String, Object> json) {
+			request.setJSON(json);
+		}
+
+		@Override
+		public Principal getUserPrincipal() {
+			return request.getUserPrincipal();
 		}		
 	}		
 	
@@ -396,5 +421,25 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 		public void close() {
 			request.close();
 		}		
+		
+		@Override
+		public RTimer getRequestTimer() {
+			return request.getRequestTimer();
+		}
+
+		@Override
+		public Map<String, Object> getJSON() {
+			return request.getJSON();
+		}
+
+		@Override
+		public void setJSON(final Map<String, Object> json) {
+			request.setJSON(json);
+		}
+
+		@Override
+		public Principal getUserPrincipal() {
+			return request.getUserPrincipal();
+		}				
 	}	
 }
