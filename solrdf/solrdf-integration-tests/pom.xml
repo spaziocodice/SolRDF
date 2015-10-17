@@ -7,7 +7,7 @@
 		<version>1.0</version>
 	</parent>
 	<artifactId>solrdf-integration-tests</artifactId>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<properties>
 		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/solrdf</solr.home>
 		<listen.port>8080</listen.port>
