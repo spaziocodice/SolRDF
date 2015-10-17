@@ -16,7 +16,7 @@
 		<junit.version>4.11</junit.version>
 		<mockito.version>1.9.5-rc1</mockito.version>
 		<junit.version>4.11</junit.version>
-		<solr.version>4.10.3</solr.version>
+		<solr.version>4.10.4</solr.version>
 	</properties>
 	<licenses>
 		<license>
