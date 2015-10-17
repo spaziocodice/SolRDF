@@ -1,15 +1,16 @@
 package org.gazzax.labs.solrdf.client;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetAccessor;
@@ -39,7 +40,7 @@ public class SolRDF {
 	final DatasetAccessor remoteDataset;
 	final Dataset localDataset;
 	final String sparqlEndpoint;
-	final SolrServer solr;
+	final SolrClient solr;
 
 	static class CloseableResultSet implements ResultSet {
 		
@@ -188,10 +189,10 @@ public class SolRDF {
 								graphStoreProtocolEndpointPath),
 						firstEndpointAddress + sparqlEndpointPath,		
 						zkHost != null
-							? new CloudSolrServer(zkHost)
+							? new CloudSolrClient(zkHost)
 							: (endpoints.size() == 1)
-								? new HttpSolrServer(endpoints.iterator().next())
-								: new LBHttpSolrServer(endpoints.toArray(new String[endpoints.size()])));
+								? new HttpSolrClient(endpoints.iterator().next())
+								: new LBHttpSolrClient(endpoints.toArray(new String[endpoints.size()])));
 			} catch (final Exception exception) {
 				throw new UnableToBuildSolRDFClientException(exception);
 			}	
@@ -216,7 +217,7 @@ public class SolRDF {
 	SolRDF(
 			final DatasetAccessor dataset, 
 			final String sparqlEndpointAddress,
-			final SolrServer solr) {
+			final SolrClient solr) {
 		this.remoteDataset = dataset;
 		this.localDataset = DatasetFactory.createMem();
 		this.solr = solr;
@@ -618,7 +619,7 @@ public class SolRDF {
 	 * @param waitFlush blocks until index changes are flushed to disk.
 	 * @param waitSearcher blocks until a new searcher is opened and registered as the main query searcher. 
 	 * @throws UnableToCommitException in case of commit failure.
-	 * @see SolrServer#commit(boolean, boolean)
+	 * @see SolrClient#commit(boolean, boolean)
 	 */
 	public void commit(final boolean waitFlush, final boolean waitSearcher) throws UnableToCommitException {
 		try {
@@ -632,7 +633,11 @@ public class SolRDF {
 	 * The caller does no longer need this client.
 	 */
 	public void done() {
-		solr.shutdown();
+		try {
+			solr.close();
+		} catch (final IOException exception) {
+			// Ignore
+		}
 	}
 	
 	/**
@@ -642,7 +647,7 @@ public class SolRDF {
 	 * @param waitSearcher blocks until a new searcher is opened and registered as the main query searcher. 
 	 * @param softCommit true for issuing a soft commit.
 	 * @throws UnableToCommitException in case of commit failure.
-	 * @see SolrServer#commit(boolean, boolean, boolean)
+	 * @see SolrClient#commit(boolean, boolean, boolean)
 	 */
 	public void commit(final boolean waitFlush, final boolean waitSearcher, final boolean softCommit) throws UnableToCommitException {
 		try {	
