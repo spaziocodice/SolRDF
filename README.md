@@ -5,50 +5,128 @@ SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and sea
 
 [![Continuous Integration status](https://travis-ci.org/agazzarini/SolRDF.svg?branch=master)](https://travis-ci.org/agazzarini/SolRDF)
 
-This page will guide you through the SolRDF quick installation. 
+# Get me up and running
+This section provides instructions for running SolRDF. We divided the section in two different parts because the different architecture introduced with Solr 5. Prior to that (i.e. Solr 4.x) Solr was distributed as a JEE web application and therefore, being SolRDF a Maven project, you could use Maven for starting up a live instance without downloading Solr (Maven would do that for you, behind the scenes). 
 
-> If you already have Solr (4.8.x - 4.10.x) installed, please refer to [this section](https://github.com/agazzarini/SolRDF/wiki/User%20Guide#if-you-already-have-solr-installed) for detailed instruction.    
+Solr 5 is now delivered as a standalone jar and therefore the SolRDF installation is different; it requires some manual steps in order to deploy configuration files and libraries within an external Solr (which needs to be downloaded separately).    
 
-I assume you already have Java (7), Maven (3.x) and git on your system.
+### SolRDF 1.1 (Solr 5.x)
+First, you need Java 8, Apache Maven and Apache Solr installed on your machine.
+Open a new shell and type the following:     
 
-Checkout the project Open a new shell and type the following:
+```
+# cd /tmp
+# git clone https://github.com/agazzarini/SolRDF.git solrdf-download
+```  
+#### Build and run SolrRDF    
 
-> \> cd /tmp  
-> \> git clone https://github.com/agazzarini/SolRDF.git solrdf-download
+```
+# cd solrdf-download/solrdf
+# mvn clean install
+# cd solrdf-integration-tests
+# mvn clean package cargo:run
+```
+At the end of the build, after seeing
 
-Build and run SolrRDF
+```
+[INFO] --------------------------------------------------------
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] Solr RDF plugin .................... SUCCESS [  3.151 s]
+[INFO] solrdf-core ........................ SUCCESS [ 10.191 s]
+[INFO] solrdf-client ...................... SUCCESS [  3.554 s]
+[INFO] solrdf-integration-tests ........... SUCCESS [ 14.910 s]
+[INFO] --------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] --------------------------------------------------------  
+[INFO] Total time: 32.065 s
+[INFO] Finished at: 2015-10-20T14:42:09+01:00
+[INFO] Final Memory: 43M/360M
+```
 
-> \> cd solrdf-download/solrdf    
-> \> mvn clean install    
-> \> cd solrdf-integration-tests    
-> \> mvn clean package cargo:run     
+you can find the solr-home directory, with everything required for running SolRDF, under the 
 
-The very first time you run this command a lot of things will be downloaded, Solr included. At the end you should see sheomething like this:
+```
+/tmp/solr/solrdf-download/solrdf/solrdf-integration-tests/target/solrdf-integration-tests-1.1-dev/solrdf
+```
+We refer to this directory as $SOLR_HOME. 
+At this point, open a shell under the _bin_ folder of your Solr and type:
 
+```
+> ./solr -p 8080 -s $SOLR_HOME -a "-Dsolr.data.dir=/work/data/solrdf"
+
+Waiting to see Solr listening on port 8080 [/]  
+Started Solr server on port 8080 (pid=10934). Happy searching!
+
+```
+
+### SolRDF 1.0 (Solr 4.x)
+If you're using Solr 4.x, you can point to the solrdf-1.0 branch and use the automatic procedure described below for downloading, installing and run it. There's no need to download Solr, as Maven will do that for you.
+
+#### Checkout the project    
+Open a new shell and type the following:   
+
+```
+# cd /tmp
+# git clone https://github.com/agazzarini/SolRDF.git solrdf-download
+```  
+
+#### Build and run SolrRDF    
+
+```
+# cd solrdf-download/solrdf
+# mvn clean install
+# cd solrdf-integration-tests
+# mvn clean package cargo:run
+```
+The very first time you run this command a lot of things will be downloaded, Solr included.
+At the end you should see something like this:
+```
 [INFO] Jetty 7.6.15.v20140411 Embedded started on port [8080]
-[INFO] Press Ctrl-C to stop the container... 
+[INFO] Press Ctrl-C to stop the container...
+``` 
+[SolRDF](http://127.0.0.1:8080/solr/#/store) is up and running! 
 
-SolRDF is up and running! Now let's add some data. Open a new shell and type the following
+# Add data   
+Now let's add some data. You can do that in one of the following ways: 
 
-> \> curl -v http://localhost:8080/solr/store/update/bulk?commit=true \  
-  -H "Content-Type: application/n-triples" \  
-  --data-binary @/tmp/solrdf-download/solrdf/solrdf-integration-tests/src/test/resources/sample_data/bsbm-generated-dataset.nt  
+## Browser
+Open your favourite browser and type the follwing URL (line has been split for readability):
+```
+http://localhost:8080/solr/store/update/bulk?commit=true
+&update.contentType=application/n-triples
+&stream.file=/tmp/solrdf-download/solrdf/solrdf-integration-tests/src/test/resources/sample-data/bsbm-generated-dataset.nt
+```
+This is an example with the bundled sample data. If you have a file somehere (i.e. remotely) you can use the _stream.url_ parameter to indicate the file URL. For example:  
 
-Ok, you just added about 5000 triples. Now, it's time to execute some query:
+```
+http://localhost:8080/solr/store/update/bulk?commit=true
+&update.contentType=application/rdf%2Bxml
+&stream.url=http://ec.europa.eu/eurostat/ramon/rdfdata/countries.rdf
+```
+## Command line
+Open a shell and type the following
+```
+# curl -v http://localhost:8080/solr/store/update/bulk?commit=true \ 
+  -H "Content-Type: application/n-triples" \
+  --data-binary @/tmp/solrdf-download/solrdf/src/test/resources/sample_data/bsbm-generated-dataset.nt
+```
+Ok, you just added (about) [5000 triples](http://127.0.0.1:8080/solr/#/store). 
 
-> \> curl "http://127.0.0.1:8080/solr/store/sparql" \  
-  --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \  
-  -H "Accept: application/sparql-results+xml"  
-
-> \> ...      
-
-> \> curl "http://127.0.0.1:8080/solr/store/sparql" \   
-  --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \  
-  -H "Accept: application/sparql-results+json"  
+# SPARQL 1.1. endpoint    
+SolRDF is a fully compliant SPARQL 1.1. endpoint. In order to issue a query just run a query like this:
+```
+# curl "http://127.0.0.1:8080/solr/store/sparql" \
+  --data-urlencode "q=SELECT * WHERE { ?s ?p ?o } LIMIT 10" \
+  -H "Accept: application/sparql-results+json"
   
-> \> ...
+Or  
+  
+# curl "http://127.0.0.1:8080/solr/store/sparql" \
+  --data-urlencode "**q=SELECT * WHERE { ?s ?p ?o } LIMIT 10**" \
+  -H "Accept: application/sparql-results+xml"
 
-Et voilà! Enjoy! As you can imagine I'm still working on that...so if you meet some annoying bug feel free to give me a shout ;)
+```
 
 -----------------------------------
 
