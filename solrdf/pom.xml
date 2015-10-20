@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.gazzax.labs</groupId>
 	<artifactId>solrdf</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>Solr RDF plugin</name>
 	<packaging>pom</packaging>
 	<properties>
