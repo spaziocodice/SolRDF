@@ -84,7 +84,7 @@ public abstract class IntegrationTestSupertypeLayer extends SolrJettyTestBase {
 			
 		try {
 			SOLR = createJetty(
-					"/work/workspaces/solrdf/solrdf/solrdf/solrdf-core/src/solr-home",
+					"target/solrdf-integration-tests-1.1-dev/solrdf",
 					JettyConfig.builder()
 						.setPort(8080)
 						.setContext("/solr")

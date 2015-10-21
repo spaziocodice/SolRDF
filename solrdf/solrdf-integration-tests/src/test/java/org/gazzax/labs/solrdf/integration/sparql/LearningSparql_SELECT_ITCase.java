@@ -336,6 +336,8 @@ public class LearningSparql_SELECT_ITCase extends LearningSparqlSupertypeLayer {
 		selectTest(misteryGuest("ex164.rq", "ex145.ttl"));		
 	}
 	
+	// This is working but sometimes it causes a failure in the whole suite because DBPedia is under maintenaince.
+	@Ignore
 	@Test
 	public void serviceKeyword() throws Exception {
 		selectTest(misteryGuest("ex167.rq", "ex145.ttl"));		
