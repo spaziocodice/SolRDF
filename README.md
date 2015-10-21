@@ -23,8 +23,7 @@ Open a new shell and type the following:
 ```
 # cd solrdf-download/solrdf
 # mvn clean install
-# cd solrdf-integration-tests
-# mvn clean package cargo:run
+
 ```
 At the end of the build, after seeing
 
