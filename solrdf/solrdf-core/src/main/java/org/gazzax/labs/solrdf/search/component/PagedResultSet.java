@@ -10,8 +10,6 @@ import com.hp.hpl.jena.query.ResultSetRewindable;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.sparql.core.ResultBinding;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
-import com.sun.tools.internal.xjc.generator.bean.ImplStructureStrategy.Result;
-
 /**
  * A simple in-memory {@link ResultSet} decorator that retains (and remember) a page of results from another underlying {@link ResultSet}.
  * Each instance wraps a concrete {@link ResultSet}. It is instantiated with a given offset and size.
@@ -40,7 +38,7 @@ public final class PagedResultSet implements ResultSetRewindable {
     private Model resourceModel;
     
     /**
-     * The iterator state of this {@link ResultSet} when the wrapped {@link Result} is iterated for the first time.
+     * The iterator state of this {@link ResultSet} when the wrapped {@link ResultSet} is iterated for the first time.
      */
     private ResultSetRewindable firstTimeIteration = new ResultSetRewindable() {
 
