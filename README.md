@@ -129,4 +129,4 @@ Or
 
 -----------------------------------
 
-_The SolRDF logo was kindly provided by Umberto Basili_ 
+_The SolRDF logo was kindly provided by [Umberto Basili](https://it.linkedin.com/in/umberto-basili-14a6a8b1)_ 
