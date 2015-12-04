@@ -8,7 +8,7 @@ SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and sea
 # Get me up and running
 This section provides instructions for running SolRDF. We divided the section in two different parts because the different architecture introduced with Solr 5. Prior to that (i.e. Solr 4.x) Solr was distributed as a JEE web application and therefore, being SolRDF a Maven project, you could use Maven for starting up a live instance without downloading Solr (Maven would do that for you, behind the scenes). 
 
-Solr 5 is now delivered as a standalone jar and therefore the SolRDF installation is different; it requires some manual steps in order to deploy configuration files and libraries within an external Solr (which needs to be downloaded separately).    
+Solr 5.x is now delivered as a standalone jar and therefore the SolRDF installation is different; it requires some manual steps in order to deploy configuration files and libraries within an external Solr (which needs to be downloaded separately).    
 
 ### SolRDF 1.1 (Solr 5.x)
 First, you need Java 8, Apache Maven and Apache Solr installed on your machine.
