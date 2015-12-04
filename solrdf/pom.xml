@@ -206,7 +206,7 @@
 			<version>4.4.1</version>
 		</dependency>
 	</dependencies>
-	<url>https://github.com/agazzarini/SolRD</url>
+	<url>https://github.com/agazzarini/SolRDF</url>
 	<description>A set of Solr addons for using Solr as an RDF Store.</description>
 	<modules>
 		<module>solrdf-core</module>
