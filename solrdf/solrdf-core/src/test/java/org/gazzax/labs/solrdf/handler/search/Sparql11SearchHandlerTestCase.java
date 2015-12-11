@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.handler.search.handler;
+package org.gazzax.labs.solrdf.handler.search;
 
 import static org.gazzax.labs.solrdf.TestUtility.randomString;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +31,7 @@ import org.apache.solr.request.SolrRequestHandler;
 import org.apache.solr.response.SolrQueryResponse;
 import org.gazzax.labs.solrdf.Names;
 import org.gazzax.labs.solrdf.Strings;
+import org.gazzax.labs.solrdf.handler.search.Sparql11SearchHandler;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,13 +77,13 @@ public class Sparql11SearchHandlerTestCase {
 		when(request.getParams()).thenReturn(parameters.set(Names.QUERY, randomString()));
 		cut.handleRequestBody(request, response); 
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_QUERY_HANDLER_NAME);
 
 		reset(cut);
 		
 		when(request.getParams()).thenReturn(parameters.set(CommonParams.Q, randomString()));
 		cut.handleRequestBody(request, response);
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_QUERY_HANDLER_NAME);
 	} 		
 	
 	@Test
@@ -125,7 +126,7 @@ public class Sparql11SearchHandlerTestCase {
 		
 		cut.handleRequestBody(request, response);
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_UPDATE_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_UPDATE_HANDLER_NAME);
 	} 
 	
 	@Test 
@@ -155,7 +156,7 @@ public class Sparql11SearchHandlerTestCase {
 		
 		cut.handleRequestBody(request, response);
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_QUERY_HANDLER_NAME);
 	} 
 	
 	@Test 
@@ -169,7 +170,7 @@ public class Sparql11SearchHandlerTestCase {
 		
 		cut.handleRequestBody(request, response);
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_QUERY_HANDLER_NAME);
 	} 	
 	
 	@Test 
@@ -205,7 +206,7 @@ public class Sparql11SearchHandlerTestCase {
 		
 		cut.handleRequestBody(request, response);
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_UPDATE_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_UPDATE_HANDLER_NAME);
 	} 	
 	
 	@Test 
@@ -254,7 +255,7 @@ public class Sparql11SearchHandlerTestCase {
 		
 		cut.handleRequestBody(request, response);
 		
-		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SEARCH_HANDLER_NAME);
+		verify(cut).requestHandler(request, Sparql11SearchHandler.DEFAULT_SPARQL_QUERY_HANDLER_NAME);
 	} 	
 	
 	@Test 

@@ -1,19 +1,3 @@
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/ns/hydra/core#member> <http://data.linkeddatafragments.org/#dataset>.
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/ns/void#Dataset>.
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/hydra/core#Collection>.
-<http://data.linkeddatafragments.org/#dataset> <http://rdfs.org/ns/void#subset> <http://data.linkeddatafragments.org/>.
-<http://data.linkeddatafragments.org/#dataset> <http://rdfs.org/ns/void#uriLookupEndpoint> "http://data.linkeddatafragments.org/{?subject,predicate,object}".
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/ns/hydra/core#search> _:triplePattern.
-_:triplePattern <http://www.w3.org/ns/hydra/core#template> "http://data.linkeddatafragments.org/{?subject,predicate,object}".
-_:triplePattern <http://www.w3.org/ns/hydra/core#mapping> _:subject.
-_:triplePattern <http://www.w3.org/ns/hydra/core#mapping> _:predicate.
-_:triplePattern <http://www.w3.org/ns/hydra/core#mapping> _:object.
-_:subject <http://www.w3.org/ns/hydra/core#variable> "subject".
-_:subject <http://www.w3.org/ns/hydra/core#property> <http://www.w3.org/1999/02/22-rdf-syntax-ns#subject>.
-_:predicate <http://www.w3.org/ns/hydra/core#variable> "predicate".
-_:predicate <http://www.w3.org/ns/hydra/core#property> <http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate>.
-_:object <http://www.w3.org/ns/hydra/core#variable> "object".
-_:object <http://www.w3.org/ns/hydra/core#property> <http://www.w3.org/1999/02/22-rdf-syntax-ns#object>.
 <http://data.linkeddatafragments.org/dbpedia2014#dataset> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/ns/void#Dataset>.
 <http://data.linkeddatafragments.org/dbpedia2014#dataset> <http://www.w3.org/2000/01/rdf-schema#label> "DBpedia 2014".
 <http://data.linkeddatafragments.org/dbpedia2014#dataset> <http://purl.org/dc/terms/title> "DBpedia 2014".
@@ -106,16 +90,3 @@ _:object <http://www.w3.org/ns/hydra/core#property> <http://www.w3.org/1999/02/2
 <http://data.linkeddatafragments.org/victoria#dataset> <http://www.w3.org/2000/01/rdf-schema#label> "Victoria".
 <http://data.linkeddatafragments.org/victoria#dataset> <http://purl.org/dc/terms/title> "Victoria".
 <http://data.linkeddatafragments.org/victoria#dataset> <http://purl.org/dc/terms/description> "Public Record Office Victoria Semantic Wiki".
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/ns/void#Dataset>.
-<http://data.linkeddatafragments.org/#dataset> <http://www.w3.org/2000/01/rdf-schema#label> "dataset index".
-<http://data.linkeddatafragments.org/#dataset> <http://purl.org/dc/terms/title> "dataset index".
-<http://data.linkeddatafragments.org/> <http://rdfs.org/ns/void#subset> <http://data.linkeddatafragments.org/>.
-<http://data.linkeddatafragments.org/> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/hydra/core#Collection>.
-<http://data.linkeddatafragments.org/> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/hydra/core#PagedCollection>.
-<http://data.linkeddatafragments.org/> <http://purl.org/dc/terms/title> "Linked Data Fragment of dataset index"@en.
-<http://data.linkeddatafragments.org/> <http://purl.org/dc/terms/description> "Triple Pattern Fragment of the 'dataset index' dataset containing triples matching the pattern { ?s ?p ?o }."@en.
-<http://data.linkeddatafragments.org/> <http://purl.org/dc/terms/source> <http://data.linkeddatafragments.org/#dataset>.
-<http://data.linkeddatafragments.org/> <http://www.w3.org/ns/hydra/core#totalItems> "95"^^<http://www.w3.org/2001/XMLSchema#integer>.
-<http://data.linkeddatafragments.org/> <http://rdfs.org/ns/void#triples> "95"^^<http://www.w3.org/2001/XMLSchema#integer>.
-<http://data.linkeddatafragments.org/> <http://www.w3.org/ns/hydra/core#itemsPerPage> "100"^^<http://www.w3.org/2001/XMLSchema#integer>.
-<http://data.linkeddatafragments.org/> <http://www.w3.org/ns/hydra/core#firstPage> <http://data.linkeddatafragments.org/?page=1>.

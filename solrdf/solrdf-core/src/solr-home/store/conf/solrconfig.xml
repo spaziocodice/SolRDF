@@ -75,7 +75,7 @@
 	<!-- 
 		RequestHandler acting as SPARQL endpoint / facade 
 	-->
-	<requestHandler name="/sparql" class="org.gazzax.labs.solrdf.handler.search.handler.Sparql11SearchHandler">
+	<requestHandler name="/sparql" class="org.gazzax.labs.solrdf.handler.search.Sparql11SearchHandler">
 		<lst name="invariants">
 			<str name="s">/sparql-query</str>
 			<str name="u">/sparql-update</str>
@@ -130,7 +130,15 @@
 			<str name="wt">json</str>
 		</lst>
 	</requestHandler>
-	
+
+	<!-- Linked Data Fragments Handlers: Get all available datasets -->
+	<requestHandler name="/ldf/datasets" class="org.gazzax.labs.solrdf.handler.search.ldf.AvailableDatasetsSearchHandler">
+		<lst name="invariants">
+			<str name="s">/sparql-query</str>
+			<str name="u">/sparql-update</str>
+		</lst>
+	</requestHandler>
+		
 	<!-- Classic Solr UpdateRequestHandler -->
 	<requestHandler name="/update" class="org.apache.solr.handler.UpdateRequestHandler"/>
 		

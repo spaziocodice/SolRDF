@@ -1,4 +1,4 @@
-package org.gazzax.labs.solrdf.handler.search.handler;
+package org.gazzax.labs.solrdf.handler.search;
 import static org.gazzax.labs.solrdf.F.readCommandFromIncomingStream;
 
 import java.security.Principal;
@@ -53,10 +53,10 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 	static final String INVALID_HTTP_METHOD = "SPARQL Protocol violation: request method must be GET or POST.";
 	
 	static final String SEARCH_HANDLER_PARAMETER_NAME = "s";
-	static final String DEFAULT_SEARCH_HANDLER_NAME = "/sparql-query";
+	public static final String DEFAULT_SPARQL_QUERY_HANDLER_NAME = "/sparql-query";
 	
 	static final String UPDATE_HANDLER_PARAMETER_NAME = "u";
-	static final String DEFAULT_UPDATE_HANDLER_NAME = "/sparql-update";
+	static final String DEFAULT_SPARQL_UPDATE_HANDLER_NAME = "/sparql-update";
 
 	@Override
 	public void handleRequestBody(final SolrQueryRequest request, final SolrQueryResponse response) throws Exception {
@@ -65,7 +65,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 			if (containsQueryParameter(parameters)) {
 				requestHandler(
 						request,
-						parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SEARCH_HANDLER_NAME))
+						parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SPARQL_QUERY_HANDLER_NAME))
 					.handleRequest(request, response);	
 			} else {
 				throw new SolrException(
@@ -77,12 +77,12 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 				if (containsUpdateParameter(parameters)) {
 					requestHandler(
 							request,
-							parameters.get(UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_UPDATE_HANDLER_NAME))
+							parameters.get(UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_SPARQL_UPDATE_HANDLER_NAME))
 						.handleRequest(new SparqlUpdateSolrQueryRequest(request), response);	
 				} else if (containsQueryParameter(parameters)) {
 					requestHandler(
 							request,
-							parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SEARCH_HANDLER_NAME))
+							parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SPARQL_QUERY_HANDLER_NAME))
 						.handleRequest(request, response);	
 				} else {    
 					throw new SolrException(
@@ -91,10 +91,13 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 				}
 			} else if (isSparqlQueryContentType(request)) {
 				if (isBodyNotEmpty(request)) {
-					request.setParams(new ModifiableSolrParams(parameters).set(Names.QUERY, readCommandFromIncomingStream(request.getContentStreams().iterator().next())));
+					request.setParams(
+							new ModifiableSolrParams(parameters)
+								.set(Names.QUERY, readCommandFromIncomingStream(
+										request.getContentStreams().iterator().next())));
 					requestHandler(
 							request,
-							parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SEARCH_HANDLER_NAME))
+							parameters.get(SEARCH_HANDLER_PARAMETER_NAME, DEFAULT_SPARQL_QUERY_HANDLER_NAME))
 						.handleRequest(new SparqlQuerySolrQueryRequest(request), response);	
 				} else {
 					throw new SolrException(
@@ -105,7 +108,7 @@ public class Sparql11SearchHandler extends RequestHandlerBase {
 				if (isBodyNotEmpty(request)) {
 					requestHandler(
 							request,
-							parameters.get(UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_UPDATE_HANDLER_NAME))
+							parameters.get(UPDATE_HANDLER_PARAMETER_NAME, DEFAULT_SPARQL_UPDATE_HANDLER_NAME))
 						.handleRequest(request, response);	
 				} else {
 					throw new SolrException(
