@@ -8,10 +8,6 @@
 	</parent>
 	<artifactId>solrdf-integration-tests</artifactId>
 	<packaging>jar</packaging>
-	<properties>
-		<solr.home>${project.build.directory}/${project.artifactId}-${project.version}-dev/solrdf</solr.home>
-		<listen.port>8080</listen.port>
-	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.gazzax.labs</groupId>
