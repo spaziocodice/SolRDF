@@ -5,7 +5,7 @@ import static org.gazzax.labs.solrdf.Strings.isNotNullOrEmptyString;
 
 import java.io.IOException;
 
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.CommonParams;
@@ -47,7 +47,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	private static final String DEFAULT_DEF_TYPE = "sparql";
 	private static final Log LOGGER = new Log(LoggerFactory.getLogger(SparqlSearchComponent.class));
 	
-	private CloudSolrServer server;
+	private CloudSolrClient server;
 	
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -56,7 +56,7 @@ public class SparqlSearchComponent extends SearchComponent {
 		super.init(args);
 		final String zkAddress = System.getProperty("zkHost");
 		if (isNotNullOrEmptyString(zkAddress)) {
-			this.server= new CloudSolrServer(zkAddress);
+			this.server= new CloudSolrClient(zkAddress);
 			this.server.setDefaultCollection("store");
 		}
 	}
@@ -81,6 +81,8 @@ public class SparqlSearchComponent extends SearchComponent {
 	protected void doProcess(final ResponseBuilder responseBuilder) throws IOException {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
+
+		server.setDefaultCollection(request.getCore().getName());
 
 	    final int start = request.getParams().getInt(CommonParams.START, 0);
 		final int rows = request.getParams().getInt(CommonParams.ROWS, 10);

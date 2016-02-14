@@ -59,7 +59,9 @@ class Sparql11UpdateRdfDataLoader extends ContentStreamLoader {
 			final SolrQueryResponse response,
 			final ContentStream stream, 
 			final UpdateRequestProcessor processor) throws Exception {
-		 
+		
+		CLUSTER.setDefaultCollection(request.getCore().getName());
+		
 		final SolrParams parameters = request.getParams();
 		String updateRequest = parameters.get(Names.UPDATE_PARAMETER_NAME);
 
