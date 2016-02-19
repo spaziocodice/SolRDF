@@ -82,7 +82,7 @@ public class SparqlSearchComponent extends SearchComponent {
 	    final SolrQueryRequest request = responseBuilder.req;
 	    final SolrQueryResponse response = responseBuilder.rsp;
 
-		server.setDefaultCollection(request.getCore().getName());
+		//server.setDefaultCollection(request.getCore().getName());
 
 	    final int start = request.getParams().getInt(CommonParams.START, 0);
 		final int rows = request.getParams().getInt(CommonParams.ROWS, 10);
