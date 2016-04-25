@@ -108,7 +108,7 @@ Open a shell and type the following
 ```
 # curl -v http://localhost:8080/solr/store/update/bulk?commit=true \ 
   -H "Content-Type: application/n-triples" \
-  --data-binary @/tmp/solrdf-download/solrdf/src/test/resources/sample_data/bsbm-generated-dataset.nt
+  --data-binary @/tmp/solrdf-download/solrdf/solrdf-integration-tests/src/test/resources/sample_data/bsbm-generated-dataset.nt
 ```
 Ok, you just added (about) [5000 triples](http://127.0.0.1:8080/solr/#/store). 
 
