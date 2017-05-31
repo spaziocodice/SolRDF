@@ -1,6 +1,6 @@
-<img src="https://cloud.githubusercontent.com/assets/7569632/7524584/5971e1ba-f503-11e4-940e-72e808677c48.png" width="100" height="100"/>
+<div> <img src="https://cloud.githubusercontent.com/assets/7569632/7524584/5971e1ba-f503-11e4-940e-72e808677c48.png" width="100" height="100"/>
 <img src="https://cloud.githubusercontent.com/assets/7569632/7532363/51104a30-f566-11e4-8481-229f64064905.png">
-
+</div>
 SolRDF (i.e. Solr + RDF) is a set of Solr extensions for managing (index and search) RDF data. Join us at solrdf-user-list@googlegroups.com
 
 [![Continuous Integration status](https://travis-ci.org/agazzarini/SolRDF.svg?branch=master)](https://travis-ci.org/agazzarini/SolRDF)
